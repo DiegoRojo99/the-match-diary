@@ -1,9 +1,18 @@
-import SignInSignOut from "./login/signInSignOut";
-
-export default function HomePage() {
+export default function Home() {
   return (
-    <div>
-      <SignInSignOut />
-    </div>
+    <main className="flex flex-col items-center justify-center min-h-screen px-6 bg-gradient-to-br from-blue-100 via-white to-gray-100 text-center">
+      <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+        Welcome to <span className="text-blue-600">The Match Diary</span>
+      </h1>
+      <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-xl">
+        Track your football adventures, review stadiums, unlock achievements, and plan your next match day experience!
+      </p>
+      <a
+        href="/login"
+        className="px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition text-lg font-medium"
+      >
+        Get Started
+      </a>
+    </main>
   );
 }
