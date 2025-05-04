@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Match {
+  id          String   @id @default(cuid())
+  teamHomeId  String
+  teamAwayId  String
+  stadium     String
+  date        DateTime
+  homeScore   Int
+  awayScore   Int
+  createdAt   DateTime @default(now())
+
+  teamHome    Team     @relation("TeamHomeMatches", fields: [teamHomeId], references: [id])
+  teamAway    Team     @relation("TeamAwayMatches", fields: [teamAwayId], references: [id])
+  matchVisits MatchVisit[]
+}
+
+model MatchVisit {
+  id          String   @id @default(cuid())
+  userId      String
+  matchId     String
+  review      String?
+  photos      Photo[]
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+  match       Match    @relation(fields: [matchId], references: [id])
+}
+
+model Photo {
+  id           String   @id @default(cuid())
+  url          String
+  matchVisitId String
+  createdAt    DateTime @default(now())
+
+  matchVisit   MatchVisit @relation(fields: [matchVisitId], references: [id])
+}
+
+model Team {
+  id           String   @id @default(cuid())
+  name         String
+  shortName    String?
+  logoUrl      String?
+  country      String
+  founded      Int?
+  createdAt    DateTime @default(now())
+
+  homeMatches  Match[]  @relation("TeamHomeMatches")
+  awayMatches  Match[]  @relation("TeamAwayMatches")
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String?
+  email         String?      @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  matchVisits   MatchVisit[]
+  userAchievements UserAchievement[]
+  createdAt     DateTime     @default(now())
+}
+
+model Account {
+  id                String   @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user              User     @relation(fields: [userId], references: [id])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model Competition {
+  id        String   @id @default(cuid())
+  name      String
+  logoUrl   String?
+  country   String
+  createdAt DateTime @default(now())
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+
+  userAchievements UserAchievement[]
+}
+
+model UserAchievement {
+  id            String     @id @default(cuid())
+  userId        String
+  achievementId String
+  obtainedAt    DateTime   @default(now())
+
+  user          User       @relation(fields: [userId], references: [id])
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+}
