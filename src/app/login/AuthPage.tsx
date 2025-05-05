@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import supabase from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 import { useSupabaseSession } from '@/components/SupabaseSessionProvider';
+import Image from 'next/image';
 
 export default function AuthPage() {
   const session = useSupabaseSession();
@@ -37,9 +38,11 @@ export default function AuthPage() {
       {user ? (
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <h2 className="text-xl text-black mb-4">Welcome, {user.user_metadata.full_name}</h2>
-          <img
+          <Image
             src={user.user_metadata.avatar_url}
             alt="User"
+            width={64}
+            height={64}
             className="w-16 h-16 rounded-full mx-auto mb-4"
           />
           <button
