@@ -1,9 +1,9 @@
-import SignInSignOut from "@/app/login/signInSignOut";
+import AuthPage from "@/app/login/AuthPage";
 
 export default function LoginPage() {
   return (
     <div>
-      <SignInSignOut />
+      <AuthPage />
     </div>
   );
 }
