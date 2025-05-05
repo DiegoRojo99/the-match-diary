@@ -32,7 +32,6 @@ model MatchVisit {
   photos      Photo[]
   createdAt   DateTime @default(now())
 
-  user        User     @relation(fields: [userId], references: [id])
   match       Match    @relation(fields: [matchId], references: [id])
 }
 
@@ -56,45 +55,6 @@ model Team {
 
   homeMatches  Match[]  @relation("TeamHomeMatches")
   awayMatches  Match[]  @relation("TeamAwayMatches")
-}
-
-model User {
-  id            String       @id @default(cuid())
-  name          String?
-  email         String?      @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  matchVisits   MatchVisit[]
-  userAchievements UserAchievement[]
-  createdAt     DateTime     @default(now())
-}
-
-model Account {
-  id                String   @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-
-  user              User     @relation(fields: [userId], references: [id])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-
-  user         User     @relation(fields: [userId], references: [id])
 }
 
 model Competition {
@@ -121,6 +81,5 @@ model UserAchievement {
   achievementId String
   obtainedAt    DateTime   @default(now())
 
-  user          User       @relation(fields: [userId], references: [id])
   achievement   Achievement @relation(fields: [achievementId], references: [id])
 }
