@@ -3,29 +3,27 @@
 import { useEffect, useState } from 'react';
 import supabase from '@/lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
+import { useSupabaseSession } from '@/components/SupabaseSessionProvider';
 
 export default function AuthPage() {
+  const session = useSupabaseSession();
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) setUser(data.user);
-    };
-    getUser();
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      listener?.subscription.unsubscribe();
-    };
-  }, []);
+    if (session) {
+      setUser(session.user);
+    } 
+    else {
+      setUser(null);
+    }
+  }, [session]);
 
   const handleSignIn = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
+      options: {
+        redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`
+      }
     });
     if (error) console.error('Login error:', error.message);
   };
@@ -38,7 +36,7 @@ export default function AuthPage() {
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       {user ? (
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <h2 className="text-xl mb-4">Welcome, {user.user_metadata.full_name}</h2>
+          <h2 className="text-xl text-black mb-4">Welcome, {user.user_metadata.full_name}</h2>
           <img
             src={user.user_metadata.avatar_url}
             alt="User"
@@ -46,17 +44,17 @@ export default function AuthPage() {
           />
           <button
             onClick={handleSignOut}
-            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+            className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded cursor-pointer"
           >
             Sign Out
           </button>
         </div>
       ) : (
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <h2 className="text-xl mb-4">Sign in with Google</h2>
+          <h2 className="text-xl text-black mb-4">Sign in with Google</h2>
           <button
             onClick={handleSignIn}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded cursor-pointer"
           >
             Sign In
           </button>
