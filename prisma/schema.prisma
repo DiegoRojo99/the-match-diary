@@ -44,15 +44,32 @@ model Photo {
   matchVisit   MatchVisit @relation(fields: [matchVisitId], references: [id])
 }
 
-model Team {
-  id           String   @id @default(cuid())
-  name         String
-  shortName    String?
-  logoUrl      String?
-  country      String
-  founded      Int?
-  createdAt    DateTime @default(now())
+model Stadium {
+  id        String  @id @default(cuid())
+  name      String
+  city      String?
+  country   String?
+  teams     Team[]
 
+  createdAt DateTime @default(now())
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  apiId       Int      @unique
+  name        String
+  shortName   String?
+  tla         String?
+  crest       String?
+  address     String?
+  website     String?
+  founded     Int?
+  clubColors  String?
+  area        String?
+  stadiumId   String?   // Foreign key to Stadium
+  stadium     Stadium? @relation(fields: [stadiumId], references: [id])
+
+  createdAt   DateTime @default(now())
   homeMatches  Match[]  @relation("TeamHomeMatches")
   awayMatches  Match[]  @relation("TeamAwayMatches")
 }
