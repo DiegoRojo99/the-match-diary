@@ -1,24 +1,9 @@
-import { MatchAPI } from "@/types/API";
+import { MatchAPI, MatchTeamAPI } from "@/types/API";
 import { PrismaClient } from "../../prisma/generated/client";
 
 const prisma = new PrismaClient();
 const API_KEY = process.env.NEXT_PUBLIC_FOOTBALL_DATA_API_KEY!;
 const BASE_URL = 'https://api.football-data.org/v4';
-
-async function fetchMatchesByDate(date: string): Promise<MatchAPI[]> {
-  const res = await fetch(`${BASE_URL}/matches?dateFrom=${date}&dateTo=${date}`, {
-    headers: {
-      'X-Auth-Token': API_KEY,
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch matches for ${date}: ${res.statusText}`);
-  }
-
-  const data = await res.json();
-  return data.matches;
-}
 
 async function fetchMatchesBetweenDates(startDate: string, endDate: string): Promise<MatchAPI[]> {
   const res = await fetch(`${BASE_URL}/matches?dateFrom=${startDate}&dateTo=${endDate}`, {
@@ -109,7 +94,7 @@ async function importMatches() {
   console.log(`Imported ${matches.length} matches`);
 }
 
-async function upsertTeam(team: any) {
+async function upsertTeam(team: MatchTeamAPI) {
   return await prisma.team.upsert({
     where: { apiId: team.id },
     update: {},
