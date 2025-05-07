@@ -4,35 +4,43 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model Match {
-  id          String   @id @default(cuid())
-  teamHomeId  String
-  teamAwayId  String
-  stadium     String
-  date        DateTime
-  homeScore   Int
-  awayScore   Int
-  createdAt   DateTime @default(now())
+  id            String   @id @default(cuid())
+  homeTeamId    String
+  awayTeamId    String
+  stadiumId     String?
+  competitionId String
+  seasonId      String
+  date          DateTime
+  homeScore     Int      @default(0)
+  awayScore     Int      @default(0)
+  createdAt     DateTime @default(now())
 
-  teamHome    Team     @relation("TeamHomeMatches", fields: [teamHomeId], references: [id])
-  teamAway    Team     @relation("TeamAwayMatches", fields: [teamAwayId], references: [id])
+  homeTeam    Team        @relation("TeamHomeMatches", fields: [homeTeamId], references: [id])
+  awayTeam    Team        @relation("TeamAwayMatches", fields: [awayTeamId], references: [id])
+  stadium     Stadium?    @relation(fields: [stadiumId], references: [id])
+  competition Competition @relation(fields: [competitionId], references: [id])
+  season      Season      @relation(fields: [seasonId], references: [id])
+
   matchVisits MatchVisit[]
+  
+  @@unique([homeTeamId, awayTeamId, date]) 
 }
 
 model MatchVisit {
-  id          String   @id @default(cuid())
-  userId      String
-  matchId     String
-  review      String?
-  photos      Photo[]
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  userId    String
+  matchId   String
+  review    String?
+  photos    Photo[]
+  createdAt DateTime @default(now())
 
-  match       Match    @relation(fields: [matchId], references: [id])
+  match Match @relation(fields: [matchId], references: [id])
 }
 
 model Photo {
@@ -41,37 +49,39 @@ model Photo {
   matchVisitId String
   createdAt    DateTime @default(now())
 
-  matchVisit   MatchVisit @relation(fields: [matchVisitId], references: [id])
+  matchVisit MatchVisit @relation(fields: [matchVisitId], references: [id])
 }
 
 model Stadium {
   id        String  @id @default(cuid())
   name      String
+  address   String
   city      String?
   country   String?
-  teams     Team[]
+  latitude  Float?
+  longitude Float?
 
-  createdAt DateTime @default(now())
+  teams   Team[]
+  matches Match[]
 }
 
 model Team {
-  id          String   @id @default(cuid())
-  apiId       Int      @unique
-  name        String
-  shortName   String?
-  tla         String?
-  crest       String?
-  address     String?
-  website     String?
-  founded     Int?
-  clubColors  String?
-  area        String?
-  stadiumId   String?   // Foreign key to Stadium
-  stadium     Stadium? @relation(fields: [stadiumId], references: [id])
+  id         String  @id @default(cuid())
+  apiId      Int     @unique
+  name       String
+  shortName  String?
+  tla        String?
+  crest      String?
+  address    String?
+  website    String?
+  founded    Int?
+  clubColors String?
+  area       String?
+  stadiumId  String?
 
-  createdAt   DateTime @default(now())
-  homeMatches  Match[]  @relation("TeamHomeMatches")
-  awayMatches  Match[]  @relation("TeamAwayMatches")
+  stadium     Stadium? @relation(fields: [stadiumId], references: [id])
+  homeMatches Match[]  @relation("TeamHomeMatches")
+  awayMatches Match[]  @relation("TeamAwayMatches")
 }
 
 model Competition {
@@ -79,7 +89,10 @@ model Competition {
   name      String
   logoUrl   String?
   country   String
-  createdAt DateTime @default(now())
+  type      String
+
+  matches Match[]
+  seasons Season[]
 }
 
 model Achievement {
@@ -93,10 +106,22 @@ model Achievement {
 }
 
 model UserAchievement {
-  id            String     @id @default(cuid())
+  id            String   @id @default(cuid())
   userId        String
   achievementId String
-  obtainedAt    DateTime   @default(now())
+  obtainedAt    DateTime @default(now())
 
-  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+}
+
+model Season {
+  id              String   @id @default(cuid())
+  apiId           Int      @unique
+  startDate       DateTime
+  endDate         DateTime
+  currentMatchday Int?
+  competitionId   String
+
+  competition Competition @relation(fields: [competitionId], references: [id])
+  matches     Match[]
 }
