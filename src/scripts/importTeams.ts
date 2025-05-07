@@ -43,6 +43,7 @@ async function importTeams(limit: number, offset: number): Promise<void> {
         name: team.venue || 'Unknown Stadium',
         city,
         country: team.area?.name ?? null,
+        address: team.address ?? 'Unknown Address',
       },
     });
 
@@ -69,7 +70,7 @@ async function importTeams(limit: number, offset: number): Promise<void> {
   await prisma.$disconnect();
 }
 
-importTeams(50, 300).catch((err) => {
+importTeams(100, 100).catch((err) => {
   console.error(err);
   prisma.$disconnect();
 });
