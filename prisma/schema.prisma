@@ -95,6 +95,18 @@ model Competition {
   seasons Season[]
 }
 
+model Season {
+  id              String   @id @default(cuid())
+  apiId           Int      @unique
+  startDate       DateTime
+  endDate         DateTime
+  currentMatchday Int?
+  competitionId   String
+
+  competition Competition @relation(fields: [competitionId], references: [id])
+  matches     Match[]
+}
+
 model Achievement {
   id          String   @id @default(cuid())
   title       String
@@ -112,16 +124,4 @@ model UserAchievement {
   obtainedAt    DateTime @default(now())
 
   achievement Achievement @relation(fields: [achievementId], references: [id])
-}
-
-model Season {
-  id              String   @id @default(cuid())
-  apiId           Int      @unique
-  startDate       DateTime
-  endDate         DateTime
-  currentMatchday Int?
-  competitionId   String
-
-  competition Competition @relation(fields: [competitionId], references: [id])
-  matches     Match[]
 }
