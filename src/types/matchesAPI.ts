@@ -59,10 +59,10 @@ type MatchAPI = {
 };
 
 export type { 
-    MatchAPI, 
-    MatchTeamAPI, 
-    MatchScoreAPI, 
-    MatchCompetitionAPI, 
-    MatchAreaAPI, 
-    MatchSeasonAPI
+  MatchAPI, 
+  MatchTeamAPI, 
+  MatchScoreAPI, 
+  MatchCompetitionAPI, 
+  MatchAreaAPI, 
+  MatchSeasonAPI
  };
