@@ -1,4 +1,4 @@
-import { PrismaClient } from "../../prisma/generated/client";
+import { PrismaClient } from "../../../prisma/generated/client";
 
 const prisma = new PrismaClient();
 
@@ -70,7 +70,7 @@ async function importTeams(limit: number, offset: number): Promise<void> {
   await prisma.$disconnect();
 }
 
-importTeams(100, 100).catch((err) => {
+importTeams(300, 700).catch((err) => {
   console.error(err);
   prisma.$disconnect();
 });

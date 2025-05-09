@@ -1,5 +1,5 @@
 import { MatchAPI, MatchTeamAPI } from "@/types/API";
-import { PrismaClient } from "../../prisma/generated/client";
+import { PrismaClient } from "../../../prisma/generated/client";
 
 const prisma = new PrismaClient();
 const API_KEY = process.env.NEXT_PUBLIC_FOOTBALL_DATA_API_KEY!;
@@ -21,7 +21,7 @@ async function fetchMatchesBetweenDates(startDate: string, endDate: string): Pro
 }
 
 async function importMatches() {
-  const matches = await fetchMatchesBetweenDates('2025-05-11', '2025-05-20');
+  const matches = await fetchMatchesBetweenDates('2025-01-01', '2025-01-11');
 
   for (const match of matches) {
     const {
