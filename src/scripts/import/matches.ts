@@ -1,4 +1,4 @@
-import { MatchAPI, MatchTeamAPI } from "@/types/API";
+import { MatchAPI, MatchTeamAPI } from "@/types/matchesAPI";
 import { PrismaClient } from "../../../prisma/generated/client";
 
 const prisma = new PrismaClient();
@@ -44,6 +44,7 @@ async function importMatches() {
       update: {},
       create: {
         id: `api-${competition.id}`,
+        apiId: competition.id,
         name: competition.name,
         logoUrl: competition.emblem,
         country: area?.name,
