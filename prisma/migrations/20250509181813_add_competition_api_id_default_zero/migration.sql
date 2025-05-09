@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Competition" ADD COLUMN     "apiId" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "fromApi" BOOLEAN NOT NULL DEFAULT false;

@@ -86,10 +86,12 @@ model Team {
 
 model Competition {
   id        String   @id @default(cuid())
+  apiId     Int      @unique
   name      String
   logoUrl   String?
   country   String
   type      String
+  fromApi   Boolean  @default(false)
 
   matches Match[]
   seasons Season[]
