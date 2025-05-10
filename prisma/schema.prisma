@@ -100,8 +100,8 @@ model Competition {
 model Season {
   id              String   @id @default(cuid())
   apiId           Int      @unique
-  startDate       DateTime
-  endDate         DateTime
+  startDate       DateTime?
+  endDate         DateTime?
   currentMatchday Int?
   competitionId   String
 

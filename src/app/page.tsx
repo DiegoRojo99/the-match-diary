@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen px-6 bg-gradient-to-br from-blue-100 via-white to-gray-100 text-center">
+    <div className="items-center justify-center flex flex-col min-h-screen">  
       <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
         Welcome to <span className="text-blue-600">The Match Diary</span>
       </h1>
@@ -13,6 +13,6 @@ export default function Home() {
       >
         Get Started
       </a>
-    </main>
+    </div>
   );
 }

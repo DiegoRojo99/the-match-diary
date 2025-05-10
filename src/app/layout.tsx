@@ -28,9 +28,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SupabaseSessionProvider>
-          {children}
-        </SupabaseSessionProvider>
+        <main className="flex flex-col min-h-screen px-6 
+          bg-gradient-to-br from-blue-100 via-white to-gray-100 text-center text-black">
+          <SupabaseSessionProvider>
+            {children}
+          </SupabaseSessionProvider>
+        </main>
       </body>
     </html>
   );
