@@ -21,3 +21,7 @@ type CompetitionsListItemAPI = {
   "numberOfAvailableSeasons": number,
   "lastUpdated": string
 }
+
+export type {
+  CompetitionsListItemAPI
+}
