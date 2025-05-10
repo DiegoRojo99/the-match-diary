@@ -16,7 +16,13 @@ type CompetitionsListItemAPI = {
       "startDate": string | null,
       "endDate": string | null,
       "currentMatchday": number | null,
-      "winner": null | any
+      "winner": {
+          "id": number,
+          "name": string,
+          "shortName": string | null,
+          "tla": string | null,
+          "crest": string | null
+      } | null,
   },
   "numberOfAvailableSeasons": number,
   "lastUpdated": string

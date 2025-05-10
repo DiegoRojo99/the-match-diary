@@ -34,7 +34,8 @@ export default function AddVisit() {
         return data;
       })
       .catch((error) => {
-        return []
+        console.error('Error fetching teams:', error);
+        return [];
       });
     
     // Check if teams are found
