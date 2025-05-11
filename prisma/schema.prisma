@@ -15,7 +15,7 @@ model Match {
   awayTeamId    String
   stadiumId     String?
   competitionId String
-  seasonId      String
+  seasonId      String?
   date          DateTime
   homeScore     Int      @default(0)
   awayScore     Int      @default(0)
@@ -25,7 +25,7 @@ model Match {
   awayTeam    Team        @relation("TeamAwayMatches", fields: [awayTeamId], references: [id])
   stadium     Stadium?    @relation(fields: [stadiumId], references: [id])
   competition Competition @relation(fields: [competitionId], references: [id])
-  season      Season      @relation(fields: [seasonId], references: [id])
+  season      Season?     @relation(fields: [seasonId], references: [id])
 
   matchVisits MatchVisit[]
   
