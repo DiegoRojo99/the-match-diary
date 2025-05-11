@@ -73,25 +73,25 @@ export async function POST(req: Request) {
               id: awayTeamId,
             }
           },
-          ...stadiumId ? {
+          ...(stadiumId ? {
             stadium: {
               connect: {
                 id: stadiumId,
               }
             }
-          } : {},
+          } : {}),
           competition: {
             connect: {
               id: selectedCompetition,
             }
           },
-          ...season ? {
+          ...(season ? {
             season: {
               connect: {
                 id: season.id,
               }
             }
-          } : {},
+          } : {}),
           date: matchDateObj,
           homeScore,
           awayScore,
