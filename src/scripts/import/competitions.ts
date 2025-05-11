@@ -1,4 +1,4 @@
-import { PrismaClient } from "../../../prisma/generated/client";
+import { PrismaClient } from '@prisma/generated/client';
 import { CompetitionsListItemAPI } from "../../types/competitionsAPI";
 const prisma = new PrismaClient();
 
@@ -51,15 +51,15 @@ async function importCompetitions() {
       await prisma.season.upsert({
         where: { apiId: season.id },
         update: {
-          startDate: new Date(season.startDate),
-          endDate: new Date(season.endDate),
+          startDate: season.startDate ? new Date(season.startDate) : null,
+          endDate: season.endDate ? new Date(season.endDate) : null,
           currentMatchday: season.currentMatchday,
           competitionId: dbCompetition.id,
         },
         create: {
           apiId: season.id,
-          startDate: new Date(season.startDate),
-          endDate: new Date(season.endDate),
+          startDate: season.startDate ? new Date(season.startDate) : null,
+          endDate: season.endDate ? new Date(season.endDate) : null,
           currentMatchday: season.currentMatchday,
           competitionId: dbCompetition.id,
         },
