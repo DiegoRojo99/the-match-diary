@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Team, Competition } from '../../../prisma/generated/client';
+import { Team, Competition } from '@prisma/generated/client';
 import ScoreboardTeam from '../components/ScoreboardTeam';
+import CompetitionDropdown from './CompetitionDropdown';
 
 function format(date: Date, formatString: string) {
   const options: Intl.DateTimeFormatOptions = {
@@ -77,6 +78,49 @@ export default function AddVisit() {
     }
   }
 
+  async function submitMatchVisit() {
+    console.log("Selected Competition:", selectedCompetition);
+    console.log("Match Date:", matchDate);
+    console.log("Home Team:", homeTeam);
+    console.log("Away Team:", awayTeam);
+    if(!selectedCompetition || !matchDate || !homeTeam || !awayTeam) {
+      alert('Please fill in all fields.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/matchVisit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          selectedCompetition,
+          matchDate,
+          homeTeamId: homeTeam.id,
+          awayTeamId: awayTeam.id,
+          // homeScore: 0,
+          // awayScore: 0,
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Request failed: ${text}`);
+      }
+
+      const result = await response.json();
+      console.log('Match visit created:', result);
+      alert('Match visit created successfully!');
+    } 
+    catch (error: any) {
+      console.error('Error submitting match visit:', error);
+      console.error('Error message submitting match visit:', error.message);
+      alert(`Failed to create match visit: ${error.message}`);
+    }
+  }
+
   useEffect(() => {
     const fetchCompetitions = async () => {
       const res = await fetch('/api/competitions');
@@ -93,18 +137,9 @@ export default function AddVisit() {
       {/* League dropdown */}
       <div className="mb-4">
         <label className="block mb-1 text-sm font-medium">Competition</label>
-        <select
-          value={selectedCompetition}
-          onChange={(e) => setSelectedCompetition(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-        >
-          <option value="">Select competition</option>
-          {competitions.map((comp) => (
-            <option key={comp.id} value={comp.id}>
-              {comp.name}
-            </option>
-          ))}
-        </select>
+        <CompetitionDropdown competitions={competitions} onSelect={(comp) => {
+          setSelectedCompetition(comp.id);
+        }} />
       </div>
 
       {/* Date input */}
@@ -144,6 +179,15 @@ export default function AddVisit() {
             </span>
           </div>
       </div>
+
+      {/* Submit button */}
+      <button
+        onClick={() => submitMatchVisit()}
+        disabled={!selectedCompetition || !matchDate || !homeTeam || !awayTeam}
+        className="w-full bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700 transition cursor-pointer"
+      >
+        Add Visit
+      </button>
 
     </div>
   );
