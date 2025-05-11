@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/generated/client';
 import { createClient } from '@/lib/supabase/server';
-import { connect } from 'http2';
 
 const prisma = new PrismaClient();
 
@@ -39,7 +38,7 @@ export async function POST(req: Request) {
 
     const matchDateObj = new Date(matchDate);
 
-    let season = await prisma.season.findFirst({
+    const season = await prisma.season.findFirst({
       where: {
         competitionId: selectedCompetition,
         startDate: { lte: matchDateObj },
