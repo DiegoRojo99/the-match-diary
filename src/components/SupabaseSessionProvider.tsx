@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { createContext, useContext } from "react";
-import supabase from "@/lib/supabaseClient";
+import supabase from "@/lib/supabase/client";
 
 const AuthContext = createContext<Session | null>(null);
 
