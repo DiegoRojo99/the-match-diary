@@ -1,5 +1,5 @@
 import { MatchAPI, MatchTeamAPI } from "@/types/matchesAPI";
-import { PrismaClient } from "../../../prisma/generated/client";
+import { PrismaClient } from '@prisma/generated/client';
 
 const prisma = new PrismaClient();
 const API_KEY = process.env.NEXT_PUBLIC_FOOTBALL_DATA_API_KEY!;

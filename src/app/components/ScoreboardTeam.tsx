@@ -1,5 +1,5 @@
 import React from 'react';
-import { Team } from '../../../prisma/generated/client';
+import { Team } from '@prisma/generated/client';
 import Image from 'next/image';
 
 interface ScoreboardTeamProps {

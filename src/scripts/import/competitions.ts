@@ -1,4 +1,4 @@
-import { PrismaClient } from "../../../prisma/generated/client";
+import { PrismaClient } from '@prisma/generated/client';
 import { CompetitionsListItemAPI } from "../../types/competitionsAPI";
 const prisma = new PrismaClient();
 
