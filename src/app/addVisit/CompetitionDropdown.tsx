@@ -34,14 +34,14 @@ export default function CompetitionDropdown({ competitions, onSelect }: Competit
       </button>
       {open && (
         <ul className="absolute z-10 w-full mt-2 bg-white border rounded shadow max-h-60 overflow-auto">
-          {competitions.filter(c => c.logoUrl).map((comp: any) => (
+          {competitions.filter((c: Competition) => c.logoUrl).map((comp: Competition) => (
             <li
               key={comp.id}
               onClick={() => handleSelect(comp)}
               className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer"
             >
               <Image 
-                src={comp.logoUrl} 
+                src={comp.logoUrl || ''} 
                 alt={comp.name} 
                 width={48} 
                 height={48} 

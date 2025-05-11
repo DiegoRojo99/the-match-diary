@@ -114,10 +114,15 @@ export default function AddVisit() {
       console.log('Match visit created:', result);
       alert('Match visit created successfully!');
     } 
-    catch (error: any) {
+    catch (error) {
       console.error('Error submitting match visit:', error);
-      console.error('Error message submitting match visit:', error.message);
-      alert(`Failed to create match visit: ${error.message}`);
+      if (error instanceof Error) {
+        console.error('Error message submitting match visit:', error.message);
+        alert(`Failed to create match visit: ${error.message}`);
+      } 
+      else {
+        console.error('Error submitting match visit:', error);
+      }
     }
   }
 
