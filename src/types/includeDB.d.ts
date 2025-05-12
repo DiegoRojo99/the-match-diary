@@ -1,5 +1,4 @@
-import { Stadium } from "@prisma/client";
-import { Competition, Match, MatchVisit, Team } from "@prisma/generated/client";
+import { Stadium, Competition, Match, MatchVisit, Team } from "@prisma/generated/client";
 
 type MatchVisitWithDetails = MatchVisit & {
   match: Match & {
