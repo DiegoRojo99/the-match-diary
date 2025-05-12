@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import VisitCard from './visitCard';
+import { MatchVisitWithDetails } from '@/types/includeDB';
 
 export default function VisitsPage() {
   const [visits, setVisits] = useState([]);
@@ -28,7 +29,7 @@ export default function VisitsPage() {
     <div className="p-4 mt-4">
       <h1 className="text-2xl font-bold my-4">My Match Visits</h1>
       <div className="flex flex-wrap gap-4">
-        {visits.map((visit: any) => <VisitCard key={visit.id} visit={visit} /> )}
+        {visits.map((visit: MatchVisitWithDetails) => <VisitCard key={visit.id} visit={visit} /> )}
       </div>
     </div>
   );
