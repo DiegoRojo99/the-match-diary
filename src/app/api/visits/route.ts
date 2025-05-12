@@ -5,8 +5,7 @@ import { MatchVisitWithDetails } from '@/types/includeDB';
 
 const prisma = new PrismaClient();
 
-export async function GET(req: Request) {
-  
+export async function GET() {
   const supabase = await createClient();
   const {
     data: { user },
