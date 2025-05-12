@@ -113,6 +113,9 @@ export default function AddVisit() {
       const result = await response.json();
       console.log('Match visit created:', result);
       alert('Match visit created successfully!');
+      setTimeout(() => {
+        window.location.href = '/visits';
+      }, 500);
     } 
     catch (error) {
       console.error('Error submitting match visit:', error);
