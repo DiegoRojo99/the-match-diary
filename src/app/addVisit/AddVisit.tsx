@@ -4,22 +4,7 @@ import { useEffect, useState } from 'react';
 import { Team, Competition } from '@prisma/generated/client';
 import ScoreboardTeam from '../components/ScoreboardTeam';
 import CompetitionDropdown from './CompetitionDropdown';
-
-function format(date: Date, formatString: string) {
-  const options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  };
-  const parts = new Intl.DateTimeFormat('en-US', options).formatToParts(date);
-  const year = parts.find(part => part.type === 'year')?.value;
-  const month = parts.find(part => part.type === 'month')?.value;
-  const day = parts.find(part => part.type === 'day')?.value;
-  return formatString
-    .replace('yyyy', year || '')
-    .replace('MM', month || '')
-    .replace('dd', day || '');
-}
+import { format } from 'date-fns';
 
 export default function AddVisit() {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
