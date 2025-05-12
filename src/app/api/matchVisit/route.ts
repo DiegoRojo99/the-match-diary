@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/generated/client';
 import { createClient } from '@/lib/supabase/server';
+import { addDays, subDays } from 'date-fns';
 
 const prisma = new PrismaClient();
 
@@ -52,11 +53,25 @@ export async function POST(req: Request) {
 
     const stadiumId = homeTeamData?.stadiumId ?? null;
 
+    const dateRangeStart = subDays(matchDateObj, 7);
+    const dateRangeEnd = addDays(matchDateObj, 7);
+
     let match = await prisma.match.findFirst({
       where: {
-        homeTeamId: homeTeamId,
-        awayTeamId: awayTeamId,
-        date: matchDateObj,
+        OR: [
+          {
+            homeTeamId: homeTeamId,
+            awayTeamId: awayTeamId,
+          },
+          {
+            homeTeamId: awayTeamId,
+            awayTeamId: homeTeamId,
+          },
+        ],
+        date: {
+          gte: dateRangeStart,
+          lte: dateRangeEnd,
+        },
       },
     });
 
