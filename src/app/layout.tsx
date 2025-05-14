@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SupabaseSessionProvider } from "@/components/SupabaseSessionProvider";
+import Navbar from "./components/NavBar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -31,6 +32,7 @@ export default function RootLayout({
         <main className="flex flex-col min-h-screen 
           bg-gradient-to-br from-blue-100 via-white to-gray-100 text-center text-black">
           <SupabaseSessionProvider>
+            <Navbar />
             {children}
           </SupabaseSessionProvider>
         </main>

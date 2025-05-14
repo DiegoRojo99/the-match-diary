@@ -1,0 +1,38 @@
+'use client';
+
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+
+export default function Navbar() {
+  return (
+    <nav className="w-full bg-blue-200 shadow-md py-4 px-6 flex items-center justify-between">
+      <div className="flex items-center space-x-4">
+        <Image
+          src="/TheMatchDiaryLogo.png"
+          alt="The Match Diary Logo"
+          width={48}
+          height={48}
+          className="rounded-full"
+          priority
+        />
+        <Link href="/" className="text-xl font-semibold text-gray-800 hover:text-blue-600">
+          The Match Diary
+        </Link>
+      </div>
+
+      <ul className="flex items-center space-x-6">
+        <li>
+          <Link href="/addVisit" className="text-gray-700 hover:text-blue-600 transition-colors">
+            Add Visit
+          </Link>
+        </li>
+        <li>
+          <Link href="/visits" className="text-gray-700 hover:text-blue-600 transition-colors">
+            Visits
+          </Link>
+        </li>
+      </ul>
+    </nav>
+  );
+}
