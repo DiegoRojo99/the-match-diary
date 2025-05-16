@@ -8,14 +8,6 @@ export default function Navbar() {
   return (
     <nav className="w-full bg-blue-200 shadow-md py-4 px-6 flex items-center justify-between">
       <div className="flex items-center space-x-4">
-        <Image
-          src="/TheMatchDiaryLogo.png"
-          alt="The Match Diary Logo"
-          width={48}
-          height={48}
-          className="rounded-full"
-          priority
-        />
         <Link href="/" className="text-xl font-semibold text-gray-800 hover:text-blue-600">
           The Match Diary
         </Link>
