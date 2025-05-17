@@ -42,31 +42,33 @@ export default function MatchVisitDetailsPage() {
   if (!visit) return <div className="text-center py-10">Visit not found</div>;
 
   const { match, photos } = visit;
-  const { homeTeam, awayTeam, competition, stadium, homeScore, awayScore } = match;
+  const { homeTeam, awayTeam, competition, homeScore, awayScore } = match;
 
   return (
     <div className="py-8 px-4 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-center pb-2">
-          <Image
-            src={competition.logoUrl ?? ''}
-            alt={competition.name}
-            width={64}
-            height={64}
-          />
-      </div>
+      <div>          
+        {/* Header */}
+        <div className="flex items-center justify-center pb-2">
+            <Image
+              src={competition.logoUrl ?? ''}
+              alt={competition.name}
+              width={64}
+              height={64}
+            />
+        </div>
 
-      {/* Score */}
-      <div className="flex justify-around items-center gap-4 text-3xl font-semibold">
-        {/* Home Team */}
-        <Image src={homeTeam.crest ?? ''} alt={homeTeam.name} width={64} height={64} className='w-32 h-32' />
-        <span>{homeScore}</span>
+        {/* Score */}
+        <div className="flex justify-around items-center gap-4 text-3xl font-semibold">
+          {/* Home Team */}
+          <Image src={homeTeam.crest ?? ''} alt={homeTeam.name} width={64} height={64} className='w-32 h-32' />
+          <span>{homeScore}</span>
 
-        <span>-</span>
+          <span>-</span>
 
-        {/* Away Team */}
-        <span>{awayScore}</span>
-        <Image src={awayTeam.crest ?? ''} alt={awayTeam.name} width={64} height={64} className='w-32 h-32' />
+          {/* Away Team */}
+          <span>{awayScore}</span>
+          <Image src={awayTeam.crest ?? ''} alt={awayTeam.name} width={64} height={64} className='w-32 h-32' />
+        </div>
       </div>
 
       {/* Review */}
