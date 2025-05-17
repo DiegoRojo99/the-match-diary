@@ -9,6 +9,7 @@ const FootballLoader: React.FC = () => (
       className="animate-spin"
       width={128}
       height={128}
+      priority
     />
   </div>
 );
