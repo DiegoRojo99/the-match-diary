@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function Navbar() {
   return (
-    <nav className="w-full bg-blue-200 shadow-md py-4 px-6 flex items-center justify-between">
+    <nav className="w-full bg-(--color-mountain-meadow-300) shadow-md py-4 px-6 flex items-center justify-between">
       <div className="flex items-center space-x-4">
         <Link href="/" className="text-xl font-semibold text-gray-800 hover:text-blue-600">
           The Match Diary
