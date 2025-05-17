@@ -14,11 +14,12 @@ const VisitCard: React.FC<VisitCardProps> = ({ visit }) => {
   if (!visit.match.homeTeam || !visit.match.awayTeam) {
     return <div className="p-4 text-gray-500">No team data available.</div>;
   }
+  
   return (
-    <div className="w-full sm:w-[360px] bg-white shadow rounded-xl p-4 flex flex-col">
+    <div className="w-full sm:w-[360px] bg-white shadow rounded-xl p-4 flex flex-col border border-gray-200">
       <div className="flex items-center flex flex-col mb-4">
         <span className="text-lg font-bold text-gray-800">
-          {visit.match.stadium?.name}
+          {visit.match.competition?.name}
         </span>
         <span className="text-xs text-gray-500">
           {new Date(visit.match.date).toLocaleDateString('en-US', {

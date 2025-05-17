@@ -26,9 +26,9 @@ export default function VisitsPage() {
   if (visits.length === 0) return <p className="p-4 text-gray-500">No visits yet.</p>;
 
   return (
-    <div className="p-4 mt-4">
+    <div className="p-4">
       <h1 className="text-2xl font-bold my-4">My Match Visits</h1>
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-4 mt-4">
         {visits.map((visit: MatchVisitWithDetails) => <VisitCard key={visit.id} visit={visit} /> )}
       </div>
     </div>
