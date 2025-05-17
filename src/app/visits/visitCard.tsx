@@ -7,7 +7,6 @@ interface VisitCardProps {
 }
 
 const VisitCard: React.FC<VisitCardProps> = ({ visit }) => {
-  console.log('VisitCard', visit);
   if (!visit.match) {
     return <div className="p-4 text-gray-500">No match data available.</div>;
   }
@@ -16,7 +15,7 @@ const VisitCard: React.FC<VisitCardProps> = ({ visit }) => {
   }
   
   return (
-    <div className="w-full sm:w-[360px] bg-white shadow rounded-xl p-4 flex flex-col border border-gray-200">
+    <a href={`/visits/${visit.id}`} className="w-full sm:w-[360px] bg-white shadow rounded-xl p-4 flex flex-col border border-gray-200">
       <div className="flex items-center flex flex-col mb-4">
         <span className="text-lg font-bold text-gray-800">
           {visit.match.competition?.name}
@@ -69,7 +68,7 @@ const VisitCard: React.FC<VisitCardProps> = ({ visit }) => {
           {visit.match.stadium?.name ?? visit.match.homeTeam.stadium?.name}
         </span>
       </div>
-    </div>
+    </a>
   );
 };
 
