@@ -64,6 +64,11 @@ const VisitCard: React.FC<VisitCardProps> = ({ visit }) => {
           </span>
         </div>
       </div>
+      <div className='mt-4 flex flex-col items-center'>
+        <span className="text-md text-gray-600">
+          {visit.match.stadium?.name ?? visit.match.homeTeam.stadium?.name}
+        </span>
+      </div>
     </div>
   );
 };

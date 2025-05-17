@@ -20,7 +20,11 @@ export async function GET() {
     include: {
       match: {
         include: {
-          homeTeam: true,
+          homeTeam: {
+            include: {
+              stadium: true,
+            },
+          },
           awayTeam: true,
           competition: true,
           stadium: true,
