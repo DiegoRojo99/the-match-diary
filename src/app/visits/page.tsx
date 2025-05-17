@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import VisitCard from './visitCard';
 import { MatchVisitWithDetails } from '@/types/includeDB';
+import FootballLoader from '@/components/Loader/FootballLoader';
 
 export default function VisitsPage() {
   const [visits, setVisits] = useState([]);
@@ -21,7 +22,9 @@ export default function VisitsPage() {
   }, []);
 
   
-  if (loading) return <p className="p-4 text-gray-500">Loading...</p>;
+  if (loading) return (
+    <FootballLoader />
+  );
   if (error) return <p className="p-4 text-red-500">Error loading visits.</p>;
   if (visits.length === 0) return <p className="p-4 text-gray-500">No visits yet.</p>;
 
