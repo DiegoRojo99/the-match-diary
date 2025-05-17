@@ -2,9 +2,8 @@ import { NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/generated/client';
 const prisma = new PrismaClient();
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  
-  const visitId = params.id;
+export async function GET(req: NextRequest) {
+  const visitId = req.nextUrl.pathname.split('/').pop();
   if (!visitId) return new Response('Visit ID is required', { status: 400 });
 
   const matchVisit = await prisma.matchVisit.findUnique({
