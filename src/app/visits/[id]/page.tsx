@@ -42,32 +42,34 @@ export default function MatchVisitDetailsPage() {
   if (!visit) return <div className="text-center py-10">Visit not found</div>;
 
   const { match, photos } = visit;
+  console.log('MatchVisit Photos:', photos);
   const { homeTeam, awayTeam, competition, homeScore, awayScore } = match;
 
   return (
     <div className="py-8 px-4 space-y-6">
-      <div>          
+      <div className='pb-8'>          
         {/* Header */}
-        <div className="flex items-center justify-center pb-2">
+        <div className="flex items-center justify-center pb-4">
             <Image
               src={competition.logoUrl ?? ''}
               alt={competition.name}
               width={64}
               height={64}
+              className="w-16 h-16 sm:w-24 sm:h-24"
             />
         </div>
 
         {/* Score */}
         <div className="flex justify-around items-center gap-4 text-3xl font-semibold">
           {/* Home Team */}
-          <Image src={homeTeam.crest ?? ''} alt={homeTeam.name} width={64} height={64} className='w-32 h-32' />
+          <Image src={homeTeam.crest ?? ''} alt={homeTeam.name} width={64} height={64} className='w-16 h-16 sm:w-32 sm:h-32' />
           <span>{homeScore}</span>
 
           <span>-</span>
 
           {/* Away Team */}
           <span>{awayScore}</span>
-          <Image src={awayTeam.crest ?? ''} alt={awayTeam.name} width={64} height={64} className='w-32 h-32' />
+          <Image src={awayTeam.crest ?? ''} alt={awayTeam.name} width={64} height={64} className='w-16 h-16 sm:w-32 sm:h-32' />
         </div>
       </div>
 
@@ -81,28 +83,35 @@ export default function MatchVisitDetailsPage() {
       {photos.length === 0 && (
         <div className="text-center py-10">
           <h2 className="text-lg font-semibold text-gray-600">No photos added yet</h2>
+          
+          {/* Upload */}
+          <div className="mt-4 flex flex-col items-center w-[320px] mx-auto">
+          <AddPhotoForm visitId={visit.id} />
+          </div>
         </div>
       )}
       {photos.length > 0 && (
         <div>
-          <h2 className="font-bold text-lg mb-2">Photos</h2>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 justify-center">
             {photos.map(photo => (
               <Image
                 key={photo.id}
                 src={photo.url}
                 alt="Visit photo"
-                width={128}
-                height={128}
-                className="rounded object-cover"
+                width={640}
+                height={0}
+                className="w-full h-auto sm:w-80 sm:h-80 rounded-lg shadow-md object-cover"
               />
             ))}
+            
+            {/* Upload */}
+            <div className="w-96 h-auto sm:w-80 sm:h-80 rounded-lg shadow-md justify-center items-center flex flex-col bg-gray-100">
+              <AddPhotoForm visitId={visit.id} />
+            </div>
           </div>
         </div>
       )}
 
-      {/* Upload */}
-      <AddPhotoForm visitId={visit.id} />
     </div>
   );
 }
