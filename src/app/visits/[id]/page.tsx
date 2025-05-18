@@ -6,6 +6,7 @@ import AddPhotoForm from './AddPhotoForm';
 import FootballLoader from '@/components/Loader/FootballLoader';
 import { MatchVisitWithDetails } from '@/types/includeDB';
 import { Photo } from '@prisma/generated/client';
+import { format } from 'date-fns';
 
 type MatchVisitWithDetailsAndPhotos = MatchVisitWithDetails & {
   photos: Photo[];
@@ -49,7 +50,7 @@ export default function MatchVisitDetailsPage() {
     <div className="py-8 px-4 space-y-6">
       <div className='pb-8'>          
         {/* Header */}
-        <div className="flex items-center justify-center pb-4">
+        <div className="flex flex-col items-center justify-center pb-4">
             <Image
               src={competition.logoUrl ?? ''}
               alt={competition.name}
@@ -57,19 +58,40 @@ export default function MatchVisitDetailsPage() {
               height={64}
               className="w-16 h-16 sm:w-24 sm:h-24"
             />
+            <h3 className="text-xl font-bold text-gray-400 mt-4">
+              {format(new Date(match.date), 'EEE, dd MMMM yyyy')}
+            </h3>
         </div>
 
         {/* Score */}
         <div className="flex justify-around items-center gap-4 text-3xl font-semibold">
           {/* Home Team */}
-          <Image src={homeTeam.crest ?? ''} alt={homeTeam.name} width={64} height={64} className='w-16 h-16 sm:w-32 sm:h-32' />
+          <div>
+            <Image 
+              src={homeTeam.crest ?? ''} 
+              alt={homeTeam.name}
+              width={64} 
+              height={64} 
+              className='w-16 h-16 sm:w-32 sm:h-32 mx-auto' 
+            />
+            <span className="text-center text-sm text-gray-600">{homeTeam.name}</span>
+          </div>
           <span>{homeScore}</span>
 
           <span>-</span>
 
           {/* Away Team */}
           <span>{awayScore}</span>
-          <Image src={awayTeam.crest ?? ''} alt={awayTeam.name} width={64} height={64} className='w-16 h-16 sm:w-32 sm:h-32' />
+          <div>
+            <Image 
+              src={awayTeam.crest ?? ''} 
+              alt={awayTeam.name}
+              width={64} 
+              height={64} 
+              className='w-16 h-16 sm:w-32 sm:h-32 mx-auto' 
+            />
+            <span className="text-center text-sm text-gray-600">{awayTeam.name}</span>
+          </div>
         </div>
       </div>
 
