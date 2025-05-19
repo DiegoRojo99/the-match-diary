@@ -21,7 +21,7 @@ async function fetchMatchesBetweenDates(startDate: string, endDate: string): Pro
 }
 
 async function importMatches() {
-  const matches = await fetchMatchesBetweenDates('2025-01-01', '2025-01-11');
+  const matches = await fetchMatchesBetweenDates('2025-05-16', '2025-05-26');
 
   for (const match of matches) {
     const {
@@ -39,11 +39,13 @@ async function importMatches() {
     const home = await upsertTeam(homeTeam);
     const away = await upsertTeam(awayTeam);
 
+    const existingComp = await prisma.competition.findFirst({
+      where: { name: competition.name },
+    });
     const comp = await prisma.competition.upsert({
-      where: { id: `api-${competition.id}` },
+      where: { id: existingComp?.id },
       update: {},
       create: {
-        id: `api-${competition.id}`,
         apiId: competition.id,
         name: competition.name,
         logoUrl: competition.emblem,
@@ -52,20 +54,21 @@ async function importMatches() {
       },
     });
 
-    const seasonId = `season-${season.id}`;
-
+    
     // Create season if needed
-    await prisma.season.upsert({
-      where: { id: seasonId },
+    const existingSeason = await prisma.season.findFirst({
+      where: { apiId: season.id },
+    });
+    const newSeason = await prisma.season.upsert({
+      where: { id: existingSeason?.id },
       update: {},
       create: {
-        id: seasonId,
         apiId: season.id,
         startDate: new Date(season.startDate),
         endDate: new Date(season.endDate),
         currentMatchday: season.currentMatchday,
         competition: {
-          connect: { id: `api-${competition.id}` },
+          connect: { id: existingComp?.id ?? comp.id },
         },
       },
     });
@@ -87,7 +90,7 @@ async function importMatches() {
         awayScore: score.fullTime.away ?? 0,
         stadiumId: null,
         competitionId: comp.id,
-        seasonId: seasonId,
+        seasonId: existingSeason?.id ?? newSeason.id,
       },
     });
   }
