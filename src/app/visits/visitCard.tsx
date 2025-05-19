@@ -17,9 +17,13 @@ const VisitCard: React.FC<VisitCardProps> = ({ visit }) => {
   return (
     <a href={`/visits/${visit.id}`} className="w-full sm:w-[360px] bg-white shadow rounded-xl p-4 flex flex-col border border-gray-200">
       <div className="flex items-center flex flex-col mb-4">
-        <span className="text-lg font-bold text-gray-800">
-          {visit.match.competition?.name}
-        </span>
+        <Image
+          src={visit.match.competition?.logoUrl || ''}
+          alt={`${visit.match.competition?.name} logo`}
+          className="w-16 h-16 object-contain mb-2"
+          width={200}
+          height={200}
+        />
         <span className="text-xs text-gray-500">
           {new Date(visit.match.date).toLocaleDateString('en-US', {
             year: 'numeric',
