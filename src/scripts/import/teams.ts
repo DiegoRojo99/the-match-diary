@@ -70,7 +70,7 @@ async function importTeams(limit: number, offset: number): Promise<void> {
   await prisma.$disconnect();
 }
 
-importTeams(300, 700).catch((err) => {
+importTeams(100, 1000).catch((err) => {
   console.error(err);
   prisma.$disconnect();
 });
