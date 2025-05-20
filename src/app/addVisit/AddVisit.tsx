@@ -91,7 +91,6 @@ export default function AddVisit() {
         throw new Error(`Request failed: ${text}`);
       }
 
-      const result = await response.json();
       alert('Match visit created successfully!');
       setTimeout(() => {
         window.location.href = '/visits';
