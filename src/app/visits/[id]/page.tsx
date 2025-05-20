@@ -43,7 +43,6 @@ export default function MatchVisitDetailsPage() {
   if (!visit) return <div className="text-center py-10">Visit not found</div>;
 
   const { match, photos } = visit;
-  console.log('MatchVisit Photos:', photos);
   const { homeTeam, awayTeam, competition, homeScore, awayScore } = match;
 
   return (

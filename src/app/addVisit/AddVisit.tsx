@@ -64,10 +64,6 @@ export default function AddVisit() {
   }
 
   async function submitMatchVisit() {
-    console.log("Selected Competition:", selectedCompetition);
-    console.log("Match Date:", matchDate);
-    console.log("Home Team:", homeTeam);
-    console.log("Away Team:", awayTeam);
     if(!selectedCompetition || !matchDate || !homeTeam || !awayTeam) {
       alert('Please fill in all fields.');
       return;
@@ -96,7 +92,6 @@ export default function AddVisit() {
       }
 
       const result = await response.json();
-      console.log('Match visit created:', result);
       alert('Match visit created successfully!');
       setTimeout(() => {
         window.location.href = '/visits';
