@@ -23,6 +23,11 @@ export default function Navbar() {
             Visits
           </Link>
         </li>
+        <li>
+          <Link href="/map" className="text-gray-700 hover:text-blue-600 transition-colors">
+            Map
+          </Link>
+        </li>
       </ul>
     </nav>
   );
