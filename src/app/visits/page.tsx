@@ -10,7 +10,7 @@ export default function VisitsPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch('/api/visits')
+    fetch('/api/user/visits')
       .then((res) => res.json())
       .then(setVisits)
       .then(() => setLoading(false))
@@ -20,7 +20,6 @@ export default function VisitsPage() {
         setLoading(false);
       });
   }, []);
-
   
   if (loading) return (
     <FootballLoader />
