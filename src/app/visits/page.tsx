@@ -30,7 +30,7 @@ export default function VisitsPage() {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold my-4">My Match Visits</h1>
-      <div className="flex flex-wrap gap-4 mt-4">
+      <div className="flex flex-wrap gap-4 mt-4 justify-center">
         {visits.map((visit: MatchVisitWithDetails) => <VisitCard key={visit.id} visit={visit} /> )}
       </div>
     </div>
