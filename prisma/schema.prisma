@@ -78,6 +78,8 @@ model Team {
   clubColors String?
   area       String?
   stadiumId  String?
+  latitude   Float?
+  longitude  Float?
 
   stadium     Stadium? @relation(fields: [stadiumId], references: [id])
   homeMatches Match[]  @relation("TeamHomeMatches")
