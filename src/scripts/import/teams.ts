@@ -60,7 +60,6 @@ async function importTeams(limit: number, offset: number): Promise<void> {
         website: team.website,
         founded: team.founded,
         clubColors: team.clubColors,
-        area: team.area?.name,
         stadiumId: stadium.id,
       },
     });

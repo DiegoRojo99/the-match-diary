@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/generated/client';
+import { extractCityFromAddress } from '../address/addressBreakdown';
 
 const prisma = new PrismaClient();
 
@@ -32,23 +33,30 @@ async function importTeams(competitionId: string): Promise<void> {
 
   for (const team of teams) {
     console.log(`${team.id}) Importing team: ${team.name}`);
-    const city = team.address?.split(',').slice(-2, -1)[0]?.trim() ?? null;
+
+    const city = await extractCityFromAddress(team.address);
+    console.log(`Extracted city: ${city}`);
+    const country = team.area?.name ?? null;
+    
+    const updateData: any = {};
+    if (city != null) updateData.city = city;
+    if (country != null) updateData.country = country;
 
     const stadium = await prisma.stadium.upsert({
       where: { id: `stadium_${team.venue || 'Unknown Stadium'}` },
-      update: {},
+      update: updateData,
       create: {
         id: `stadium_${team.venue || 'Unknown Stadium'}`,
         name: team.venue || 'Unknown Stadium',
         city,
-        country: team.area?.name ?? null,
+        country,
         address: team.address ?? 'Unknown Address',
       },
     });
 
     await prisma.team.upsert({
       where: { apiId: team.id },
-      update: {},
+      update: updateData,
       create: {
         apiId: team.id,
         name: team.name,
@@ -56,10 +64,11 @@ async function importTeams(competitionId: string): Promise<void> {
         tla: team.tla,
         crest: team.crest,
         address: team.address,
+        city,
+        country,
         website: team.website,
         founded: team.founded,
         clubColors: team.clubColors,
-        area: team.area?.name,
         stadiumId: stadium.id,
       },
     });
@@ -69,7 +78,7 @@ async function importTeams(competitionId: string): Promise<void> {
   await prisma.$disconnect();
 }
 
-importTeams('SA').catch((err) => {
+importTeams('BSA').catch((err) => {
   console.error(err);
   prisma.$disconnect();
 });
