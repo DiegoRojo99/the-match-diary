@@ -23,7 +23,7 @@ async function updateTeamCities() {
     }
 
     // Use fallbackExtractCity to get the city
-    var city = fallbackExtractCity(team.address);
+    let city = fallbackExtractCity(team.address);
     if (!city) {
       console.log(`No city found for team ${team.name}`);
       continue;
