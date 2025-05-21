@@ -69,7 +69,20 @@ export function fallbackExtractCity(address: string): string | null {
 
   // Try comma-separated fallback
   const parts = address.split(',');
-  return parts.length > 1 ? parts[parts.length - 2].trim() : null;
+  if (parts.length > 1) {
+    const lastPart = parts[parts.length - 1].trim();
+    if (lastPart.length > 2) {
+      return lastPart.split(' ').slice(-1)[0];
+    }
+  }
+  
+  // Try to extract the last word
+  const noNullAddress = address.replaceAll('null', '').trim();
+  if(noNullAddress.split(' ').length === 1) {
+    return noNullAddress;
+  }
+  
+  return null;
 }
 
 function normalizeString(input: string): string {
