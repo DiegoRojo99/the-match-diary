@@ -73,10 +73,11 @@ model Team {
   tla        String?
   crest      String?
   address    String?
+  city       String?
+  country    String?
   website    String?
   founded    Int?
   clubColors String?
-  area       String?
   stadiumId  String?
   latitude   Float?
   longitude  Float?
