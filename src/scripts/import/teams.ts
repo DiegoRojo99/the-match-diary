@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/generated/client';
+import { fallbackExtractCity } from '../address/addressBreakdown';
 
 const prisma = new PrismaClient();
 
@@ -16,9 +17,6 @@ type ApiTeam = {
   founded: number;
   clubColors: string;
   venue: string;
-  area: {
-    name: string;
-  };
 };
 
 async function importTeams(limit: number, offset: number): Promise<void> {
@@ -33,7 +31,7 @@ async function importTeams(limit: number, offset: number): Promise<void> {
 
   for (const team of teams) {
     console.log(`${team.id}) Importing team: ${team.name}`);
-    const city = team.address?.split(',').slice(-2, -1)[0]?.trim() ?? null;
+    const city = fallbackExtractCity(team.address);
 
     const stadium = await prisma.stadium.upsert({
       where: { id: `stadium_${team.venue || 'Unknown Stadium'}` },
@@ -42,7 +40,7 @@ async function importTeams(limit: number, offset: number): Promise<void> {
         id: `stadium_${team.venue || 'Unknown Stadium'}`,
         name: team.venue || 'Unknown Stadium',
         city,
-        country: team.area?.name ?? null,
+        country: null,
         address: team.address ?? 'Unknown Address',
       },
     });
@@ -61,6 +59,8 @@ async function importTeams(limit: number, offset: number): Promise<void> {
         founded: team.founded,
         clubColors: team.clubColors,
         stadiumId: stadium.id,
+        city,
+        country: null,
       },
     });
   }
@@ -69,7 +69,7 @@ async function importTeams(limit: number, offset: number): Promise<void> {
   await prisma.$disconnect();
 }
 
-importTeams(100, 1000).catch((err) => {
+importTeams(10, 0).catch((err) => {
   console.error(err);
   prisma.$disconnect();
 });
