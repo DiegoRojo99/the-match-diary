@@ -23,7 +23,7 @@ export async function updateStadiumAddresses() {
     console.log(`Extracted city: ${city}`);
     console.log(`Extracted country: ${country}`);
     
-    const updateData: Map<string, string> = {};
+    const updateData: { [key: string]: string } = {};
     if (city != null) updateData.city = city;
     if (country != null) updateData.country = country;
 

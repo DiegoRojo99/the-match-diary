@@ -38,7 +38,7 @@ async function importTeams(competitionId: string): Promise<void> {
     console.log(`Extracted city: ${city}`);
     const country = team.area?.name ?? null;
     
-    const updateData: Map<string, string> = {};
+    const updateData: { [key: string]: string } = {};
     if (city != null) updateData.city = city;
     if (country != null) updateData.country = country;
 
