@@ -30,7 +30,7 @@ export async function updateStadiumAddresses() {
     await prisma.stadium.update({
       where: { id: stadium.id },
       data: updateData,
-    }).catch((error) => {
+    }).catch((error: Error) => {
       console.error(`Error updating stadium ${stadium.id}:`, error);
     });
   }
