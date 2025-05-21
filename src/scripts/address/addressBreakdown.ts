@@ -1,9 +1,12 @@
+
 export async function extractCityFromAddress(address: string): Promise<string | null> {
+  if (!address) return null;
+  else if (address === 'null null null') return null;
+  
   // Normalize the address string
   address = normalizeString(address);
   
   const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(address)}`;
-
   const res = await fetch(url, {
     headers: {
       'User-Agent': 'the-match-diary/1.0 (diego99rojo@gmail.com)',
@@ -33,7 +36,6 @@ export async function extractCityAndCountryFromAddress(address: string): Promise
   address = normalizeString(address);
   
   const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(address)}`;
-
   const res = await fetch(url, {
     headers: {
       'User-Agent': 'the-match-diary/1.0 (diego99rojo@gmail.com)',
@@ -46,7 +48,6 @@ export async function extractCityAndCountryFromAddress(address: string): Promise
   if (!data || data.length === 0) return null;
 
   const addressDetails = data[0].address;
-  console.log(addressDetails);
   if (!addressDetails) return null;
 
   return {
