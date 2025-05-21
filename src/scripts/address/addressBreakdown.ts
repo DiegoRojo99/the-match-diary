@@ -2,7 +2,7 @@
 export async function extractCityFromAddress(address: string): Promise<string | null> {
   if (!address) return null;
   else if (address === 'null null null') return null;
-  
+
   // Normalize the address string
   address = normalizeString(address);
   
@@ -56,7 +56,10 @@ export async function extractCityAndCountryFromAddress(address: string): Promise
   }
 }
 
-function fallbackExtractCity(address: string): string | null {
+export function fallbackExtractCity(address: string): string | null {
+  if (!address) return null;
+  else if (address === 'null null null') return null;
+
   // Normalize the address string
   address = normalizeString(address);
   
