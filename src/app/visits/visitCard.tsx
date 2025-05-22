@@ -15,7 +15,7 @@ const VisitCard: React.FC<VisitCardProps> = ({ visit }) => {
   }
   
   return (
-    <a href={`/visits/${visit.id}`} className="w-full sm:w-[360px] bg-white shadow rounded-xl p-4 flex flex-col border border-gray-200">
+    <a href={`/visits/${visit.id}`} className="w-full bg-white shadow rounded-xl p-4 flex flex-col border border-gray-200">
       <div className="flex items-center flex flex-col mb-4">
         {visit.match.competition?.logoUrl ? 
           <Image

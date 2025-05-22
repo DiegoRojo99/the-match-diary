@@ -14,11 +14,6 @@ export default function Navbar() {
 
       <ul className="flex items-center space-x-6">
         <li>
-          <Link href="/addVisit" className="text-gray-700 hover:text-blue-600 transition-colors">
-            Add Visit
-          </Link>
-        </li>
-        <li>
           <Link href="/visits" className="text-gray-700 hover:text-blue-600 transition-colors">
             Visits
           </Link>
