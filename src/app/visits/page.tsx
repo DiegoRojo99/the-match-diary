@@ -11,7 +11,24 @@ export default function VisitsPage() {
 
   useEffect(() => {
     fetch('/api/user/visits')
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          alert('You are not logged in. Redirecting to login page.');
+          window.location.href = '/login';
+          return null;
+        }
+        
+        if (!res.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return res;
+      })
+      .then((res) => {
+        if (res) {
+          return res.json();
+        }
+        return [];
+      })
       .then(setVisits)
       .then(() => setLoading(false))
       .catch((error) => {
