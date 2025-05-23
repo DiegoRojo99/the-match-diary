@@ -38,12 +38,18 @@ export async function GET() {
     const stadium = visit.match.stadium || visit.match.homeTeam.stadium;
     if (!stadium) return null;
 
-    const coordinates = {
-      latitude: visit.match.homeTeam.latitude,
-      longitude: visit.match.homeTeam.longitude,
+    let coordinates = {
+      latitude: stadium.latitude,
+      longitude: stadium.longitude,
     };
     if (!coordinates.latitude || !coordinates.longitude) {
-      return null;
+      coordinates = {
+        latitude: visit.match.homeTeam.latitude,
+        longitude: visit.match.homeTeam.longitude,
+      };
+      if (!coordinates.latitude || !coordinates.longitude) {
+        return null;
+      }
     }
     
     return {
