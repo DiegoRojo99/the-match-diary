@@ -18,7 +18,12 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "vxtuynxjvkcvyftsfbks.supabase.co",
         pathname: "/**",
-      }
+      },
+      {
+        protocol: "https",
+        hostname: "commons.wikimedia.org",
+        pathname: "/**",
+      },
     ],
   },
 };
