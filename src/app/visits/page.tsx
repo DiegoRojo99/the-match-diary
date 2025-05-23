@@ -30,7 +30,7 @@ export default function VisitsPage() {
   return (
     <div className="p-4">
       <div className="relative w-full py-4 mb-2">
-        <h1 className="text-3xl font-bold text-center flex-1">Visits</h1>
+        <h1 className="text-3xl font-bold text-center flex-1 mb-2">Visits</h1>
         <button className="sm:absolute sm:right-4 sm:top-1/2 sm:-translate-y-1/2 cursor-pointer
         bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
           <a href="/addVisit">
