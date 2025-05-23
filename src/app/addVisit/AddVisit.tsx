@@ -36,6 +36,14 @@ export default function AddVisit() {
       else { setAwayTeam(selectedTeam); }
     }
     else {
+      if (teams.find((team: Team) => team.name?.toLowerCase() === name.toLowerCase())) {
+        // If the exact name is found, set it as the selected team
+        const selectedTeam = teams.find((team: Team) => team.name?.toLowerCase() === name.toLowerCase());
+        if (home) { setHomeTeam(selectedTeam); } 
+        else { setAwayTeam(selectedTeam); }
+        return;
+      }
+
       // If multiple teams are found, prompt the user to select one
       let teamNames: string[] = teams.map((team: Team) => team.name || '');
       while (teamNames.length > 1) {
@@ -45,8 +53,16 @@ export default function AddVisit() {
         const filteredTeams = teams.filter((team: Team) => 
           team.name && team.name.toLowerCase().includes(selectedTeamName?.toLowerCase() || '')
         );
-  
-        if (filteredTeams.length === 1) {
+
+        const exactTeam = teams.find((team: Team) =>
+          team.name && team.name.toLowerCase() === selectedTeamName?.toLowerCase()
+        );
+        if (exactTeam) {
+          if (home) { setHomeTeam(exactTeam); } 
+          else { setAwayTeam(exactTeam); }
+          break;
+        }  
+        else if (filteredTeams.length === 1) {
           const selectedTeam = filteredTeams[0];
           if (home) { setHomeTeam(selectedTeam); } 
           else { setAwayTeam(selectedTeam); }
