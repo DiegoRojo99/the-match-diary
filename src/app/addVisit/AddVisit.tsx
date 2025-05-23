@@ -48,6 +48,10 @@ export default function AddVisit() {
       let teamNames: string[] = teams.map((team: Team) => team.name || '');
       while (teamNames.length > 1) {
         const selectedTeamName = prompt(`Multiple teams found: ${teamNames.join(', ')}. Please enter the exact name of the team you want to select:`);
+        if (!selectedTeamName) {
+          alert('No team selected.');
+          return;
+        }
 
         // Find the selected team based on the name entered by the user
         const filteredTeams = teams.filter((team: Team) => 
