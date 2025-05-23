@@ -21,7 +21,7 @@ async function fetchMatchesBetweenDates(startDate: string, endDate: string): Pro
 }
 
 async function importMatches() {
-  const matches = await fetchMatchesBetweenDates('2025-05-16', '2025-05-26');
+  const matches = await fetchMatchesBetweenDates('2024-03-08', '2024-03-18');
 
   for (const match of matches) {
     const {
@@ -56,11 +56,8 @@ async function importMatches() {
 
     
     // Create season if needed
-    const existingSeason = await prisma.season.findFirst({
-      where: { apiId: season.id },
-    });
     const newSeason = await prisma.season.upsert({
-      where: { id: existingSeason?.id },
+      where: { apiId: season.id },
       update: {},
       create: {
         apiId: season.id,
@@ -90,7 +87,7 @@ async function importMatches() {
         awayScore: score.fullTime.away ?? 0,
         stadiumId: null,
         competitionId: comp.id,
-        seasonId: existingSeason?.id ?? newSeason.id,
+        seasonId: newSeason.id,
       },
     });
   }
