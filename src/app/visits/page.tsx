@@ -37,6 +37,12 @@ export default function VisitsPage() {
         setLoading(false);
       });
   }, []);
+
+  function sortByDate(a: MatchVisitWithDetails, b: MatchVisitWithDetails) {
+    const dateA = new Date(a.match.date);
+    const dateB = new Date(b.match.date);
+    return dateB.getTime() - dateA.getTime();
+  }
   
   if (loading) return (
     <FootballLoader />
@@ -57,7 +63,7 @@ export default function VisitsPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {visits.map((visit: MatchVisitWithDetails) => <VisitCard key={visit.id} visit={visit} /> )}
+        {visits.sort(sortByDate).map((visit: MatchVisitWithDetails) => <VisitCard key={visit.id} visit={visit} /> )}
       </div>
     </div>
   );
