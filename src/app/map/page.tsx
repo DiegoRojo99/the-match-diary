@@ -42,8 +42,10 @@ const MapPage = () => {
 
   return (
     <main>
-      <h1 className='my-4 text-2xl text-bold'>Football Map</h1>
-      <FootballMap stadiums={stadiums}  />
+      <h1 className='my-6 text-2xl font-bold'>Football Map</h1>
+      <div className='w-full sm:w-[90vw] sm:mx-auto h-[80vh]'>
+        <FootballMap stadiums={stadiums}  />
+      </div>
     </main>
   );
 };
