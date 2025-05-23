@@ -8,7 +8,7 @@ export default function Home() {
         Track your football adventures, review stadiums, unlock achievements, and plan your next match day experience!
       </p>
       <a
-        href="/login"
+        href="/visits"
         className="px-6 py-3 bg-(--color-mountain-meadow-500) text-white rounded-full hover:bg-(--color-mountain-meadow-600) transition text-lg font-medium"
       >
         Get Started
