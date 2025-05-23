@@ -14,8 +14,8 @@ const ScoreboardTeam: React.FC<ScoreboardTeamProps> = ({ team }) => {
           <Image
             src={team.crest}
             alt={`${team.name} crest`}
-            className='rounded-full'
             style={{ objectFit: 'cover' }}
+            className='w-32 h-32'
             width={128}
             height={128}
           />
