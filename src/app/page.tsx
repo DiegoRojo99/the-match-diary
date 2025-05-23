@@ -1,6 +1,6 @@
 export default function Home() {
   return (
-    <div className="items-center justify-center flex flex-col min-h-screen">  
+    <div className="items-center justify-center flex flex-col min-h-screen h-full">  
       <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
         Welcome to <span className="text-(--color-mountain-meadow-500)">The Match Diary</span>
       </h1>

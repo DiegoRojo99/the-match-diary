@@ -118,7 +118,7 @@ export default function AddVisit() {
   }, []);
 
   return (
-    <div className="max-w-xl mx-auto p-4 mt-10 bg-white shadow-md rounded-lg">
+    <div className="w-[90vw] sm:max-w-xl p-4 bg-white shadow-md rounded-lg h-fit m-auto">
       <h2 className="text-xl font-bold my-4">Add Match Visit</h2>
 
       {/* League dropdown */}

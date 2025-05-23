@@ -34,7 +34,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex flex-col items-center justify-center h-full bg-gray-50">
       {user ? (
         <div className="bg-white p-6 rounded-lg shadow-md text-center">
           <h2 className="text-xl text-black mb-4">Welcome, {user.user_metadata.full_name}</h2>
