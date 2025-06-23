@@ -71,7 +71,7 @@ const StadiumMap: React.FC<StadiumMapProps> = ({ stadiums }) => {
   return (
     <div 
       ref={mapRef} 
-      style={{ width: '100%', height: '75vh', margin: '0 auto' }} 
+      style={{ width: '100%', minHeight: '75vh', height: '100%', margin: '0 auto', borderRadius: '8px' }} 
     />);
 };
 
