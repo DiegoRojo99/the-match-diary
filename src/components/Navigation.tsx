@@ -1,5 +1,6 @@
 'use client';
 
+import { useAuth } from '@/lib/auth';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -13,6 +14,13 @@ const MatchIcon = ({ className = "w-4 h-4" }) => (
 const StadiumIcon = ({ className = "w-4 h-4" }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+  </svg>
+);
+
+const LocationIcon = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
   </svg>
 );
 
@@ -34,8 +42,29 @@ const PlusIcon = ({ className = "w-4 h-4" }) => (
   </svg>
 );
 
+const SignInIcon = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+  </svg>
+);
+
+const SignOutIcon = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+  </svg>
+);
+
 export default function Navigation() {
+  const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSignOut = async () => {
+    setLoading(true);
+    await signOut();
+    setLoading(false);
+    setIsOpen(false);
+  };
 
   return (
     <nav className="bg-black border-b border-gray-800 shadow-2xl">
@@ -52,45 +81,83 @@ export default function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex lg:items-center lg:space-x-6">
-            <Link
-              href="/matches"
-              className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
-            >
-              <MatchIcon />
-              <span className="tracking-wide">My Matches</span>
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
-            </Link>
-            <Link
-              href="/stadiums"
-              className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
-            >
-              <StadiumIcon />
-              <span className="tracking-wide">Stadiums</span>
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
-            </Link>
-            <Link
-              href="/competitions"
-              className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
-            >
-              <TrophyIcon />
-              <span className="tracking-wide">Competitions</span>
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
-            </Link>
-            <Link
-              href="/stats"
-              className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
-            >
-              <StatsIcon />
-              <span className="tracking-wide">Statistics</span>
-              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
-            </Link>
-            <Link
-              href="/add-match"
-              className="bg-green-500 hover:bg-green-400 text-black px-5 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/25 flex items-center gap-2"
-            >
-              <PlusIcon />
-              <span className="tracking-wide">Add Match</span>
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/matches"
+                  className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
+                >
+                  <MatchIcon />
+                  <span className="tracking-wide">My Matches</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
+                </Link>
+                <Link
+                  href="/venues"
+                  className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
+                >
+                  <LocationIcon />
+                  <span className="tracking-wide">Venues</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
+                </Link>
+                <Link
+                  href="/stats"
+                  className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
+                >
+                  <StatsIcon />
+                  <span className="tracking-wide">Statistics</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
+                </Link>
+                <Link
+                  href="/add-match"
+                  className="bg-green-500 hover:bg-green-400 text-black px-5 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/25 flex items-center gap-2"
+                >
+                  <PlusIcon />
+                  <span className="tracking-wide">Add Match</span>
+                </Link>
+                
+                {/* User Menu */}
+                <div className="flex items-center space-x-3 ml-4 border-l border-gray-700 pl-4">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                      <span className="text-black font-medium text-sm">
+                        {user.user_metadata?.display_name?.[0]?.toUpperCase() || 
+                         user.user_metadata?.username?.[0]?.toUpperCase() || 
+                         user.email?.[0]?.toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="text-gray-300 text-sm">
+                      {user.user_metadata?.display_name || 
+                       user.user_metadata?.username || 
+                       user.email}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    disabled={loading}
+                    className="flex items-center space-x-1 text-gray-300 hover:text-red-400 transition-colors font-medium disabled:opacity-50 px-2 py-1"
+                  >
+                    <SignOutIcon />
+                    <span className="text-sm">{loading ? 'Signing out...' : 'Sign out'}</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center space-x-3">
+                <Link 
+                  href="/auth/login"
+                  className="flex items-center space-x-1 text-gray-300 hover:text-green-400 transition-colors font-medium px-3 py-2"
+                >
+                  <SignInIcon />
+                  <span className="tracking-wide">Sign in</span>
+                </Link>
+                <Link 
+                  href="/auth/register"
+                  className="bg-green-500 text-black px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-green-400 transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/25"
+                >
+                  Sign up
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -118,46 +185,87 @@ export default function Navigation() {
       {isOpen && (
         <div className="lg:hidden border-t border-gray-800">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-black">
-            <Link
-              href="/matches"
-              className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              <MatchIcon className="w-5 h-5" />
-              <span className="tracking-wide">My Matches</span>
-            </Link>
-            <Link
-              href="/stadiums"
-              className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              <StadiumIcon className="w-5 h-5" />
-              <span className="tracking-wide">Stadiums</span>
-            </Link>
-            <Link
-              href="/competitions"
-              className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              <TrophyIcon className="w-5 h-5" />
-              <span className="tracking-wide">Competitions</span>
-            </Link>
-            <Link
-              href="/stats"
-              className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              <StatsIcon className="w-5 h-5" />
-              <span className="tracking-wide">Statistics</span>
-            </Link>
-            <Link
-              href="/add-match"
-              className="bg-green-500 hover:bg-green-400 text-black flex items-center gap-3 px-3 py-3 rounded-lg text-base font-bold transition-colors mt-4"
-              onClick={() => setIsOpen(false)}
-            >
-              <PlusIcon className="w-5 h-5" />
-              <span className="tracking-wide">Add Match</span>
-            </Link>
+            {user ? (
+              <>
+                {/* User info */}
+                <div className="flex items-center space-x-3 px-3 py-3 border-b border-gray-700 mb-2">
+                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                    <span className="text-black font-medium">
+                      {user.user_metadata?.display_name?.[0]?.toUpperCase() || 
+                       user.user_metadata?.username?.[0]?.toUpperCase() || 
+                       user.email?.[0]?.toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-white font-medium text-sm">
+                      {user.user_metadata?.display_name || user.user_metadata?.username || user.email}
+                    </p>
+                    <p className="text-gray-400 text-xs">{user.email}</p>
+                  </div>
+                </div>
+
+                <Link
+                  href="/matches"
+                  className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <MatchIcon className="w-5 h-5" />
+                  <span className="tracking-wide">My Matches</span>
+                </Link>
+                <Link
+                  href="/venues"
+                  className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <LocationIcon className="w-5 h-5" />
+                  <span className="tracking-wide">Venues</span>
+                </Link>
+                <Link
+                  href="/stats"
+                  className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <StatsIcon className="w-5 h-5" />
+                  <span className="tracking-wide">Statistics</span>
+                </Link>
+                <Link
+                  href="/add-match"
+                  className="bg-green-500 hover:bg-green-400 text-black flex items-center gap-3 px-3 py-3 rounded-lg text-base font-bold transition-colors mt-4"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <PlusIcon className="w-5 h-5" />
+                  <span className="tracking-wide">Add Match</span>
+                </Link>
+                
+                {/* Sign out button */}
+                <button
+                  onClick={handleSignOut}
+                  disabled={loading}
+                  className="w-full text-gray-300 hover:text-red-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors mt-2 disabled:opacity-50"
+                >
+                  <SignOutIcon className="w-5 h-5" />
+                  <span className="tracking-wide">{loading ? 'Signing out...' : 'Sign out'}</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/auth/login"
+                  className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <SignInIcon className="w-5 h-5" />
+                  <span className="tracking-wide">Sign in</span>
+                </Link>
+                <Link
+                  href="/auth/register"
+                  className="bg-green-500 hover:bg-green-400 text-black flex items-center justify-center px-3 py-3 rounded-lg text-base font-bold transition-colors mt-4"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span className="tracking-wide">Sign up</span>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       )}

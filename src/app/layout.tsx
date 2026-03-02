@@ -4,6 +4,7 @@ import "./globals.css";
 import ServiceWorkerRegistration from "../components/ServiceWorkerRegistration";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
+import { AuthProvider } from "../lib/auth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,13 +37,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black`}
       >
         <ServiceWorkerRegistration />
-        <div className="min-h-screen flex flex-col bg-black">
-          <Navigation />
-          <main className="flex-1">
-            {children}
-          </main>
-          <Footer />
-        </div>
+        <AuthProvider>
+          <div className="min-h-screen flex flex-col bg-black">
+            <Navigation />
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -4,14 +4,12 @@ const CACHE_NAME = 'match-diary-v1';
 
 // Install event
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Install event');
   // Skip waiting to activate immediately
   self.skipWaiting();
 });
 
 // Activate event  
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activate event');
   // Claim all clients immediately
   event.waitUntil(self.clients.claim());
 });
