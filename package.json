@@ -11,6 +11,7 @@
     "seed:england": "tsx scripts/seed-competitions.ts",
     "seed:europe": "tsx scripts/seed-competitions.ts",
     "seed:competitions": "tsx scripts/seed-competitions.ts",
+    "seed:teams": "tsx scripts/seed-teams-venues.ts",
     "seed:all": "tsx scripts/seed-countries.ts"
   },
   "dependencies": {
