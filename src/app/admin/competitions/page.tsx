@@ -27,6 +27,7 @@ export default function AdminCompetitions() {
   const [competitions, setCompetitions] = useState<CountryGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'visible' | 'hidden'>('all');
   const [expandedCountries, setExpandedCountries] = useState<Set<string>>(new Set(['World'])); // World expanded by default
   const [updating, setUpdating] = useState<Set<number>>(new Set());
 
@@ -112,13 +113,24 @@ export default function AdminCompetitions() {
   const filteredCompetitions = competitions
     .map(countryGroup => ({
       ...countryGroup,
-      competitions: countryGroup.competitions.filter(comp =>
-        comp.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      competitions: countryGroup.competitions.filter(comp => {
+        const matchesSearch = comp.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesVisibility = 
+          visibilityFilter === 'all' || 
+          (visibilityFilter === 'visible' && comp.visible) ||
+          (visibilityFilter === 'hidden' && !comp.visible);
+        return matchesSearch && matchesVisibility;
+      })
     }))
     .filter(countryGroup => countryGroup.competitions.length > 0);
 
-  // Calculate statistics
+  // Calculate statistics for filtered results
+  const filteredTotalCompetitions = filteredCompetitions.reduce((sum, group) => sum + group.competitions.length, 0);
+  const filteredVisibleCompetitions = filteredCompetitions.reduce((sum, group) => 
+    sum + group.competitions.filter(comp => comp.visible).length, 0
+  );
+
+  // Calculate overall statistics
   const totalCompetitions = competitions.reduce((sum, group) => sum + group.competitions.length, 0);
   const visibleCompetitions = competitions.reduce((sum, group) => 
     sum + group.competitions.filter(comp => comp.visible).length, 0
@@ -166,8 +178,15 @@ export default function AdminCompetitions() {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center">
               <div className="flex-1">
-                <p className="text-sm text-gray-500">Total Competitions</p>
-                <p className="text-2xl font-semibold text-gray-900">{totalCompetitions}</p>
+                <p className="text-sm text-gray-500">
+                  {(searchTerm || visibilityFilter !== 'all') ? 'Filtered / ' : ''}Total Competitions
+                </p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {(searchTerm || visibilityFilter !== 'all') ? 
+                    `${filteredTotalCompetitions} / ${totalCompetitions}` : 
+                    totalCompetitions
+                  }
+                </p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <span className="text-blue-600 text-xl">🏆</span>
@@ -178,8 +197,15 @@ export default function AdminCompetitions() {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center">
               <div className="flex-1">
-                <p className="text-sm text-gray-500">Visible Competitions</p>
-                <p className="text-2xl font-semibold text-green-600">{visibleCompetitions}</p>
+                <p className="text-sm text-gray-500">
+                  {(searchTerm || visibilityFilter !== 'all') ? 'Filtered / ' : ''}Visible Competitions
+                </p>
+                <p className="text-2xl font-semibold text-green-600">
+                  {(searchTerm || visibilityFilter !== 'all') ? 
+                    `${filteredVisibleCompetitions} / ${visibleCompetitions}` : 
+                    visibleCompetitions
+                  }
+                </p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <span className="text-green-600 text-xl">👁️</span>
@@ -190,8 +216,15 @@ export default function AdminCompetitions() {
           <div className="bg-white p-6 rounded-lg shadow">
             <div className="flex items-center">
               <div className="flex-1">
-                <p className="text-sm text-gray-500">Hidden Competitions</p>
-                <p className="text-2xl font-semibold text-gray-600">{totalCompetitions - visibleCompetitions}</p>
+                <p className="text-sm text-gray-500">
+                  {(searchTerm || visibilityFilter !== 'all') ? 'Filtered / ' : ''}Hidden Competitions
+                </p>
+                <p className="text-2xl font-semibold text-gray-600">
+                  {(searchTerm || visibilityFilter !== 'all') ? 
+                    `${filteredTotalCompetitions - filteredVisibleCompetitions} / ${totalCompetitions - visibleCompetitions}` : 
+                    totalCompetitions - visibleCompetitions
+                  }
+                </p>
               </div>
               <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                 <span className="text-gray-600 text-xl">🚫</span>
@@ -200,8 +233,8 @@ export default function AdminCompetitions() {
           </div>
         </div>
 
-        {/* Search */}
-        <div className="mb-6">
+        {/* Search and Filters */}
+        <div className="mb-6 space-y-4">
           <input
             type="text"
             placeholder="Search competitions..."
@@ -209,6 +242,43 @@ export default function AdminCompetitions() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
+          
+          {/* Visibility Filter */}
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-gray-700">Show:</span>
+            <div className="bg-white rounded-lg border border-gray-200 p-1 flex">
+              <button
+                onClick={() => setVisibilityFilter('all')}
+                className={`px-4 py-2 text-sm rounded-md transition-colors ${
+                  visibilityFilter === 'all'
+                    ? 'bg-blue-500 text-white font-medium'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                All ({totalCompetitions})
+              </button>
+              <button
+                onClick={() => setVisibilityFilter('visible')}
+                className={`px-4 py-2 text-sm rounded-md transition-colors ${
+                  visibilityFilter === 'visible'
+                    ? 'bg-green-500 text-white font-medium'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                Visible ({visibleCompetitions})
+              </button>
+              <button
+                onClick={() => setVisibilityFilter('hidden')}
+                className={`px-4 py-2 text-sm rounded-md transition-colors ${
+                  visibilityFilter === 'hidden'
+                    ? 'bg-gray-500 text-white font-medium'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                Hidden ({totalCompetitions - visibleCompetitions})
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Competitions by Country */}
@@ -301,7 +371,23 @@ export default function AdminCompetitions() {
           <div className="text-center py-12">
             <div className="text-gray-400 text-6xl mb-4">🔍</div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No competitions found</h3>
-            <p className="text-gray-500">Try adjusting your search term</p>
+            <p className="text-gray-500">
+              {searchTerm 
+                ? `No ${visibilityFilter === 'all' ? '' : visibilityFilter + ' '}competitions match "${searchTerm}"` 
+                : `No ${visibilityFilter} competitions found`
+              }
+            </p>
+            {(searchTerm || visibilityFilter !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setVisibilityFilter('all');
+                }}
+                className="mt-4 text-blue-600 hover:text-blue-800 font-medium text-sm"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         )}
       </div>
