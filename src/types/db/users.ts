@@ -18,13 +18,9 @@ export interface UserRow {
 export interface UserMatchRow extends BaseUserTable {
   match_id: number;
   attended_date: string;
-  rating: number | null; // 1-5 stars
+  rating: number | null; // 1-5 stars (optional)
   notes: string | null;
   photos: any; // JSONB array of photo URLs
-  seat_section: string | null;
-  ticket_price: number | null;
-  currency: string;
-  weather: string | null;
 }
 
 // User venues table row structure
@@ -102,10 +98,6 @@ export interface UserMatchTable extends TableType<UserMatchRow> {
     rating?: number | null;
     notes?: string | null;
     photos?: any;
-    seat_section?: string | null;
-    ticket_price?: number | null;
-    currency?: string;
-    weather?: string | null;
     created_at?: string;
     updated_at?: string;
   };
@@ -117,10 +109,6 @@ export interface UserMatchTable extends TableType<UserMatchRow> {
     rating?: number | null;
     notes?: string | null;
     photos?: any;
-    seat_section?: string | null;
-    ticket_price?: number | null;
-    currency?: string;
-    weather?: string | null;
     created_at?: string;
     updated_at?: string;
   };

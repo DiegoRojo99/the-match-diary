@@ -33,9 +33,57 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# Supabase config (contains local settings)
+supabase/config.toml
+
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE/Editor files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+
+# Linux
+*~
+
+# API keys and secrets
+**/*secret*
+**/*key*
+!src/types/api/common.ts
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Database files (if using local SQLite, etc.)
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache directories
+.cache
+.parcel-cache

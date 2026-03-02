@@ -1,14 +1,13 @@
-# The Match Diary - Database Schema Design
+-- The Match Diary - Initial Database Schema
+-- Aligned with API-Football.com structure
 
-## Overview
-This document outlines the database schema for The Match Diary web application, designed to track users' live football experiences including matches attended, stadiums visited, and competitions followed.
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-## Core Entities
+-- Enable PostGIS for geographic queries
+CREATE EXTENSION IF NOT EXISTS postgis;
 
-### 1. Users
-Stores user account information and preferences.
-
-```sql
+-- Users table
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -17,26 +16,18 @@ CREATE TABLE users (
   avatar_url TEXT,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
-  preferences JSONB DEFAULT '{}' -- For storing user preferences like favorite teams, etc.
+  preferences JSONB DEFAULT '{}'
 );
-```
 
-### 2. Countries
-Reference table for country data (aligned with API-Football.com structure).
-
-```sql
+-- Countries table (aligned with API structure)
 CREATE TABLE countries (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL, -- e.g., "England"
   code CHAR(2) UNIQUE NOT NULL, -- API field: "GB" (ISO 3166-1 alpha-2)
   flag TEXT -- API field: flag URL from API-Football.com
 );
-```
 
-### 3. Cities
-Cities where stadiums are located.
-
-```sql
+-- Cities table
 CREATE TABLE cities (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
@@ -45,12 +36,8 @@ CREATE TABLE cities (
   longitude DECIMAL(11,8),
   timezone VARCHAR(50)
 );
-```
 
-### 4. Venues
-Football stadiums and venues (aligned with API-Football.com structure).
-
-```sql
+-- Venues table (aligned with API structure)
 CREATE TABLE venues (
   id SERIAL PRIMARY KEY,
   name VARCHAR(200) NOT NULL, -- API field: name
@@ -65,12 +52,8 @@ CREATE TABLE venues (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
-```
 
-### 5. Teams
-Football teams/clubs (aligned with API-Football.com structure).
-
-```sql
+-- Teams table (aligned with API structure)
 CREATE TABLE teams (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL, -- API field: name
@@ -84,12 +67,8 @@ CREATE TABLE teams (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
-```
 
-### 6. Competitions
-Leagues, cups, and tournaments with embedded seasons (aligned with API-Football.com structure).
-
-```sql
+-- Competitions table with embedded seasons (aligned with API structure)
 CREATE TABLE competitions (
   id SERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL, -- API field: league.name
@@ -102,12 +81,8 @@ CREATE TABLE competitions (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
-```
 
-### 7. Matches
-Football matches/fixtures (aligned with API-Football.com structure).
-
-```sql
+-- Matches table (aligned with API structure)
 CREATE TABLE matches (
   id SERIAL PRIMARY KEY,
   home_team_id INTEGER REFERENCES teams(id),
@@ -126,34 +101,26 @@ CREATE TABLE matches (
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()
 );
-```
 
-### 8. User Matches (Core Tracking Table)
-Links users to matches they attended.
-
-```sql
+-- User matches table (core tracking)
 CREATE TABLE user_matches (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   match_id INTEGER REFERENCES matches(id),
-  attended_date TIMESTAMP DEFAULT NOW(), -- When they logged this attendance
-  rating INTEGER CHECK (rating >= 1 AND rating <= 5), -- User's rating of the experience
-  notes TEXT, -- Personal notes about the match
+  attended_date TIMESTAMP DEFAULT NOW(),
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  notes TEXT,
   photos JSONB DEFAULT '[]', -- Array of photo URLs
-  seat_section VARCHAR(50), -- Where they sat
+  seat_section VARCHAR(50),
   ticket_price DECIMAL(10,2),
   currency CHAR(3) DEFAULT 'EUR',
   weather VARCHAR(50),
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW(),
-  UNIQUE(user_id, match_id) -- User can only log attending a match once
+  UNIQUE(user_id, match_id)
 );
-```
 
-### 9. User Venues (Aggregate View)
-Materialized view or table tracking venue visits.
-
-```sql
+-- User venues table (aggregate view)
 CREATE TABLE user_venues (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
@@ -166,11 +133,8 @@ CREATE TABLE user_venues (
   updated_at TIMESTAMP DEFAULT NOW(),
   UNIQUE(user_id, venue_id)
 );
-```
 
-## Indexes for Performance
-
-```sql
+-- Performance indexes
 -- Users
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
@@ -210,40 +174,86 @@ CREATE INDEX idx_user_venues_first_visit ON user_venues(first_visit_date);
 
 -- Geographic indexes for map queries
 CREATE INDEX idx_venues_location ON venues USING GIST (ST_Point(longitude, latitude));
-```
 
-## Key Relationships
+-- Row Level Security (RLS) policies
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_matches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_venues ENABLE ROW LEVEL SECURITY;
 
-1. **Users → User_Matches → Matches**: Core tracking relationship
-2. **Matches → Venues**: Every match has a venue (can differ from team home)
-3. **Teams → Venues**: Each team has a home venue reference
-4. **Matches → Teams**: Home and away teams
-5. **Matches → Competitions**: What competition/season the match was part of
-6. **Venues → Cities → Countries**: Geographic hierarchy
-7. **User_Venues**: Aggregated view of venue visits per user
+-- Users can only access their own data
+CREATE POLICY "Users can view own profile" ON users
+  FOR SELECT USING (auth.uid() = id);
 
-## API Integration Notes
+CREATE POLICY "Users can update own profile" ON users
+  FOR UPDATE USING (auth.uid() = id);
 
-- `api_id` fields in major tables enable integration with API-Football.com
-- Schema structure directly maps to API response format:
-  - Teams include venue relationships (teams have home venues)
-  - Competitions embed seasons as JSONB (matches API structure)
-  - Match fixtures map to competition + season_year (no separate season table)
-- This allows fetching live data while maintaining local user tracking
-- Local IDs remain primary to ensure data consistency
+-- User matches policies
+CREATE POLICY "Users can view own matches" ON user_matches
+  FOR SELECT USING (auth.uid() = user_id);
 
-## Scalability Considerations
+CREATE POLICY "Users can insert own matches" ON user_matches
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-- UUIDs for user-data tables to support distributed architecture
-- JSONB fields for flexible data (preferences, photos, embedded seasons)
-- Structured to match API-Football.com responses for efficient data syncing
-- Efficient indexing for common query patterns
-- Venue-based architecture supports complex stadium relationships
+CREATE POLICY "Users can update own matches" ON user_matches
+  FOR UPDATE USING (auth.uid() = user_id);
 
-## Future Extensions
+CREATE POLICY "Users can delete own matches" ON user_matches
+  FOR DELETE USING (auth.uid() = user_id);
 
-1. **Social Features**: Friend connections, shared experiences
-2. **Multi-Sport**: Additional sport types and rules
-3. **Analytics**: Advanced statistics and insights
-4. **Gamification**: Badges, achievements, challenges
-5. **Travel Integration**: Flight/hotel booking for away matches
+-- User venues policies
+CREATE POLICY "Users can view own venues" ON user_venues
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own venues" ON user_venues
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own venues" ON user_venues
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- Reference data is public (read-only for authenticated users)
+CREATE POLICY "Public read access to countries" ON countries
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Public read access to cities" ON cities
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Public read access to venues" ON venues
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Public read access to teams" ON teams
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Public read access to competitions" ON competitions
+  FOR SELECT TO authenticated USING (true);
+
+CREATE POLICY "Public read access to matches" ON matches
+  FOR SELECT TO authenticated USING (true);
+
+-- Functions for updating user_venues aggregates
+CREATE OR REPLACE FUNCTION update_user_venues_on_match_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO user_venues (user_id, venue_id, first_visit_date, last_visit_date, total_matches)
+  SELECT 
+    NEW.user_id,
+    m.venue_id,
+    NEW.attended_date,
+    NEW.attended_date,
+    1
+  FROM matches m 
+  WHERE m.id = NEW.match_id
+  ON CONFLICT (user_id, venue_id) 
+  DO UPDATE SET
+    last_visit_date = GREATEST(user_venues.last_visit_date, NEW.attended_date),
+    first_visit_date = LEAST(user_venues.first_visit_date, NEW.attended_date),
+    total_matches = user_venues.total_matches + 1,
+    updated_at = NOW();
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_user_venues_on_match_insert
+  AFTER INSERT ON user_matches
+  FOR EACH ROW
+  EXECUTE FUNCTION update_user_venues_on_match_insert();
