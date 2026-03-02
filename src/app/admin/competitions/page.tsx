@@ -10,6 +10,7 @@ interface Competition {
   name: string;
   type: string;
   visible: boolean;
+  seeded: boolean;
 }
 
 interface CountryGroup {
@@ -333,6 +334,13 @@ export default function AdminCompetitions() {
                               </span>
                               <h4 className="font-medium text-gray-900">{competition.name}</h4>
                               <span className="text-sm text-gray-500">ID: {competition.api_id}</span>
+                              <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                                competition.seeded 
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-gray-100 text-gray-600'
+                              }`}>
+                                {competition.seeded ? '✅ Seeded' : '⏳ Not Seeded'}
+                              </span>
                             </div>
                           </div>
                           

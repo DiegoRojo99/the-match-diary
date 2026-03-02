@@ -37,8 +37,8 @@ async function seedTeamsAndVenues() {
   console.log('🏈 Starting teams and venues seeding...');
   
   try {
-    // 1. Get all visible competitions, sorted by country_id (nulls last) 
-    console.log('🔍 Fetching visible competitions...');
+    // 1. Get all visible competitions that haven't been seeded yet, sorted by country_id (nulls last) 
+    console.log('🔍 Fetching visible competitions that need seeding...');
     const { data: competitions, error: compError } = await supabase
       .from('competitions')
       .select(`
@@ -46,6 +46,7 @@ async function seedTeamsAndVenues() {
         api_id,
         name,
         country_id,
+        seeded,
         countries (
           id,
           name,
@@ -53,6 +54,7 @@ async function seedTeamsAndVenues() {
         )
       `)
       .eq('visible', true)
+      .eq('seeded', false)
       .order('country_id', { ascending: true, nullsLast: true });
     
     if (compError) {
@@ -60,11 +62,12 @@ async function seedTeamsAndVenues() {
     }
     
     if (!competitions || competitions.length === 0) {
-      console.log('❌ No visible competitions found');
+      console.log('❌ No visible competitions found that need seeding');
+      console.log('ℹ️  All visible competitions may already be seeded');
       return;
     }
     
-    console.log(`✅ Found ${competitions.length} visible competitions`);
+    console.log(`✅ Found ${competitions.length} visible competitions that need seeding`);
     console.log('📋 Competition priority order:');
     competitions.slice(0, 10).forEach((comp, idx) => {
       const countryInfo = comp.countries ? `${comp.countries.name} (${comp.countries.code})` : 'International/Continental';
@@ -253,6 +256,18 @@ async function seedTeamsAndVenues() {
       // Log competition summary
       console.log(`${progress} ✅ Teams: +${newTeams} new, +${updatedTeams} updated, ${skippedTeams} skipped`);
       console.log(`${progress} ✅ Venues: +${newVenues} new, ${skippedVenues} skipped`);
+      
+      // Mark competition as seeded
+      const { error: seededError } = await supabase
+        .from('competitions')
+        .update({ seeded: true })
+        .eq('id', targetCompetition.id);
+      
+      if (seededError) {
+        console.error(`${progress} ❌ Error marking competition as seeded:`, seededError);
+      } else {
+        console.log(`${progress} ✅ Marked competition as seeded`);
+      }
       
       // Add to totals
       totalNewTeams += newTeams;

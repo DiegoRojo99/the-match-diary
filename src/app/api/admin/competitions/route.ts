@@ -20,6 +20,7 @@ export async function GET() {
         name,
         type,
         visible,
+        seeded,
         countries (
           id,
           name,
@@ -49,7 +50,8 @@ export async function GET() {
         api_id: comp.api_id,
         name: comp.name,
         type: comp.type,
-        visible: comp.visible
+        visible: comp.visible,
+        seeded: comp.seeded
       });
       
       return acc;

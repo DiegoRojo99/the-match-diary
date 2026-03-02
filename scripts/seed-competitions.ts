@@ -180,7 +180,19 @@ async function main() {
   
   try {
     // Seed European/International competitions first
-    await seedCompetitionsFromCountry('World');
+    const alreadySeeded = [
+      'England', 'Spain', 'Italy', 'Germany', 'France', 
+      'Netherlands', 'Portugal', 'World', 'Ireland'
+    ];
+
+    const nextToSeed = [
+      'Belgium', 'Turkey', 'Russia', 'Ukraine', 'Greece',
+      'Scotland', 'Denmark', 'Sweden', 'Norway', 'Switzerland'
+    ];
+
+    for (const country of nextToSeed) {
+      await seedCompetitionsFromCountry(country);
+    }
     
     console.log('='.repeat(50));
     console.log('✅ Competition seeding completed successfully!');
