@@ -1,3 +1,4 @@
+import { ApiCompetition } from '@/types';
 import type { ApiCountry } from '@/types/api/countries';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
@@ -49,7 +50,7 @@ class ApiFootballService {
     return this.makeRequest<ApiCountry[]>('/countries');
   }
 
-  async getLeagues(country?: string, season?: number): Promise<any[]> {
+  async getLeagues(country?: string, season?: number): Promise<ApiCompetition[]> {
     let endpoint = '/leagues';
     const params = new URLSearchParams();
     
@@ -60,7 +61,7 @@ class ApiFootballService {
       endpoint += `?${params.toString()}`;
     }
     
-    return this.makeRequest<any[]>(endpoint);
+    return this.makeRequest<ApiCompetition[]>(endpoint);
   }
 
   async getTeams(league?: number, season?: number, country?: string): Promise<any[]> {

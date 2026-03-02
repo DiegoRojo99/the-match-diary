@@ -10,6 +10,7 @@ export interface CompetitionRow extends BaseTable {
   logo_url: string | null;
   seasons: any; // JSONB array of season objects
   api_id: number | null; // API-Football.com league ID
+  visible: boolean; // Whether this competition is visible in the app
 }
 
 // Season type for the JSONB seasons field
@@ -47,6 +48,7 @@ export interface CompetitionTable extends TableType<CompetitionRow> {
     logo_url?: string | null;
     seasons?: any;
     api_id?: number | null;
+    visible?: boolean;
     created_at?: string;
     updated_at?: string;
   };
@@ -58,6 +60,7 @@ export interface CompetitionTable extends TableType<CompetitionRow> {
     logo_url?: string | null;
     seasons?: any;
     api_id?: number | null;
+    visible?: boolean;
     created_at?: string;
     updated_at?: string;
   };
