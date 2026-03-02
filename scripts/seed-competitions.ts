@@ -182,12 +182,13 @@ async function main() {
     // Seed European/International competitions first
     const alreadySeeded = [
       'England', 'Spain', 'Italy', 'Germany', 'France', 
-      'Netherlands', 'Portugal', 'World', 'Ireland'
+      'Netherlands', 'Portugal', 'World', 'Ireland',      
+      'Belgium', 'Turkey', 'Russia', 'Ukraine', 'Greece',
+      'Scotland', 'Denmark', 'Sweden', 'Norway', 'Switzerland'
     ];
 
     const nextToSeed = [
-      'Belgium', 'Turkey', 'Russia', 'Ukraine', 'Greece',
-      'Scotland', 'Denmark', 'Sweden', 'Norway', 'Switzerland'
+      
     ];
 
     for (const country of nextToSeed) {
