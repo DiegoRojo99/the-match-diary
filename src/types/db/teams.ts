@@ -44,3 +44,12 @@ export interface TeamTable extends TableType<TeamRow> {
     updated_at?: string;
   };
 }
+
+// Team with country details
+export interface TeamWithCountry extends TeamRow {
+  country: {
+    id: number;
+    name: string;
+    code: string;
+  } | null;
+}

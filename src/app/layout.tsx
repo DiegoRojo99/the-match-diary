@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ServiceWorkerRegistration from "../components/ServiceWorkerRegistration";
@@ -21,9 +21,13 @@ export const metadata: Metadata = {
   description: "Track your live football experiences - matches, stadiums, and competitions all in one place",
   keywords: ["football", "matches", "stadiums", "diary", "sports tracking"],
   authors: [{ name: "Diego Rojo" }],
-  viewport: "width=device-width, initial-scale=1",
-  themeColor: "#16a34a",
   manifest: "/manifest.json",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#16a34a",
 };
 
 export default function RootLayout({

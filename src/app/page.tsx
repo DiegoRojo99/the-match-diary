@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <div className="bg-black text-white min-h-screen">
@@ -27,9 +29,9 @@ export default function Home() {
             <button className="bg-green-500 hover:bg-green-400 text-black px-8 py-4 rounded-lg text-lg font-bold transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/25">
               START TRACKING ⟶
             </button>
-            <button className="border-2 border-green-400 text-green-400 hover:bg-green-400 hover:text-black px-8 py-4 rounded-lg text-lg font-bold transition-all duration-300 transform hover:scale-105">
+            <Link href="/venues" className="border-2 border-green-400 text-green-400 hover:bg-green-400 hover:text-black px-8 py-4 rounded-lg text-lg font-bold transition-all duration-300 transform hover:scale-105">
               EXPLORE STADIUMS 🏟️
-            </button>
+            </Link>
           </div>
         </div>
 
