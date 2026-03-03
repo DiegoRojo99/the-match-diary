@@ -1,6 +1,7 @@
 // Database types for Competitions table
 
 import type { BaseTable, TableType } from './common';
+import { CountryRow } from './countries';
 
 // Competitions table row structure
 export interface CompetitionRow extends BaseTable {
@@ -12,6 +13,10 @@ export interface CompetitionRow extends BaseTable {
   api_id: number | null; // API-Football.com league ID
   visible: boolean; // Whether this competition is visible in the app (default: false)
   seeded: boolean; // Whether this competition has been seeded with teams and venues
+}
+
+export interface CompetitionWithCountry extends CompetitionRow {
+  country: CountryRow | null;
 }
 
 // Season type for the JSONB seasons field

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { CompetitionRow, CompetitionWithCountry, CountryRow } from '@/types';
 
 export async function GET() {
   try {
@@ -12,20 +13,11 @@ export async function GET() {
     // TODO: Add proper server-side auth check if needed
 
     // Fetch all competitions with their country information
-    const { data: competitions, error } = await supabase
+    const { data: competitionData, error } = await supabase
       .from('competitions')  
       .select(`
-        id,
-        api_id,
-        name,
-        type,
-        visible,
-        seeded,
-        countries (
-          id,
-          name,
-          code
-        )
+        *,
+        country: countries (*)
       `)
       .order('name');
 
@@ -35,39 +27,29 @@ export async function GET() {
     }
 
     // Group competitions by country
+    const competitions = competitionData as CompetitionWithCountry[] || [];
     const grouped = competitions.reduce((acc, comp) => {
-      const countryKey = comp.countries?.name || 'World';
+      const countryKey = comp.country?.name || 'World';
       
       if (!acc[countryKey]) {
         acc[countryKey] = {
-          country: comp.countries || { name: 'World', code: null },
+          country: comp.country || { id: 0, name: 'World', code: 'WRD' } as CountryRow,
           competitions: []
         };
       }
       
-      acc[countryKey].competitions.push({
-        id: comp.id,
-        api_id: comp.api_id,
-        name: comp.name,
-        type: comp.type,
-        visible: comp.visible,
-        seeded: comp.seeded
-      });
-      
+      acc[countryKey].competitions.push(comp);      
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, { country: CountryRow; competitions: CompetitionWithCountry[] }>);
 
     // Convert to array and sort countries
     const result = Object.entries(grouped)
-      .map(([countryName, data]) => ({
-        countryName,
-        ...data
-      }))
+      .map(([_, value]) => value)
       .sort((a, b) => {
         // Put "World" first, then alphabetical
-        if (a.countryName === 'World') return -1;
-        if (b.countryName === 'World') return 1;
-        return a.countryName.localeCompare(b.countryName);
+        if (a.country.name === 'World' || !a.country.name) return -1;
+        if (b.country.name === 'World' || !b.country.name) return 1;
+        return a.country.name.localeCompare(b.country.name);
       });
 
     return NextResponse.json(result);

@@ -1,4 +1,4 @@
-import { ApiCompetition } from '@/types';
+import { ApiCompetition, ApiFixture, ApiTeam, ApiTeamResponse, ApiTeamsResponse, ApiVenue } from '@/types';
 import type { ApiCountry } from '@/types/api/countries';
 
 const API_BASE_URL = 'https://v3.football.api-sports.io';
@@ -64,7 +64,7 @@ class ApiFootballService {
     return this.makeRequest<ApiCompetition[]>(endpoint);
   }
 
-  async getTeams(league?: number, season?: number, country?: string): Promise<any[]> {
+  async getTeams(league?: number, season?: number, country?: string): Promise<ApiTeamsResponse> {
     let endpoint = '/teams';
     const params = new URLSearchParams();
     
@@ -76,10 +76,10 @@ class ApiFootballService {
       endpoint += `?${params.toString()}`;
     }
     
-    return this.makeRequest<any[]>(endpoint);
+    return this.makeRequest<ApiTeamsResponse>(endpoint);
   }
 
-  async getVenues(country?: string, city?: string): Promise<any[]> {
+  async getVenues(country?: string, city?: string): Promise<ApiVenue[]> {
     let endpoint = '/venues';
     const params = new URLSearchParams();
     
@@ -90,10 +90,10 @@ class ApiFootballService {
       endpoint += `?${params.toString()}`;
     }
     
-    return this.makeRequest<any[]>(endpoint);
+    return this.makeRequest<ApiVenue[]>(endpoint);
   }
 
-  async getFixtures(league?: number, season?: number, from?: string, to?: string): Promise<any[]> {
+  async getFixtures(league?: number, season?: number, from?: string, to?: string): Promise<ApiFixture[]> {
     let endpoint = '/fixtures';
     const params = new URLSearchParams();
     
@@ -106,7 +106,7 @@ class ApiFootballService {
       endpoint += `?${params.toString()}`;
     }
     
-    return this.makeRequest<any[]>(endpoint);
+    return this.makeRequest<ApiFixture[]>(endpoint);
   }
 }
 

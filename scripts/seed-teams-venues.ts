@@ -4,7 +4,8 @@ dotenv.config();
 
 import { createClient } from '@supabase/supabase-js';
 import { apiFootballService } from '@/lib/api-football';
-import type { TeamTable, VenueTable } from '@/types/db';
+import type { CompetitionWithCountry, TeamTable, VenueTable } from '@/types/db';
+import { ApiTeam, ApiTeamResponse } from '@/types/api/teams';
 
 // Create Supabase client for seeding
 const supabase = createClient(
@@ -12,55 +13,25 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY! // Use service role for admin operations
 );
 
-interface ApiTeam {
-  team: {
-    id: number;
-    name: string;
-    code?: string;
-    country: string;
-    founded?: number;
-    national: boolean;
-    logo: string;
-  };
-  venue: {
-    id: number;
-    name: string;
-    address?: string;
-    city: string;
-    capacity?: number;
-    surface?: string;
-    image?: string;
-  };
-}
-
 async function seedTeamsAndVenues() {
   console.log('🏈 Starting teams and venues seeding...');
   
   try {
     // 1. Get all visible competitions that haven't been seeded yet, sorted by country_id (nulls last) 
     console.log('🔍 Fetching visible competitions that need seeding...');
-    const { data: competitions, error: compError } = await supabase
+    const { data: competitionData, error: compError } = await supabase
       .from('competitions')
       .select(`
-        id,
-        api_id,
-        name,
-        country_id,
-        seeded,
-        countries (
-          id,
-          name,
-          code
-        )
+        *,
+        country: countries (*)
       `)
       .eq('visible', true)
       .eq('seeded', false)
-      .order('country_id', { ascending: true, nullsLast: true });
+      .order('country_id', { ascending: true});
     
-    if (compError) {
-      throw new Error(`Error fetching competitions: ${compError.message}`);
-    }
+    if (compError) throw new Error(`Error fetching competitions: ${compError.message}`);
     
+    const competitions = competitionData as CompetitionWithCountry[] | null;
     if (!competitions || competitions.length === 0) {
       console.log('❌ No visible competitions found that need seeding');
       console.log('ℹ️  All visible competitions may already be seeded');
@@ -70,7 +41,7 @@ async function seedTeamsAndVenues() {
     console.log(`✅ Found ${competitions.length} visible competitions that need seeding`);
     console.log('📋 Competition priority order:');
     competitions.slice(0, 10).forEach((comp, idx) => {
-      const countryInfo = comp.countries ? `${comp.countries.name} (${comp.countries.code})` : 'International/Continental';
+      const countryInfo = comp.country ? `${comp.country.name} (${comp.country.code})` : 'International/Continental';
       console.log(`  ${idx + 1}. ${comp.name} - ${countryInfo} (API ID: ${comp.api_id})`);
     });
     if (competitions.length > 10) {
@@ -92,7 +63,7 @@ async function seedTeamsAndVenues() {
       const progress = `[${i + 1}/${competitions.length}]`;
       
       console.log(`\n${progress} 🏆 ${targetCompetition.name}`);
-      console.log(`   Country: ${targetCompetition.countries?.name || 'International/Continental'}`);
+      console.log(`   Country: ${targetCompetition.country?.name || 'International/Continental'}`);
       console.log(`   API ID: ${targetCompetition.api_id}`);
       
       // 3. Check existing teams and venues to avoid duplicates (refresh each time)
@@ -125,11 +96,19 @@ async function seedTeamsAndVenues() {
       
       // 4. Fetch teams from API for the current competition
       console.log(`📡 Fetching teams for ${targetCompetition.name}...`);
-      let apiTeams: ApiTeam[];
+      let apiTeams: ApiTeamResponse[];
       
       try {
-        apiTeams = await apiFootballService.getTeams(targetCompetition.api_id, 2024);
-      } catch (error) {
+        const competitionApiId = targetCompetition.api_id;
+        if (!competitionApiId) {
+          console.log(`⚠️  Competition ${targetCompetition.name} does not have an API ID, skipping...`);
+          continue;
+        }
+        
+        const apiResponse = await apiFootballService.getTeams(competitionApiId, 2024);
+        apiTeams = apiResponse.response as ApiTeamResponse[];
+      } 
+      catch (error) {
         console.error(`❌ API error for ${targetCompetition.name}:`, error);
         continue; // Skip this competition but continue with others
       }
@@ -222,7 +201,7 @@ async function seedTeamsAndVenues() {
             if (updateError) {
               console.error(`❌ Error updating team ${team.name} country:`, updateError);
             } else {
-              console.log(`🌍 Updated ${team.name} with country: ${targetCompetition.countries?.name}`);
+              console.log(`🌍 Updated ${team.name} with country: ${targetCompetition.country?.name}`);
               updatedTeams++;
             }
           } else {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 const supabase = createClient(
@@ -16,9 +16,7 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     // Check if user has a valid session from the reset link

@@ -180,14 +180,14 @@ async function main() {
   
   try {
     // Seed European/International competitions first
-    const alreadySeeded = [
+    const alreadySeeded : string[] = [
       'England', 'Spain', 'Italy', 'Germany', 'France', 
       'Netherlands', 'Portugal', 'World', 'Ireland',      
       'Belgium', 'Turkey', 'Russia', 'Ukraine', 'Greece',
       'Scotland', 'Denmark', 'Sweden', 'Norway', 'Switzerland'
     ];
 
-    const nextToSeed = [
+    const nextToSeed: string[] = [
       
     ];
 
