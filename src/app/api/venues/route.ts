@@ -25,11 +25,7 @@ export async function GET() {
       .from('teams')
       .select(`
         *,
-        country: countries (
-          id,
-          name,
-          code
-        )
+        countries (*)
       `)
       .not('home_venue_id', 'is', null);
 

@@ -1,6 +1,6 @@
-// Database types for Venues table
-
 import type { BaseTable, TableType } from './common';
+import { CountryRow } from './countries';
+import { TeamWithCountry } from './teams';
 
 // Venues table row structure
 export interface VenueRow extends BaseTable {
@@ -46,4 +46,9 @@ export interface VenueTable extends TableType<VenueRow> {
     created_at?: string;
     updated_at?: string;
   };
+}
+
+export interface VenueWithDetails extends VenueRow {
+  teams: TeamWithCountry[];
+  country: CountryRow | null;
 }
