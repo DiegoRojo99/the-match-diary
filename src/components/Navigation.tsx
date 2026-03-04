@@ -208,6 +208,41 @@ export default function Navigation() {
       {isOpen && (
         <div className="lg:hidden border-t border-gray-800">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-black">
+            <Link
+              href="/venues"
+              className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <LocationIcon className="w-5 h-5" />
+              <span className="tracking-wide">Venues</span>
+            </Link>
+
+            <Link
+              href="/teams"
+              className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <StadiumIcon className="w-5 h-5" />
+              <span className="tracking-wide">Teams</span>
+            </Link>
+            
+            <Link
+              href="/admin/competitions"
+              className="text-gray-300 hover:text-yellow-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              <AdminIcon className="w-5 h-5" />
+              <span className="tracking-wide">Admin</span>
+            </Link>
+            
+            <Link
+              href="/add-match"
+              className="bg-green-500 hover:bg-green-400 text-black flex items-center gap-3 px-3 py-3 rounded-lg text-base font-bold transition-colors mt-4"
+              onClick={() => setIsOpen(false)}
+            >
+              <PlusIcon className="w-5 h-5" />
+              <span className="tracking-wide">Add Match</span>
+            </Link>
             {user ? (
               <>
                 {/* User info */}
@@ -226,55 +261,6 @@ export default function Navigation() {
                     <p className="text-gray-400 text-xs">{user.email}</p>
                   </div>
                 </div>
-
-                <Link
-                  href="/matches"
-                  className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <MatchIcon className="w-5 h-5" />
-                  <span className="tracking-wide">My Matches</span>
-                </Link>
-                <Link
-                  href="/venues"
-                  className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <LocationIcon className="w-5 h-5" />
-                  <span className="tracking-wide">Venues</span>
-                </Link>
-                <Link
-                  href="/teams"
-                  className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <StadiumIcon className="w-5 h-5" />
-                  <span className="tracking-wide">Teams</span>
-                </Link>
-                <Link
-                  href="/stats"
-                  className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <StatsIcon className="w-5 h-5" />
-                  <span className="tracking-wide">Statistics</span>
-                </Link>
-                <Link
-                  href="/admin/competitions"
-                  className="text-gray-300 hover:text-yellow-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <AdminIcon className="w-5 h-5" />
-                  <span className="tracking-wide">Admin</span>
-                </Link>
-                <Link
-                  href="/add-match"
-                  className="bg-green-500 hover:bg-green-400 text-black flex items-center gap-3 px-3 py-3 rounded-lg text-base font-bold transition-colors mt-4"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <PlusIcon className="w-5 h-5" />
-                  <span className="tracking-wide">Add Match</span>
-                </Link>
                 
                 {/* Sign out button */}
                 <button

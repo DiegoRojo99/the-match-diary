@@ -6,21 +6,33 @@ type TeamWithVenue = TeamWithCountry & {
   home_venue: VenueRow | null;
 };
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get('q');
+    
+    // Return empty array if no search query provided
+    if (!query || query.trim().length < 2) {
+      return NextResponse.json([]);
+    }
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Fetch all teams with their countries and home venues
+    // Search teams by name, code  
+    const searchQuery = query.toLowerCase();
+    
     const { data, error } = await supabase
       .from('teams')
       .select(`
         *,
-        countries (*),
+        country: countries (*),
         venues!teams_home_venue_id_fkey (*)
       `)
+      .or(`name.ilike.%${searchQuery}%,team_code.ilike.%${searchQuery}%`)
+      .limit(200)
       .order('name');
 
     if (error) {
@@ -34,7 +46,16 @@ export async function GET() {
       home_venue: team.venues || null
     }));
 
-    return NextResponse.json(teams);
+    // Additional client-side filtering for country names and limit to 50 results
+    const filteredTeams = teams.filter(team => {
+      const teamNameMatch = team.name.toLowerCase().includes(searchQuery);
+      const codeMatch = team.team_code?.toLowerCase().includes(searchQuery);
+      const countryMatch = team.country?.name.toLowerCase().includes(searchQuery);
+      
+      return teamNameMatch || codeMatch || countryMatch;
+    }).slice(0, 50); // Limit to 50 results
+
+    return NextResponse.json(filteredTeams);
   } 
   catch (error) {
     console.error('Error in teams API:', error);

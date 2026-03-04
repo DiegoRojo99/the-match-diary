@@ -5,6 +5,23 @@ import Link from 'next/link';
 import { TeamWithCountry } from '@/types/db/teams';
 import { VenueRow } from '@/types';
 
+// Custom hook for debounced values
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 // Icon components
 const MapPinIcon = ({ className = "w-4 h-4" }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,13 +48,27 @@ type VenueWithTeams = VenueRow & {
 
 export default function VenuesPage() {
   const [venues, setVenues] = useState<VenueWithTeams[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
+
+  // Debounce search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   useEffect(() => {
     const fetchVenues = async () => {
+      if (debouncedSearchTerm.trim().length < 2) {
+        setVenues([]);
+        setHasSearched(false);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setHasSearched(true);
+      
       try {
-        const response = await fetch('/api/venues');
+        const response = await fetch(`/api/venues?q=${encodeURIComponent(debouncedSearchTerm)}`);
         if (response.ok) {
           const data = await response.json();
           setVenues(data);
@@ -50,35 +81,12 @@ export default function VenuesPage() {
     };
 
     fetchVenues();
-  }, []);
+  }, [debouncedSearchTerm]);
 
-  // Filter venues based on search term
-  const filteredVenues = venues.filter((venue: VenueWithTeams) =>
-    venue.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    venue.address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    venue.teams.some((team: TeamWithCountry) => team.name.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // No additional filtering needed since search is handled by API
+  const filteredVenues = venues;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-8">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
-              Football Venues
-            </h1>
-            <p className="text-lg text-gray-600">Discover amazing stadiums and venues from around the world</p>
-          </div>
-          <div className="flex justify-center items-center py-20">
-            <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-3 border-blue-600"></div>
-              <span className="text-gray-600 font-medium text-lg">Loading venues...</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -91,40 +99,47 @@ export default function VenuesPage() {
           <p className="text-lg text-gray-600 mb-6">Discover amazing stadiums and venues from around the world</p>
           
           {/* Search Bar */}
-          <div className="max-w-md mx-auto lg:mx-0">
-            <div className="relative">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="relative max-w-2xl mx-auto">
               <input
                 type="text"
-                placeholder="Search venues, teams, or locations..."
+                placeholder="Search for venues by name, address, city, or team... (minimum 2 characters)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 pl-12 text-gray-700 bg-white border border-gray-300 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                className="w-full px-4 py-4 pl-12 text-gray-700 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-lg"
               />
               <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
+                {loading ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+                ) : (
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">Total Venues</h3>
-                <p className="text-3xl font-bold text-blue-600">{filteredVenues.length}</p>
+        {/* Stats - only show when we have search results */}
+        {hasSearched && venues.length > 0 && (
+          <div className="mb-8">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-1">Venues Found</h3>
+                  <p className="text-3xl font-bold text-blue-600">{filteredVenues.length}</p>
+                </div>
+                <div className="text-4xl">🏟️</div>
               </div>
-              <div className="text-4xl">🏟️</div>
             </div>
           </div>
-        </div>
+        )}
         
-        {/* Venues Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredVenues.map((venue) => (
+        {/* Venues Grid - only show when we have results */}
+        {filteredVenues.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredVenues.map((venue) => (
             <Link
               key={venue.id}
               href={`/venues/${venue.id}`}
@@ -203,29 +218,41 @@ export default function VenuesPage() {
                 </div>
               </div>
             </Link>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
         
-        {/* Empty State */}
-        {filteredVenues.length === 0 && !loading && (
-          <div className="text-center py-16 bg-white rounded-xl shadow-sm">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {searchTerm ? 'No venues found' : 'No venues available'}
+        {/* Empty States */}
+        {!hasSearched && !loading && (
+          <div className="text-center py-20 bg-white rounded-xl shadow-sm">
+            <div className="text-8xl mb-6">🏟️</div>
+            <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+              Search for Football Venues
             </h3>
-            <p className="text-gray-500">
-              {searchTerm 
-                ? 'Try adjusting your search terms or check the spelling.' 
-                : 'Check back later for new venues.'}
+            <p className="text-lg text-gray-500 mb-6 max-w-md mx-auto">
+              Find stadiums and venues by name, location, or the teams that play there.
             </p>
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Clear search
-              </button>
-            )}
+            <div className="text-sm text-gray-400">
+              Try searching for: <span className="font-medium">"Camp Nou", "Wembley", "Manchester"</span>
+            </div>
+          </div>
+        )}
+
+        {hasSearched && filteredVenues.length === 0 && !loading && (
+          <div className="text-center py-16 bg-white rounded-xl shadow-sm">
+            <div className="text-6xl mb-4">😔</div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              No venues found
+            </h3>
+            <p className="text-gray-500 mb-4">
+              No venues match "{searchTerm}". Try different search terms.
+            </p>
+            <button
+              onClick={() => setSearchTerm('')}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Clear search
+            </button>
           </div>
         )}
       </div>

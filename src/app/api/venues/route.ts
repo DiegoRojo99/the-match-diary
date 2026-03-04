@@ -2,17 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { TeamWithCountry, VenueRow } from '@/types';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const query = searchParams.get('q');
+    
+    // Return empty array if no search query provided
+    if (!query || query.trim().length < 2) {
+      return NextResponse.json([]);
+    }
+
+    const searchQuery = query.toLowerCase();
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Fetch all venues
+    // Search venues by name, address
     const { data: venueData, error: venuesError } = await supabase
       .from('venues')
       .select(`*`)
+      .or(`name.ilike.%${searchQuery}%,address.ilike.%${searchQuery}%`)
+      .limit(200)
       .order('name');
 
     if (venuesError) {
@@ -46,7 +58,7 @@ export async function GET() {
       venueMap.push(team);
     });
 
-    // Map venues with their team data
+    // Map venues with their team data and apply additional filtering
     const venues = venueData as VenueRow[];
     const venuesWithTeams = venues.map(venue => {
       const teamsForVenue = venueTeamsMap.get(venue.id) || [];      
@@ -56,7 +68,18 @@ export async function GET() {
       };
     });
 
-    return NextResponse.json(venuesWithTeams);
+    // Additional client-side filtering for team names and limit to 50 results
+    const filteredVenues = venuesWithTeams.filter(venue => {
+      const venueNameMatch = venue.name.toLowerCase().includes(searchQuery);
+      const addressMatch = venue.address?.toLowerCase().includes(searchQuery);
+      const teamMatch = venue.teams.some(team => 
+        team.name.toLowerCase().includes(searchQuery)
+      );
+      
+      return venueNameMatch || addressMatch || teamMatch;
+    }).slice(0, 50); // Limit to 50 results
+
+    return NextResponse.json(filteredVenues);
   } 
   catch (error) {
     console.error('Error in venues API:', error);

@@ -4,6 +4,23 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { TeamWithCountry, VenueRow } from '@/types';
 
+// Custom hook for debounced values
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
 // Icon components
 const UsersIcon = ({ className = "w-4 h-4" }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -35,15 +52,28 @@ type TeamWithVenue = TeamWithCountry & {
 
 export default function TeamsPage() {
   const [teams, setTeams] = useState<TeamWithVenue[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'national' | 'club'>('all');
-  const [selectedCountry, setSelectedCountry] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
+
+  // Debounce search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   useEffect(() => {
     const fetchTeams = async () => {
+      if (debouncedSearchTerm.trim().length < 2) {
+        setTeams([]);
+        setHasSearched(false);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setHasSearched(true);
+      
       try {
-        const response = await fetch('/api/teams');
+        const response = await fetch(`/api/teams?q=${encodeURIComponent(debouncedSearchTerm)}`);
         if (response.ok) {
           const data = await response.json();
           setTeams(data);
@@ -56,57 +86,19 @@ export default function TeamsPage() {
     };
 
     fetchTeams();
-  }, []);
+  }, [debouncedSearchTerm]);
 
-  // Get unique countries for the filter
-  const countries = teams
-    .filter(team => team.country)
-    .map(team => team.country!)
-    .filter((country, index, self) => 
-      index === self.findIndex(c => c.id === country.id)
-    )
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  // Filter teams based on search term and filters
+  // Filter teams based on team type only (search is handled by API)
   const filteredTeams = teams.filter((team: TeamWithVenue) => {
-    const matchesSearch = 
-      team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      team.team_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      team.country?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      team.home_venue?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    
     const matchesType = 
       filterType === 'all' || 
       (filterType === 'national' && team.national) ||
       (filterType === 'club' && !team.national);
     
-    const matchesCountry = 
-      !selectedCountry || 
-      (team.country?.id.toString() === selectedCountry);
-
-    return matchesSearch && matchesType && matchesCountry;
+    return matchesType;
   });
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-100">
-        <div className="container mx-auto px-4 py-8">
-          <div className="mb-8">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-4">
-              Football Teams
-            </h1>
-            <p className="text-lg text-gray-600">Explore teams from around the world</p>
-          </div>
-          <div className="flex justify-center items-center py-20">
-            <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-3 border-green-600"></div>
-              <span className="text-gray-600 font-medium text-lg">Loading teams...</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-100">
@@ -122,96 +114,100 @@ export default function TeamsPage() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
             {/* Search Bar */}
             <div className="mb-4">
-              <div className="relative max-w-md mx-auto lg:mx-0">
+              <div className="relative max-w-2xl mx-auto">
                 <input
                   type="text"
-                  placeholder="Search teams, countries, or venues..."
+                  placeholder="Search for teams by name, code, or country... (minimum 2 characters)"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-3 pl-12 text-gray-700 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                  className="w-full px-4 py-4 pl-12 text-gray-700 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-lg"
                 />
                 <div className="absolute left-4 top-1/2 transform -translate-y-1/2">
-                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+                  {loading ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-green-500"></div>
+                  ) : (
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Filters */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Team Type Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Team Type</label>
-                <select
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value as typeof filterType)}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                >
-                  <option value="all">All Teams</option>
-                  <option value="national">National Teams</option>
-                  <option value="club">Club Teams</option>
-                </select>
+            {/* Team Type Filter - Only show if we have results */}
+            {teams.length > 0 && (
+              <div className="flex justify-center">
+                <div className="inline-flex bg-gray-100 rounded-lg p-1">
+                  <button
+                    onClick={() => setFilterType('all')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      filterType === 'all' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    All Teams
+                  </button>
+                  <button
+                    onClick={() => setFilterType('club')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      filterType === 'club' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    Club Teams
+                  </button>
+                  <button
+                    onClick={() => setFilterType('national')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      filterType === 'national' ? 'bg-white text-green-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    National Teams
+                  </button>
+                </div>
               </div>
-
-              {/* Country Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Country</label>
-                <select
-                  value={selectedCountry}
-                  onChange={(e) => setSelectedCountry(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                >
-                  <option value="">All Countries</option>
-                  {countries.map((country) => (
-                    <option key={country.id} value={country.id.toString()}>
-                      {country.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">Total Teams</h3>
-                <p className="text-3xl font-bold text-green-600">{filteredTeams.length}</p>
+        {/* Stats - only show when we have search results */}
+        {hasSearched && teams.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-1">Results Found</h3>
+                  <p className="text-3xl font-bold text-green-600">{filteredTeams.length}</p>
+                </div>
+                <div className="text-4xl">⚽</div>
               </div>
-              <div className="text-4xl">⚽</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-1">Club Teams</h3>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {filteredTeams.filter(team => !team.national).length}
+                  </p>
+                </div>
+                <div className="text-4xl">🏟️</div>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-1">National Teams</h3>
+                  <p className="text-3xl font-bold text-yellow-600">
+                    {filteredTeams.filter(team => team.national).length}
+                  </p>
+                </div>
+                <div className="text-4xl">🌍</div>
+              </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">Club Teams</h3>
-                <p className="text-3xl font-bold text-blue-600">
-                  {filteredTeams.filter(team => !team.national).length}
-                </p>
-              </div>
-              <div className="text-4xl">🏟️</div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-800 mb-1">National Teams</h3>
-                <p className="text-3xl font-bold text-yellow-600">
-                  {filteredTeams.filter(team => team.national).length}
-                </p>
-              </div>
-              <div className="text-4xl">🌍</div>
-            </div>
-          </div>
-        </div>
+        )}
         
-        {/* Teams Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredTeams.map((team) => (
+        {/* Teams Grid - only show when we have results */}
+        {filteredTeams.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">\n            {filteredTeams.map((team) => (
             <Link
               key={team.id}
               href={`/teams/${team.id}`}
@@ -292,33 +288,46 @@ export default function TeamsPage() {
                 </div>
               </div>
             </Link>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
         
-        {/* Empty State */}
-        {filteredTeams.length === 0 && !loading && (
+        {/* Empty States */}
+        {!hasSearched && !loading && (
+          <div className="text-center py-20 bg-white rounded-xl shadow-sm">
+            <div className="text-8xl mb-6">🔍</div>
+            <h3 className="text-2xl font-semibold text-gray-900 mb-4">
+              Search for Football Teams
+            </h3>
+            <p className="text-lg text-gray-500 mb-6 max-w-md mx-auto">
+              Enter a team name, code, or country to discover teams from around the world.
+            </p>
+            <div className="text-sm text-gray-400">
+              Try searching for: <span className="font-medium">"Manchester", "BAR", "Spain"</span>
+            </div>
+          </div>
+        )}
+
+        {hasSearched && filteredTeams.length === 0 && !loading && (
           <div className="text-center py-16 bg-white rounded-xl shadow-sm">
-            <div className="text-6xl mb-4">🔍</div>
+            <div className="text-6xl mb-4">😔</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {searchTerm || filterType !== 'all' || selectedCountry ? 'No teams found' : 'No teams available'}
+              No teams found
             </h3>
             <p className="text-gray-500 mb-4">
-              {searchTerm || filterType !== 'all' || selectedCountry 
-                ? 'Try adjusting your search terms or filters.' 
-                : 'Check back later for new teams.'}
+              {filterType !== 'all' 
+                ? `Try adjusting your filter or search for different terms.` 
+                : `No teams match "${searchTerm}". Try different search terms.`}
             </p>
-            {(searchTerm || filterType !== 'all' || selectedCountry) && (
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setFilterType('all');
-                  setSelectedCountry('');
-                }}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                Clear all filters
-              </button>
-            )}
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setFilterType('all');
+              }}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Clear search
+            </button>
           </div>
         )}
       </div>

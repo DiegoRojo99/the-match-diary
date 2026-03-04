@@ -50,6 +50,7 @@ export interface TeamWithCountry extends TeamRow {
   country: {
     id: number;
     name: string;
+    flag: string | null;
     code: string;
   } | null;
 }
