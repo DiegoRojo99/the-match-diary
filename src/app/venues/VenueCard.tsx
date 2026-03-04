@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useState } from 'react';
 import { TeamWithCountry } from '@/types/db/teams';
 import { VenueRow } from '@/types';
 
@@ -31,23 +32,54 @@ interface VenueCardProps {
 }
 
 export default function VenueCard({ venue }: VenueCardProps) {
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+
+  const handleImageError = () => {
+    setImageError(true);
+    setImageLoading(false);
+  };
+
+  const handleImageLoad = () => {
+    setImageLoading(false);
+  };
+
   return (
     <Link
       href={`/venues/${venue.id}`}
       className="group block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-xl hover:shadow-blue-100/50 hover:border-blue-300 transition-all duration-300 transform hover:-translate-y-2"
     >
-      {/* Venue Image Placeholder */}
-      <div className="h-48 bg-gradient-to-br from-blue-500 to-indigo-600 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black bg-opacity-20"></div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-white text-center">
-            <div className="text-4xl mb-2">🏟️</div>
-            <div className="text-sm font-medium opacity-90">Stadium</div>
-          </div>
-        </div>
+      {/* Venue Image */}
+      <div className="h-48 relative overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600">
+        {venue.image_url && !imageError ? (
+          <>
+            <img
+              src={venue.image_url}
+              alt={venue.name}
+              className={`w-full h-full object-cover transition-opacity duration-300 ${
+                imageLoading ? 'opacity-0' : 'opacity-100'
+              }`}
+              onError={handleImageError}
+              onLoad={handleImageLoad}
+            />
+            {/* Overlay for better text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20"></div>
+          </>
+        ) : (
+          <>
+            {/* Fallback gradient background */}
+            <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-white text-center">
+                <div className="text-4xl mb-2">🏟️</div>
+                <div className="text-sm font-medium opacity-90">Stadium</div>
+              </div>
+            </div>
+          </>
+        )}
         {/* Capacity Badge */}
         {venue.capacity && (
-          <div className="absolute top-4 right-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm font-medium">
+          <div className="absolute top-4 right-4 bg-black bg-opacity-70 text-white px-3 py-1 rounded-full text-sm font-medium backdrop-blur-sm">
             <UsersIcon className="w-3 h-3 inline mr-1" />
             {venue.capacity.toLocaleString()}
           </div>
