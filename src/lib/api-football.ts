@@ -64,7 +64,7 @@ class ApiFootballService {
     return this.makeRequest<ApiCompetition[]>(endpoint);
   }
 
-  async getTeams(league?: number, season?: number, country?: string): Promise<ApiTeamsResponse> {
+  async getTeams(league?: number, season?: number, country?: string): Promise<ApiTeamResponse[]> {
     let endpoint = '/teams';
     const params = new URLSearchParams();
     
@@ -76,7 +76,7 @@ class ApiFootballService {
       endpoint += `?${params.toString()}`;
     }
     
-    return this.makeRequest<ApiTeamsResponse>(endpoint);
+    return this.makeRequest<ApiTeamResponse[]>(endpoint);
   }
 
   async getVenues(country?: string, city?: string): Promise<ApiVenue[]> {

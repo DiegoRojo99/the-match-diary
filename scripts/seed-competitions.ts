@@ -22,28 +22,14 @@ async function seedCompetitionsFromCountry(countryName: string = 'England') {
       .from('competitions')
       .select('api_id, name');
     
-    if (fetchError) {
-      throw new Error(`Error fetching existing competitions: ${fetchError.message}`);
-    }
+    if (fetchError) throw new Error(`Error fetching existing competitions: ${fetchError.message}`);
     
     const existingIds = new Set(existingComps?.map(c => c.api_id) || []);
     console.log(`📊 Found ${existingIds.size} competitions already in database`);
-    
-    // Show what we have
-    if (existingComps && existingComps.length > 0) {
-      console.log('🏆 Existing competitions:');
-      existingComps.slice(0, 5).forEach(comp => {
-        console.log(`  - ${comp.name} (ID: ${comp.api_id})`);
-      });
-      if (existingComps.length > 5) {
-        console.log(`  ... and ${existingComps.length - 5} more`);
-      }
-    }
 
     // Fetch all leagues from the specified country (current season 2024)
     console.log(`📡 Fetching all competitions from ${countryName}...`);
     const leagues = await apiFootballService.getLeagues(countryName, 2024);
-    
     console.log(`✅ Retrieved ${leagues.length} leagues from ${countryName} 2024`);
     
     if (leagues.length === 0) {
@@ -75,7 +61,8 @@ async function seedCompetitionsFromCountry(countryName: string = 'England') {
       // For European/International competitions, we'll set country_id to null
       matchingCountry = null;
       countryError = null;
-    } else {
+    } 
+    else {
       // Normal country lookup for national competitions
       const { data: country, error: error } = await supabase
         .from('countries')
@@ -105,12 +92,6 @@ async function seedCompetitionsFromCountry(countryName: string = 'England') {
         });
       }
       return;
-    }
-    
-    if (matchingCountry) {
-      console.log(`✅ Found matching country: ${matchingCountry.name} (${matchingCountry.code})`);
-    } else {
-      console.log(`✅ Treating as international/European competitions (no country)`);
     }
     
     // Filter out leagues that already exist and prepare for insertion

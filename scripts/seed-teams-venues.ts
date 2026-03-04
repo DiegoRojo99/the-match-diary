@@ -106,7 +106,8 @@ async function seedTeamsAndVenues() {
         }
         
         const apiResponse = await apiFootballService.getTeams(competitionApiId, 2024);
-        apiTeams = apiResponse.response as ApiTeamResponse[];
+        apiTeams = apiResponse as ApiTeamResponse[];
+        console.log(`📊 API returned ${apiTeams.length} teams`);
       } 
       catch (error) {
         console.error(`❌ API error for ${targetCompetition.name}:`, error);
@@ -118,17 +119,6 @@ async function seedTeamsAndVenues() {
       if (apiTeams.length === 0) {
         console.log('⚠️  No teams found for this competition, skipping...');
         continue;
-      }
-      
-      // 5. Show sample teams for first few competitions only
-      if (i < 3) {
-        console.log('🔍 Sample teams:');
-        apiTeams.slice(0, 3).forEach(teamData => {
-          console.log(`  - ${teamData.team.name} (${teamData.team.country}) - Venue: ${teamData.venue.name}`);
-        });
-        if (apiTeams.length > 3) {
-          console.log(`  ... and ${apiTeams.length - 3} more`);
-        }
       }
       
       // 6. Process teams and venues for this competition
@@ -158,7 +148,8 @@ async function seedTeamsAndVenues() {
             
             venueId = existingVenue?.id || null;
             skippedVenues++;
-          } else {
+          } 
+          else {
             // Insert new venue
             const venueData: VenueTable['Insert'] = {
               api_id: venue.id,
@@ -179,7 +170,8 @@ async function seedTeamsAndVenues() {
             if (venueInsertError) {
               console.error(`❌ Error inserting venue ${venue.name}:`, venueInsertError);
               venueId = null;
-            } else {
+            } 
+            else {
               venueId = insertedVenue.id;
               newVenues++;
             }
@@ -204,10 +196,12 @@ async function seedTeamsAndVenues() {
               console.log(`🌍 Updated ${team.name} with country: ${targetCompetition.country?.name}`);
               updatedTeams++;
             }
-          } else {
+          } 
+          else {
             skippedTeams++;
           }
-        } else {
+        } 
+        else {
           // Insert new team
           const teamData: TeamTable['Insert'] = {
             api_id: team.id,
