@@ -107,6 +107,14 @@ export default function Navigation() {
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
                 </Link>
                 <Link
+                  href="/teams"
+                  className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
+                >
+                  <StadiumIcon />
+                  <span className="tracking-wide">Teams</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
+                </Link>
+                <Link
                   href="/stats"
                   className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
                 >
@@ -234,6 +242,14 @@ export default function Navigation() {
                 >
                   <LocationIcon className="w-5 h-5" />
                   <span className="tracking-wide">Venues</span>
+                </Link>
+                <Link
+                  href="/teams"
+                  className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <StadiumIcon className="w-5 h-5" />
+                  <span className="tracking-wide">Teams</span>
                 </Link>
                 <Link
                   href="/stats"
