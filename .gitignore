@@ -87,3 +87,5 @@ lerna-debug.log*
 # Cache directories
 .cache
 .parcel-cache
+
+/src/generated/prisma
