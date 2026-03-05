@@ -108,6 +108,20 @@ class ApiFootballService {
     
     return this.makeRequest<ApiFixture[]>(endpoint);
   }
+
+  async getTeamFixtures(teamId: number, season?: number, last?: number, next?: number): Promise<ApiFixture[]> {
+    let endpoint = '/fixtures';
+    const params = new URLSearchParams();
+    
+    params.append('team', teamId.toString());
+    if (season) params.append('season', season.toString());
+    if (last) params.append('last', last.toString());
+    if (next) params.append('next', next.toString());
+    
+    endpoint += `?${params.toString()}`;
+    
+    return this.makeRequest<ApiFixture[]>(endpoint);
+  }
 }
 
 export const apiFootballService = new ApiFootballService();

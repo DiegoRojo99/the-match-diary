@@ -9,76 +9,108 @@ interface TeamMatchesProps {
   team: TeamWithVenue;
 }
 
-// Mock match data structure
+// Real match data structure from API
 interface Match {
-  id: number;
+  api_id: number;
   home_team: string;
+  home_team_logo: string;
   away_team: string;
+  away_team_logo: string;
   match_date: string;
-  status: 'upcoming' | 'completed' | 'live';
-  home_score?: number;
-  away_score?: number;
+  status: string; // "FT", "NS", "1H", "HT", "2H", etc.
+  status_long: string;
+  home_score?: number | null;
+  away_score?: number | null;
   venue: string;
+  venue_city: string;
+  league: string;
+  league_logo: string;
+  season: number;
+  round: string;
+}
+
+interface MatchesResponse {
+  matches: Match[];
+  team: {
+    id: number;
+    name: string;
+    api_id: number;
+  };
+  saved_to_db: boolean;
 }
 
 export default function TeamMatches({ team }: TeamMatchesProps) {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'upcoming' | 'recent'>('upcoming');
+  const [saving, setSaving] = useState(false);
 
-  // Mock data - in real app, this would fetch from API
+  // Fetch real matches from Football API
   useEffect(() => {
-    // Simulate loading
-    setLoading(true);
-    
-    // Mock matches data
-    const mockMatches: Match[] = [
-      {
-        id: 1,
-        home_team: team.name,
-        away_team: "Arsenal FC",
-        match_date: "2026-03-10T15:00:00Z",
-        status: "upcoming",
-        venue: team.home_venue?.name || "Stadium"
-      },
-      {
-        id: 2,
-        home_team: "Liverpool FC",
-        away_team: team.name,
-        match_date: "2026-03-17T14:30:00Z",
-        status: "upcoming",
-        venue: "Anfield Stadium"
-      },
-      {
-        id: 3,
-        home_team: team.name,
-        away_team: "Chelsea FC",
-        match_date: "2026-02-28T16:00:00Z",
-        status: "completed",
-        home_score: 2,
-        away_score: 1,
-        venue: team.home_venue?.name || "Stadium"
-      },
-      {
-        id: 4,
-        home_team: "Manchester City",
-        away_team: team.name,
-        match_date: "2026-02-21T12:30:00Z",
-        status: "completed",
-        home_score: 1,
-        away_score: 0,
-        venue: "Etihad Stadium"
+    const fetchMatches = async () => {
+      if (!team.api_id) {
+        setError('Team does not have an API ID');
+        return;
       }
-    ];
+      
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch recent and upcoming matches (last 10 and next 10)
+        const response = await fetch(`/api/teams/${team.id}/matches?last=10&next=10&season=2024`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch matches');
+        }
+        
+        const data: MatchesResponse = await response.json();
+        setMatches(data.matches);
+      } catch (error) {
+        console.error('Error fetching matches:', error);
+        setError('Failed to load matches. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    setTimeout(() => {
-      setMatches(mockMatches);
-      setLoading(false);
-    }, 500);
-  }, [team.name, team.home_venue]);
+    fetchMatches();
+  }, [team.id, team.api_id]);
 
-  const upcomingMatches = matches.filter(match => match.status === 'upcoming');
-  const recentMatches = matches.filter(match => match.status === 'completed');
+  const saveMatchesToDatabase = async () => {
+    if (!team.api_id) {
+      setError('Team does not have an API ID');
+      return;
+    }
+    
+    setSaving(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/teams/${team.id}/matches?save=true&last=20&next=20&season=2024`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to save matches');
+      }
+      
+      const data: MatchesResponse = await response.json();
+      setMatches(data.matches);
+      
+      // Show success message briefly
+      const successMessage = "Matches saved to database successfully!";
+      setError(successMessage);
+      setTimeout(() => setError(null), 3000);
+    } catch (error) {
+      console.error('Error saving matches:', error);
+      setError('Failed to save matches to database. Please try again later.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const upcomingMatches = matches.filter(match => match.status === 'NS' || match.status === 'TBD');
+  const recentMatches = matches.filter(match => match.status === 'FT' || match.status === 'AET' || match.status === 'PEN');
 
   const formatMatchDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -96,7 +128,8 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
   };
 
   const getMatchResult = (match: Match, teamName: string) => {
-    if (match.status !== 'completed') return null;
+    if (match.status !== 'FT' && match.status !== 'AET' && match.status !== 'PEN') return null;
+    if (match.home_score === null || match.away_score === null) return null;
     
     const isHome = match.home_team === teamName;
     const teamScore = isHome ? match.home_score : match.away_score;
@@ -112,14 +145,37 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
       <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
         
         {/* Header */}
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-2 rounded-lg">
-            <span className="text-white text-xl">⚽</span>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center space-x-3">
+            <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-2 rounded-lg">
+              <span className="text-white text-xl">⚽</span>
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Team Matches</h2>
+              <p className="text-gray-600">Recent and upcoming games for {team.name}</p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Team Matches</h2>
-            <p className="text-gray-600">Recent and upcoming games for {team.name}</p>
-          </div>
+          
+          {/* Save to Database Button */}
+          {team.api_id && (
+            <button
+              onClick={saveMatchesToDatabase}
+              disabled={saving || loading}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {saving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Saving...</span>
+                </>
+              ) : (
+                <>
+                  <span>💾</span>
+                  <span>Save to DB</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
         
         {/* Tab Navigation */}
@@ -153,8 +209,28 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
           </div>
         )}
         
+        {/* Error/Success State */}
+        {error && (
+          <div className={`border rounded-lg p-4 mb-4 ${
+            error.includes('successfully') 
+              ? 'bg-green-50 border-green-200'
+              : 'bg-red-50 border-red-200'
+          }`}>
+            <div className={`flex items-center space-x-2 ${
+              error.includes('successfully') 
+                ? 'text-green-700'
+                : 'text-red-700'
+            }`}>
+              <span className="text-xl">
+                {error.includes('successfully') ? '✅' : '⚠️'}
+              </span>
+              <span className="font-medium">{error}</span>
+            </div>
+          </div>
+        )}
+        
         {/* Match List */}
-        {!loading && (
+        {!loading && !error && (
           <div className="space-y-4">
             {(activeTab === 'upcoming' ? upcomingMatches : recentMatches).map((match, index) => {
               const matchDateTime = formatMatchDate(match.match_date);
@@ -163,31 +239,70 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
               
               return (
                 <div
-                  key={match.id}
+                  key={match.api_id}
                   className="group p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all duration-200"
                 >
                   <div className="flex items-center justify-between">
                     
                     {/* Match Info */}
                     <div className="flex-1">
+                      
+                      {/* League Info */}
+                      <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
+                        <img 
+                          src={match.league_logo} 
+                          alt={match.league} 
+                          className="w-4 h-4 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                        <span>{match.league}</span>
+                        <span>•</span>
+                        <span>{match.round}</span>
+                      </div>
+                      
                       <div className="flex items-center space-x-4">
                         
-                        {/* Teams */}
+                        {/* Teams with Logos */}
                         <div className="flex-1">
-                          <div className="flex items-center space-x-2 text-lg font-semibold">
-                            <span className={match.home_team === team.name ? 'text-green-600' : 'text-gray-900'}>
-                              {match.home_team}
-                            </span>
+                          <div className="flex items-center space-x-3 text-lg font-semibold">
+                            {/* Home Team */}
+                            <div className={`flex items-center space-x-2 ${match.home_team === team.name ? 'text-green-600' : 'text-gray-900'}`}>
+                              <img 
+                                src={match.home_team_logo} 
+                                alt={match.home_team}
+                                className="w-6 h-6 object-contain"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                              <span>{match.home_team}</span>
+                            </div>
+                            
                             <span className="text-gray-400">vs</span>
-                            <span className={match.away_team === team.name ? 'text-green-600' : 'text-gray-900'}>
-                              {match.away_team}
-                            </span>
+                            
+                            {/* Away Team */}
+                            <div className={`flex items-center space-x-2 ${match.away_team === team.name ? 'text-green-600' : 'text-gray-900'}`}>
+                              <img 
+                                src={match.away_team_logo} 
+                                alt={match.away_team}
+                                className="w-6 h-6 object-contain"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                }}
+                              />
+                              <span>{match.away_team}</span>
+                            </div>
                           </div>
                           
-                          <div className="flex items-center space-x-3 mt-1 text-sm text-gray-600">
+                          <div className="flex items-center space-x-3 mt-2 text-sm text-gray-600">
                             <span className="flex items-center space-x-1">
                               <span>🏟️</span>
                               <span>{match.venue}</span>
+                              {match.venue_city && (
+                                <span className="text-gray-400">• {match.venue_city}</span>
+                              )}
                             </span>
                             <span className="flex items-center space-x-1">
                               <span>📅</span>
@@ -202,7 +317,8 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
                         
                         {/* Score/Status */}
                         <div className="text-right">
-                          {match.status === 'completed' && match.home_score !== undefined && match.away_score !== undefined ? (
+                          {(match.status === 'FT' || match.status === 'AET' || match.status === 'PEN') && 
+                           match.home_score !== null && match.away_score !== null ? (
                             <div className="flex items-center space-x-2">
                               <div className="text-2xl font-bold text-gray-900">
                                 {match.home_score} - {match.away_score}
@@ -219,7 +335,7 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
                             </div>
                           ) : (
                             <div className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-                              {matchDateTime.time}
+                              {match.status === 'NS' ? matchDateTime.time : match.status_long}
                             </div>
                           )}
                         </div>
@@ -238,6 +354,9 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
                 <div className="text-4xl mb-2">⚽</div>
                 <p className="text-gray-500">
                   No {activeTab} matches found for {team.name}
+                </p>
+                <p className="text-sm text-gray-400 mt-1">
+                  {activeTab === 'upcoming' ? 'Check back later for scheduled matches' : 'No recent matches available'}
                 </p>
               </div>
             )}
