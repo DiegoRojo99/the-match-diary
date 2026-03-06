@@ -11,7 +11,4 @@ export default defineConfig({
   datasource: {
     url: process.env["DIRECT_URL"], // Use direct URL for seeding operations
   },
-  client: {
-    engineType: "binary", // Use binary engine instead of default
-  },
 });
