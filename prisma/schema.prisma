@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,40 +6,33 @@ datasource db {
   provider = "postgresql"
 }
 
-// Users table
 model User {
-  id          String   @id @default(uuid()) @db.Uuid
-  email       String   @unique
-  username    String?  @unique @db.VarChar(50)
-  displayName String?  @map("display_name") @db.VarChar(100)
-  avatarUrl   String?  @map("avatar_url")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
-  preferences Json?    @default("{}")
-
-  // Relations
+  id          String      @id @default(uuid()) @db.Uuid
+  email       String      @unique
+  username    String?     @unique @db.VarChar(50)
+  displayName String?     @map("display_name") @db.VarChar(100)
+  avatarUrl   String?     @map("avatar_url")
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at")
+  preferences Json?       @default("{}")
   userMatches UserMatch[]
   userVenues  UserVenue[]
 
   @@map("users")
 }
 
-// Countries table
 model Country {
-  id   Int     @id @default(autoincrement())
-  name String  @db.VarChar(100)
-  code String  @unique @db.VarChar(10)
-  flag String?
-
-  // Relations
+  id           Int           @id @default(autoincrement())
+  name         String        @db.VarChar(100)
+  code         String        @unique @db.VarChar(10)
+  flag         String?
   cities       City[]
-  teams        Team[]
   competitions Competition[]
+  teams        Team[]
 
   @@map("countries")
 }
 
-// Cities table
 model City {
   id        Int      @id @default(autoincrement())
   name      String   @db.VarChar(100)
@@ -50,111 +40,92 @@ model City {
   latitude  Decimal? @db.Decimal(10, 8)
   longitude Decimal? @db.Decimal(11, 8)
   timezone  String?  @db.VarChar(50)
-
-  // Relations
-  country Country? @relation(fields: [countryId], references: [id])
-  venues  Venue[]
+  country   Country? @relation(fields: [countryId], references: [id])
+  venues    Venue[]
 
   @@map("cities")
 }
 
-// Venues table
 model Venue {
-  id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(200)
-  cityId    Int?     @map("city_id")
-  capacity  Int?
-  address   String?
-  surface   String?  @db.VarChar(20)
-  latitude  Decimal? @db.Decimal(10, 8)
-  longitude Decimal? @db.Decimal(11, 8)
-  apiId     Int?     @unique @map("api_id")
-  imageUrl  String?  @map("image_url")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
-
-  // Relations
-  city        City?        @relation(fields: [cityId], references: [id])
-  teams       Team[]       @relation("HomeVenue")
-  matches     Match[]
-  userVenues  UserVenue[]
+  id         Int         @id // API ID as primary key
+  name       String      @db.VarChar(200)
+  cityId     Int?        @map("city_id")
+  capacity   Int?
+  address    String?
+  surface    String?     @db.VarChar(20)
+  latitude   Decimal?    @db.Decimal(10, 8)
+  longitude  Decimal?    @db.Decimal(11, 8)
+  imageUrl   String?     @map("image_url")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @default(now()) @updatedAt @map("updated_at")
+  matches    Match[]
+  teams      Team[]      @relation("HomeVenue")
+  userVenues UserVenue[]
+  city       City?       @relation(fields: [cityId], references: [id])
 
   @@map("venues")
 }
 
-// Teams table
 model Team {
-  id           Int      @id @default(autoincrement())
-  name         String   @db.VarChar(100)
-  teamCode     String?  @map("team_code") @db.VarChar(10)
-  countryId    Int?     @map("country_id")
-  foundedYear  Int?     @map("founded_year")
-  national     Boolean? @default(false)
-  logoUrl      String?  @map("logo_url")
-  homeVenueId  Int?     @map("home_venue_id")
-  apiId        Int?     @unique @map("api_id")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
-
-  // Relations
+  id          Int      @id // API ID as primary key
+  name        String   @db.VarChar(100)
+  teamCode    String?  @map("team_code") @db.VarChar(10)
+  countryId   Int?     @map("country_id")
+  foundedYear Int?     @map("founded_year")
+  national    Boolean? @default(false)
+  logoUrl     String?  @map("logo_url")
+  homeVenueId Int?     @map("home_venue_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at")
+  awayMatches Match[]  @relation("AwayTeam")
+  homeMatches Match[]  @relation("HomeTeam")
   country     Country? @relation(fields: [countryId], references: [id])
   homeVenue   Venue?   @relation("HomeVenue", fields: [homeVenueId], references: [id])
-  homeMatches Match[]  @relation("HomeTeam")
-  awayMatches Match[]  @relation("AwayTeam")
 
   @@map("teams")
 }
 
-// Competitions table
 model Competition {
-  id        Int      @id @default(autoincrement())
+  id        Int      @id // API ID as primary key
   name      String   @db.VarChar(100)
   type      String   @db.VarChar(20)
   countryId Int?     @map("country_id")
   logoUrl   String?  @map("logo_url")
   seasons   Json?    @default("[]")
-  visible   Boolean  @default(false)
-  seeded    Boolean  @default(false)
-  apiId     Int?     @unique @map("api_id")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
-
-  // Relations
-  country Country? @relation(fields: [countryId], references: [id])
-  matches Match[]
+  visible   Boolean  @default(false)
+  seeded    Boolean  @default(false)
+  country   Country? @relation(fields: [countryId], references: [id])
+  matches   Match[]
 
   @@map("competitions")
 }
 
-// Matches table
 model Match {
-  id            Int      @id @default(autoincrement())
-  homeTeamId    Int?     @map("home_team_id")
-  awayTeamId    Int?     @map("away_team_id")
-  venueId       Int?     @map("venue_id")
-  competitionId Int?     @map("competition_id")
-  seasonYear    Int      @map("season_year")
-  matchDate     DateTime @map("match_date")
-  homeScore     Int?     @map("home_score")
-  awayScore     Int?     @map("away_score")
-  statusShort   String?  @map("status_short") @db.VarChar(10)
-  statusLong    String?  @map("status_long") @db.VarChar(50)
-  matchWeek     Int?     @map("match_week")
-  apiId         Int?     @unique @map("api_id")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
-
-  // Relations
-  homeTeam    Team?         @relation("HomeTeam", fields: [homeTeamId], references: [id])
-  awayTeam    Team?         @relation("AwayTeam", fields: [awayTeamId], references: [id])
-  venue       Venue?        @relation(fields: [venueId], references: [id])
-  competition Competition?  @relation(fields: [competitionId], references: [id])
-  userMatches UserMatch[]
+  id            Int          @id // API ID as primary key
+  homeTeamId    Int?         @map("home_team_id")
+  awayTeamId    Int?         @map("away_team_id")
+  venueId       Int?         @map("venue_id")
+  competitionId Int?         @map("competition_id")
+  seasonYear    Int          @map("season_year")
+  matchDate     DateTime     @map("match_date")
+  homeScore     Int?         @map("home_score")
+  awayScore     Int?         @map("away_score")
+  statusShort   String?      @map("status_short") @db.VarChar(10)
+  statusLong    String?      @map("status_long") @db.VarChar(50)
+  matchWeek     Int?         @map("match_week")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @default(now()) @updatedAt @map("updated_at")
+  awayTeam      Team?        @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  competition   Competition? @relation(fields: [competitionId], references: [id])
+  homeTeam      Team?        @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  venue         Venue?       @relation(fields: [venueId], references: [id])
+  userMatches   UserMatch[]
 
   @@map("matches")
 }
 
-// User matches table (core tracking)
 model UserMatch {
   id           String   @id @default(uuid()) @db.Uuid
   userId       String?  @map("user_id") @db.Uuid
@@ -163,37 +134,41 @@ model UserMatch {
   rating       Int?     @db.SmallInt
   notes        String?
   photos       Json?    @default("[]")
-  seatSection  String?  @map("seat_section") @db.VarChar(50)
-  ticketPrice  Decimal? @map("ticket_price") @db.Decimal(10, 2)
-  currency     String?  @default("EUR") @db.Char(3)
-  weather      String?  @db.VarChar(50)
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
-
-  // Relations
-  user  User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  match Match? @relation(fields: [matchId], references: [id])
+  currency     String?  @default("EUR") @db.Char(3)
+  seatSection  String?  @map("seat_section") @db.VarChar(50)
+  ticketPrice  Decimal? @map("ticket_price") @db.Decimal(10, 2)
+  weather      String?  @db.VarChar(50)
+  match        Match?   @relation(fields: [matchId], references: [id])
+  user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, matchId])
   @@map("user_matches")
 }
 
-// User venues table (aggregate view)
 model UserVenue {
-  id              String    @id @default(uuid()) @db.Uuid
-  userId          String?   @map("user_id") @db.Uuid
-  venueId         Int?      @map("venue_id")
-  firstVisitDate  DateTime? @map("first_visit_date")
-  lastVisitDate   DateTime? @map("last_visit_date")
-  totalMatches    Int?      @default(0) @map("total_matches")
-  favorite        Boolean?  @default(false)
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
-
-  // Relations
-  user  User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  venue Venue? @relation(fields: [venueId], references: [id])
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String?   @map("user_id") @db.Uuid
+  venueId        Int?      @map("venue_id")
+  firstVisitDate DateTime? @map("first_visit_date")
+  lastVisitDate  DateTime? @map("last_visit_date")
+  totalMatches   Int?      @default(0) @map("total_matches")
+  favorite       Boolean?  @default(false)
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+  user           User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venue          Venue?    @relation(fields: [venueId], references: [id])
 
   @@unique([userId, venueId])
   @@map("user_venues")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model spatial_ref_sys {
+  srid      Int     @id
+  auth_name String? @db.VarChar(256)
+  auth_srid Int?
+  srtext    String? @db.VarChar(2048)
+  proj4text String? @db.VarChar(2048)
 }

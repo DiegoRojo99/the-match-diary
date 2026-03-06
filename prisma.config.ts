@@ -9,7 +9,7 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"], // Use pooled URL for client
+    url: process.env["DIRECT_URL"], // Use direct URL for seeding operations
   },
   client: {
     engineType: "binary", // Use binary engine instead of default

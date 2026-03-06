@@ -23,14 +23,13 @@ export async function GET(
       );
     }
 
-    // First check if the team exists and get its API ID
+    // First check if the team exists
     const team = await prisma.team.findUnique({
       where: {
         id: teamId
       },
       select: {
         id: true,
-        apiId: true,
         name: true
       }
     });
@@ -42,12 +41,7 @@ export async function GET(
       );
     }
 
-    if (!team.apiId) {
-      return NextResponse.json(
-        { error: 'Team does not have an API ID' },
-        { status: 400 }
-      );
-    }
+
 
     // Fetch fixtures from Football API
     // Default to current season (2025) and last 10 matches if no params specified
@@ -56,14 +50,14 @@ export async function GET(
     const nextMatches = next ? parseInt(next) : undefined;
     
     console.log('Fetching fixtures for team:', {
-      teamApiId: team.apiId,
+      teamApiId: team.id,
       season: currentSeason,
       last: lastMatches,
       next: nextMatches
     });
 
     const fixtures = await apiFootballService.getTeamFixtures(
-      team.apiId,
+      team.id,
       currentSeason,
       lastMatches,
       nextMatches
@@ -72,7 +66,7 @@ export async function GET(
     console.log('API returned fixtures count:', fixtures.length);
 
     // Transform fixtures to our format
-    const transformedMatches: Omit<Match, 'id'>[] = fixtures.map(fixture => (apiFixtureToMatchData(fixture)));
+    const transformedMatches: Match[] = fixtures.map(fixture => (apiFixtureToMatchData(fixture)));
 
     // Always save matches and related entities to database
     try {
@@ -82,16 +76,16 @@ export async function GET(
           // Upsert home team
           const fixtureHomeTeam = fixture.teams.home;
           const homeTeam = await prisma.team.upsert({
-            where: { apiId: fixtureHomeTeam.id },
+            where: { id: fixtureHomeTeam.id },
             update: {
               name: fixtureHomeTeam.name,
               logoUrl: fixtureHomeTeam.logo,
               updatedAt: new Date()
             },
             create: {
+              id: fixtureHomeTeam.id,
               name: fixtureHomeTeam.name,
               logoUrl: fixtureHomeTeam.logo,
-              apiId: fixtureHomeTeam.id,
               createdAt: new Date(),
               updatedAt: new Date()
             }
@@ -100,16 +94,16 @@ export async function GET(
           // Upsert away team
           const fixtureAwayTeam = fixture.teams.away;
           const awayTeam = await prisma.team.upsert({
-            where: { apiId: fixtureAwayTeam.id },
+            where: { id: fixtureAwayTeam.id },
             update: {
               name: fixtureAwayTeam.name,
               logoUrl: fixtureAwayTeam.logo,
               updatedAt: new Date()
             },
             create: {
+              id: fixtureAwayTeam.id,
               name: fixtureAwayTeam.name,
               logoUrl: fixtureAwayTeam.logo,
-              apiId: fixtureAwayTeam.id,
               createdAt: new Date(),
               updatedAt: new Date()
             }
@@ -121,14 +115,14 @@ export async function GET(
           
           if (fixtureVenue && fixtureVenue.id) {
             venue = await prisma.venue.upsert({
-              where: { apiId: fixtureVenue.id },
+              where: { id: fixtureVenue.id },
               update: {
                 name: fixtureVenue.name || 'Unknown Venue',
                 updatedAt: new Date()
               },
               create: {
+                id: fixtureVenue.id,
                 name: fixtureVenue.name || 'Unknown Venue',
-                apiId: fixtureVenue.id,
                 createdAt: new Date(),
                 updatedAt: new Date()
               }
@@ -142,16 +136,16 @@ export async function GET(
           // Upsert competition
           const fixtureLeague = fixture.league;
           const competition = await prisma.competition.upsert({
-            where: { apiId: fixtureLeague.id },
+            where: { id: fixtureLeague.id },
             update: {
               name: fixtureLeague.name,
               logoUrl: fixtureLeague.logo,
               updatedAt: new Date()
             },
             create: {
+              id: fixtureLeague.id,
               name: fixtureLeague.name,
               logoUrl: fixtureLeague.logo,
-              apiId: fixtureLeague.id,
               type: 'league', // Default type
               createdAt: new Date(),
               updatedAt: new Date()
@@ -172,15 +166,17 @@ export async function GET(
             statusShort: fixture.fixture.status.short,
             statusLong: fixture.fixture.status.long,
             matchWeek: matchWeek,
-            apiId: fixture.fixture.id
           };
           
           await prisma.match.upsert({
             where: {
-              apiId: fixture.fixture.id
+              id: fixture.fixture.id
             },
             update: matchData,
-            create: matchData
+            create: {
+              id: fixture.fixture.id,
+              ...matchData
+            }
           });
 
         } catch (fixtureError) {
@@ -199,7 +195,6 @@ export async function GET(
       team: {
         id: team.id,
         name: team.name,
-        apiId: team.apiId
       }
     });
 

@@ -41,7 +41,6 @@ export async function GET(
       foundedYear: team.foundedYear,
       national: team.national,
       logoUrl: team.logoUrl,
-      apiId: team.apiId,
       country: team.country ? {
         id: team.country.id,
         name: team.country.name,

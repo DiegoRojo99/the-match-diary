@@ -2,16 +2,19 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { createClient } from '@supabase/supabase-js';
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 import { apiFootballService } from '@/lib/api-football';
 import type { ApiCountry } from '@/types/api/countries';
-import type { CountryTable } from '@/types/db';
 
-// Create Supabase client for seeding
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // Use service role for admin operations
-);
+// Create Prisma client for seeding with PG adapter
+const pool = new Pool({ connectionString: process.env.DIRECT_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({
+  log: ['error', 'warn'],
+  adapter
+});
 
 async function seedCountries() {
   console.log('🌍 Starting countries seeding...');
@@ -19,15 +22,13 @@ async function seedCountries() {
   try {
     // First, check existing countries in database to avoid unnecessary API calls
     console.log('🔍 Checking existing countries in database...');
-    const { data: existingCountries, error: fetchError } = await supabase
-      .from('countries')
-      .select('code');
+    const existingCountries = await prisma.country.findMany({
+      select: {
+        code: true
+      }
+    });
     
-    if (fetchError) {
-      throw new Error(`Error fetching existing countries: ${fetchError.message}`);
-    }
-    
-    const existingCodes = new Set(existingCountries?.map(c => c.code) || []);
+    const existingCodes = new Set(existingCountries.map(c => c.code));
     console.log(`📊 Found ${existingCodes.size} countries already in database`);
     
     // Only fetch from API if we need to add countries
@@ -44,7 +45,7 @@ async function seedCountries() {
       });
 
       // Transform API data to database format, only filtering null codes
-      const dbCountries: CountryTable['Insert'][] = apiCountries
+      const dbCountries = apiCountries
         .filter(country => {
           if (!country.code) {
             console.log(`⚠️  Skipping ${country.name}: null code`);
@@ -74,17 +75,18 @@ async function seedCountries() {
       for (let i = 0; i < dbCountries.length; i += batchSize) {
         const batch = dbCountries.slice(i, i + batchSize);
         
-        const { error: insertError } = await supabase
-          .from('countries')
-          .insert(batch);
-        
-        if (insertError) {
+        try {
+          await prisma.country.createMany({
+            data: batch,
+            skipDuplicates: true
+          });
+          
+          inserted += batch.length;
+          console.log(`⚡ Inserted batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(dbCountries.length/batchSize)} (${inserted}/${dbCountries.length})`);
+        } catch (insertError) {
           console.error(`❌ Error inserting batch ${Math.floor(i/batchSize) + 1}:`, insertError);
           throw insertError;
         }
-        
-        inserted += batch.length;
-        console.log(`⚡ Inserted batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(dbCountries.length/batchSize)} (${inserted}/${dbCountries.length})`);
       }
       
       console.log(`🎉 Successfully seeded ${inserted} countries!`);
@@ -93,11 +95,9 @@ async function seedCountries() {
     }
     
     // Show final stats
-    const { data: totalCountries } = await supabase
-      .from('countries')
-      .select('id', { count: 'exact' });
+    const totalCountries = await prisma.country.count();
     
-    console.log(`📊 Total countries in database: ${totalCountries?.length || 0}`);
+    console.log(`📊 Total countries in database: ${totalCountries}`);
     
   } catch (error) {
     console.error('❌ Error seeding countries:', error);
@@ -119,6 +119,9 @@ async function main() {
   } catch (error) {
     console.error('💥 Database seeding failed:', error);
     process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+    await pool.end();
   }
 }
 

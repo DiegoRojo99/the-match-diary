@@ -2,36 +2,39 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { createClient } from '@supabase/supabase-js';
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 import { apiFootballService } from '@/lib/api-football';
-import type { CompetitionWithCountry, TeamTable, VenueTable } from '@/types/db';
 import { ApiTeam, ApiTeamResponse } from '@/types/api/teams';
 
-// Create Supabase client for seeding
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // Use service role for admin operations
-);
+// Create Prisma client for seeding with PG adapter
+const pool = new Pool({ connectionString: process.env.DIRECT_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({
+  log: ['error', 'warn'],
+  adapter
+});
 
 async function seedTeamsAndVenues() {
   console.log('🏈 Starting teams and venues seeding...');
   
   try {
-    // 1. Get all visible competitions that haven't been seeded yet, sorted by country_id (nulls last) 
+    // 1. Get all visible competitions that haven't been seeded yet, sorted by countryId (nulls last) 
     console.log('🔍 Fetching visible competitions that need seeding...');
-    const { data: competitionData, error: compError } = await supabase
-      .from('competitions')
-      .select(`
-        *,
-        country: countries (*)
-      `)
-      .eq('visible', true)
-      .eq('seeded', false)
-      .order('country_id', { ascending: true});
+    const competitions = await prisma.competition.findMany({
+      where: {
+        visible: true,
+        seeded: false
+      },
+      include: {
+        country: true
+      },
+      orderBy: {
+        countryId: 'asc'
+      }
+    });
     
-    if (compError) throw new Error(`Error fetching competitions: ${compError.message}`);
-    
-    const competitions = competitionData as CompetitionWithCountry[] | null;
     if (!competitions || competitions.length === 0) {
       console.log('❌ No visible competitions found that need seeding');
       console.log('ℹ️  All visible competitions may already be seeded');
@@ -42,7 +45,7 @@ async function seedTeamsAndVenues() {
     console.log('📋 Competition priority order:');
     competitions.slice(0, 10).forEach((comp, idx) => {
       const countryInfo = comp.country ? `${comp.country.name} (${comp.country.code})` : 'International/Continental';
-      console.log(`  ${idx + 1}. ${comp.name} - ${countryInfo} (API ID: ${comp.api_id})`);
+      console.log(`  ${idx + 1}. ${comp.name} - ${countryInfo} (ID: ${comp.id})`);
     });
     if (competitions.length > 10) {
       console.log(`  ... and ${competitions.length - 10} more`);
@@ -64,33 +67,30 @@ async function seedTeamsAndVenues() {
       
       console.log(`\n${progress} 🏆 ${targetCompetition.name}`);
       console.log(`   Country: ${targetCompetition.country?.name || 'International/Continental'}`);
-      console.log(`   API ID: ${targetCompetition.api_id}`);
+      console.log(`   ID: ${targetCompetition.id}`);
       
       // 3. Check existing teams and venues to avoid duplicates (refresh each time)
       console.log('🔍 Checking existing teams and venues...');
-      const { data: existingTeams, error: teamsError } = await supabase
-        .from('teams')
-        .select('api_id, name, country_id');
+      const existingTeams = await prisma.team.findMany({
+        select: {
+          id: true,
+          name: true,
+          countryId: true
+        }
+      });
       
-      if (teamsError) {
-        console.error(`❌ Error fetching existing teams: ${teamsError.message}`);
-        continue; // Skip this competition but continue with others
-      }
+      const existingVenues = await prisma.venue.findMany({
+        select: {
+          id: true,
+          name: true
+        }
+      });
       
-      const { data: existingVenues, error: venuesError } = await supabase
-        .from('venues')
-        .select('api_id, name');
-      
-      if (venuesError) {
-        console.error(`❌ Error fetching existing venues: ${venuesError.message}`);
-        continue;
-      }
-      
-      const existingTeamIds = new Set(existingTeams?.map(t => t.api_id) || []);
-      const existingVenueIds = new Set(existingVenues?.map(v => v.api_id) || []);
-      const teamsWithoutCountry = new Map((existingTeams || [])
-        .filter(t => !t.country_id)
-        .map(t => [t.api_id, t]));
+      const existingTeamIds = new Set(existingTeams.map(t => t.id));
+      const existingVenueIds = new Set(existingVenues.map(v => v.id));
+      const teamsWithoutCountry = new Map(existingTeams
+        .filter(t => !t.countryId)
+        .map(t => [t.id, t]));
       
       console.log(`📊 ${existingTeamIds.size} teams, ${existingVenueIds.size} venues, ${teamsWithoutCountry.size} teams without country`);
       
@@ -99,13 +99,9 @@ async function seedTeamsAndVenues() {
       let apiTeams: ApiTeamResponse[];
       
       try {
-        const competitionApiId = targetCompetition.api_id;
-        if (!competitionApiId) {
-          console.log(`⚠️  Competition ${targetCompetition.name} does not have an API ID, skipping...`);
-          continue;
-        }
+        const competitionId = targetCompetition.id;
         
-        const apiResponse = await apiFootballService.getTeams(competitionApiId, 2025);
+        const apiResponse = await apiFootballService.getTeams(competitionId, 2025);
         apiTeams = apiResponse as ApiTeamResponse[];
         console.log(`📊 API returned ${apiTeams.length} teams`);
       } 
@@ -137,64 +133,65 @@ async function seedTeamsAndVenues() {
         // Process venue first (teams reference venues)
         let venueId: number | null = null;
         
-        if (venue && venue.id) {
+        if (venue && venue.id && venue.id > 0) {
           if (existingVenueIds.has(venue.id)) {
-            // Venue already exists, get its database ID
-            const { data: existingVenue } = await supabase
-              .from('venues')
-              .select('id')
-              .eq('api_id', venue.id)
-              .single();
-            
-            venueId = existingVenue?.id || null;
+            // Venue already exists, use its ID
+            venueId = venue.id;
             skippedVenues++;
           } 
           else {
             // Insert new venue
-            const venueData: VenueTable['Insert'] = {
-              api_id: venue.id,
-              name: venue.name,
-              address: venue.address || null,
-              city_id: null, // TODO: Map city name to city_id when cities table exists
-              capacity: venue.capacity || null,
-              surface: venue.surface || null,
-              image_url: venue.image || null
-            };
-            
-            const { data: insertedVenue, error: venueInsertError } = await supabase
-              .from('venues')
-              .insert(venueData)
-              .select('id')
-              .single();
-            
-            if (venueInsertError) {
-              console.error(`❌ Error inserting venue ${venue.name}:`, venueInsertError);
-              venueId = null;
-            } 
-            else {
+            try {
+              const venueData = {
+                id: venue.id,
+                name: venue.name,
+                address: venue.address || null,
+                cityId: null, // TODO: Map city name to cityId when cities table exists
+                capacity: venue.capacity || null,
+                surface: venue.surface || null,
+                imageUrl: venue.image || null
+              };
+              
+              console.log(`🏟️  Inserting venue: ${venue.name} (ID: ${venue.id})`);
+              
+              const insertedVenue = await prisma.venue.create({
+                data: venueData,
+                select: {
+                  id: true
+                }
+              });
+              
               venueId = insertedVenue.id;
+              existingVenueIds.add(venueId); // Add to the set to prevent future duplicates
               newVenues++;
+            } catch (venueInsertError) {
+              console.error(`❌ Error inserting venue ${venue.name} (ID: ${venue.id}):`, venueInsertError);
+              venueId = null;
             }
+          }
+        } else {
+          if (venue) {
+            console.log(`⚠️  Skipping venue with invalid ID: ${venue.name} (ID: ${venue.id})`);
           }
         }
         
         // Process team
         if (existingTeamIds.has(team.id)) {
-          // Team exists - check if we need to update country_id
+          // Team exists - check if we need to update countryId
           const existingTeamWithoutCountry = teamsWithoutCountry.get(team.id);
           
-          if (existingTeamWithoutCountry && targetCompetition.country_id) {
+          if (existingTeamWithoutCountry && targetCompetition.countryId) {
             // Update team with country information
-            const { error: updateError } = await supabase
-              .from('teams')
-              .update({ country_id: targetCompetition.country_id })
-              .eq('api_id', team.id);
-            
-            if (updateError) {
-              console.error(`❌ Error updating team ${team.name} country:`, updateError);
-            } else {
+            try {
+              await prisma.team.update({
+                where: { id: team.id },
+                data: { countryId: targetCompetition.countryId }
+              });
+              
               console.log(`🌍 Updated ${team.name} with country: ${targetCompetition.country?.name}`);
               updatedTeams++;
+            } catch (updateError) {
+              console.error(`❌ Error updating team ${team.name} country:`, updateError);
             }
           } 
           else {
@@ -203,25 +200,25 @@ async function seedTeamsAndVenues() {
         } 
         else {
           // Insert new team
-          const teamData: TeamTable['Insert'] = {
-            api_id: team.id,
-            name: team.name,
-            team_code: team.code || null,
-            country_id: targetCompetition.country_id || null,
-            founded_year: team.founded || null,
-            national: team.national,
-            logo_url: team.logo,
-            home_venue_id: venueId
-          };
-          
-          const { error: teamInsertError } = await supabase
-            .from('teams')
-            .insert(teamData);
-          
-          if (teamInsertError) {
-            console.error(`❌ Error inserting team ${team.name}:`, teamInsertError);
-          } else {
+          try {
+            const teamData = {
+              id: team.id,
+              name: team.name,
+              teamCode: team.code || null,
+              countryId: targetCompetition.countryId || null,
+              foundedYear: team.founded || null,
+              national: team.national,
+              logoUrl: team.logo,
+              homeVenueId: venueId
+            };
+            
+            await prisma.team.create({
+              data: teamData
+            });
+            
             newTeams++;
+          } catch (teamInsertError) {
+            console.error(`❌ Error inserting team ${team.name}:`, teamInsertError);
           }
         }
       }
@@ -231,15 +228,15 @@ async function seedTeamsAndVenues() {
       console.log(`${progress} ✅ Venues: +${newVenues} new, ${skippedVenues} skipped`);
       
       // Mark competition as seeded
-      const { error: seededError } = await supabase
-        .from('competitions')
-        .update({ seeded: true })
-        .eq('id', targetCompetition.id);
-      
-      if (seededError) {
-        console.error(`${progress} ❌ Error marking competition as seeded:`, seededError);
-      } else {
+      try {
+        await prisma.competition.update({
+          where: { id: targetCompetition.id },
+          data: { seeded: true }
+        });
+        
         console.log(`${progress} ✅ Marked competition as seeded`);
+      } catch (seededError) {
+        console.error(`${progress} ❌ Error marking competition as seeded:`, seededError);
       }
       
       // Add to totals
@@ -262,17 +259,12 @@ async function seedTeamsAndVenues() {
     console.log(`   📊 Total teams processed: ${totalTeamsProcessed}`);
     
     // Show final database stats
-    const { data: totalTeams } = await supabase
-      .from('teams')
-      .select('id', { count: 'exact' });
-    
-    const { data: totalVenues } = await supabase
-      .from('venues')
-      .select('id', { count: 'exact' });
+    const totalTeams = await prisma.team.count();
+    const totalVenues = await prisma.venue.count();
     
     console.log(`\n📊 Final Database Status:`);
-    console.log(`   Total teams in database: ${totalTeams?.length || 0}`);
-    console.log(`   Total venues in database: ${totalVenues?.length || 0}`);
+    console.log(`   Total teams in database: ${totalTeams}`);
+    console.log(`   Total venues in database: ${totalVenues}`);
     
   } catch (error) {
     console.error('❌ Error in teams and venues seeding:', error);
@@ -294,6 +286,9 @@ async function main() {
   } catch (error) {
     console.error('💥 Teams and Venues seeding failed:', error);
     process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+    await pool.end();
   }
 }
 

@@ -1,7 +1,7 @@
 import { Match } from "@prisma/client";
 import { ApiFixture } from "../api";
 
-export function apiFixtureToMatchData(apiFixture: ApiFixture): Omit<Match, 'id'> {
+export function apiFixtureToMatchData(apiFixture: ApiFixture): Match {
   const homeTeam = apiFixture.teams.home;
   const awayTeam = apiFixture.teams.away;
   const league = apiFixture.league;
@@ -10,6 +10,7 @@ export function apiFixtureToMatchData(apiFixture: ApiFixture): Omit<Match, 'id'>
   const fixture = apiFixture.fixture;
 
   return {
+    id: fixture.id,
     homeTeamId: homeTeam.id,
     awayTeamId: awayTeam.id,
     venueId: fixture.venue?.id ?? null,
@@ -21,8 +22,7 @@ export function apiFixtureToMatchData(apiFixture: ApiFixture): Omit<Match, 'id'>
     statusShort: fixture.status.short,
     statusLong: fixture.status.long,
     matchWeek: matchWeek,
-    apiId: fixture.id,
     createdAt: new Date(),
-    updatedAt: new Date()
+    updatedAt: new Date(),
   };
 }

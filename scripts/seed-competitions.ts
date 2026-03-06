@@ -2,15 +2,18 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { createClient } from '@supabase/supabase-js';
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 import { apiFootballService } from '@/lib/api-football';
-import type { CompetitionTable } from '@/types/db';
 
-// Create Supabase client for seeding
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Create Prisma client for seeding with PG adapter
+const pool = new Pool({ connectionString: process.env.DIRECT_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({
+  log: ['error', 'warn'],
+  adapter
+});
 
 async function seedCompetitionsFromCountry(countryName: string = 'England') {
   console.log(`🏆 Testing competition seeding from ${countryName}...`);
@@ -18,13 +21,14 @@ async function seedCompetitionsFromCountry(countryName: string = 'England') {
   try {
     // Check existing competitions
     console.log('🔍 Checking existing competitions in database...');
-    const { data: existingComps, error: fetchError } = await supabase
-      .from('competitions')
-      .select('api_id, name');
+    const existingComps = await prisma.competition.findMany({
+      select: {
+        id: true,
+        name: true
+      }
+    });
     
-    if (fetchError) throw new Error(`Error fetching existing competitions: ${fetchError.message}`);
-    
-    const existingIds = new Set(existingComps?.map(c => c.api_id) || []);
+    const existingIds = new Set(existingComps.map(c => c.id));
     console.log(`📊 Found ${existingIds.size} competitions already in database`);
 
     // Fetch all leagues from the specified country (current season 2025)
@@ -64,14 +68,22 @@ async function seedCompetitionsFromCountry(countryName: string = 'England') {
     } 
     else {
       // Normal country lookup for national competitions
-      const { data: country, error: error } = await supabase
-        .from('countries')
-        .select('id, name, code')
-        .or(`code.eq.${apiCountryCode},name.eq.${apiCountryName}`)
-        .single();
+      const country = await prisma.country.findFirst({
+        where: {
+          OR: [
+            { code: apiCountryCode },
+            { name: apiCountryName }
+          ]
+        },
+        select: {
+          id: true,
+          name: true,
+          code: true
+        }
+      });
       
       matchingCountry = country;
-      countryError = error;
+      countryError = country ? null : new Error('Country not found');
     }
     
     if (countryError && matchingCountry !== null) {
@@ -79,11 +91,19 @@ async function seedCompetitionsFromCountry(countryName: string = 'England') {
       console.log(`   API returned: ${apiCountryName} (${apiCountryCode})`);
       
       // Let's see what countries we have available
-      const { data: availableCountries } = await supabase
-        .from('countries')
-        .select('name, code')
-        .ilike('name', `%${apiCountryName}%`)
-        .limit(5);
+      const availableCountries = await prisma.country.findMany({
+        where: {
+          name: {
+            contains: apiCountryName,
+            mode: 'insensitive'
+          }
+        },
+        select: {
+          name: true,
+          code: true
+        },
+        take: 5
+      });
       
       if (availableCountries && availableCountries.length > 0) {
         console.log('🔍 Similar countries found:');
@@ -107,11 +127,11 @@ async function seedCompetitionsFromCountry(countryName: string = 'England') {
     }
     
     // Transform to database format
-    const dbCompetitions: CompetitionTable['Insert'][] = newLeagues.map(league => ({
-      api_id: league.league?.id!,
+    const dbCompetitions = newLeagues.map(league => ({
+      id: league.league?.id!,
       name: league.league?.name!,
-      country_id: matchingCountry?.id || null,
-      logo_url: league.league?.logo || null,
+      countryId: matchingCountry?.id || null,
+      logoUrl: league.league?.logo || null,
       type: league.league?.type || 'League'
     }));
     
@@ -124,17 +144,18 @@ async function seedCompetitionsFromCountry(countryName: string = 'England') {
     for (let i = 0; i < dbCompetitions.length; i += batchSize) {
       const batch = dbCompetitions.slice(i, i + batchSize);
       
-      const { error: insertError } = await supabase
-        .from('competitions')
-        .insert(batch);
-      
-      if (insertError) {
+      try {
+        await prisma.competition.createMany({
+          data: batch,
+          skipDuplicates: true
+        });
+        
+        inserted += batch.length;
+        console.log(`⚡ Inserted batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(dbCompetitions.length/batchSize)} (${inserted}/${dbCompetitions.length})`);
+      } catch (insertError) {
         console.error(`❌ Error inserting batch ${Math.floor(i/batchSize) + 1}:`, insertError);
         throw insertError;
       }
-      
-      inserted += batch.length;
-      console.log(`⚡ Inserted batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(dbCompetitions.length/batchSize)} (${inserted}/${dbCompetitions.length})`);
     }
     
     console.log(`🎉 Successfully inserted ${inserted} competitions from ${countryName}!`);
@@ -142,7 +163,7 @@ async function seedCompetitionsFromCountry(countryName: string = 'England') {
     // Show some of the inserted competitions
     console.log('🏆 Sample inserted competitions:');
     dbCompetitions.slice(0, 5).forEach(comp => {
-      console.log(`  - ${comp.name} (API ID: ${comp.api_id}) - Type: ${comp.type}`);
+      console.log(`  - ${comp.name} (ID: ${comp.id}) - Type: ${comp.type}`);
     });
     if (dbCompetitions.length > 5) {
       console.log(`  ... and ${dbCompetitions.length - 5} more`);
@@ -162,14 +183,13 @@ async function main() {
   try {
     // Seed European/International competitions first
     const alreadySeeded : string[] = [
-      'England', 'Spain', 'Italy', 'Germany', 'France', 
-      'Netherlands', 'Portugal', 'World', 'Ireland',      
-      'Belgium', 'Turkey', 'Russia', 'Ukraine', 'Greece',
-      'Scotland', 'Denmark', 'Sweden', 'Norway', 'Switzerland'
     ];
 
     const nextToSeed: string[] = [
-      
+      'England', 'Spain', 'Italy', 'Germany', 'France', 
+      'Netherlands', 'Portugal', 'World', 'Ireland',      
+      'Belgium', 'Turkey', 'Russia', 'Ukraine', 'Greece',
+      'Scotland', 'Denmark', 'Sweden', 'Norway', 'Switzerland'      
     ];
 
     for (const country of nextToSeed) {
@@ -182,6 +202,9 @@ async function main() {
   } catch (error) {
     console.error('💥 Competition seeding failed:', error);
     process.exit(1);
+  } finally {
+    await prisma.$disconnect();
+    await pool.end();
   }
 }
 
