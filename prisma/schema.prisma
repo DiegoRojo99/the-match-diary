@@ -31,7 +31,7 @@ model User {
 model Country {
   id   Int     @id @default(autoincrement())
   name String  @db.VarChar(100)
-  code String  @unique @db.Char(2)
+  code String  @unique @db.VarChar(10)
   flag String?
 
   // Relations
@@ -140,7 +140,6 @@ model Match {
   statusShort   String?  @map("status_short") @db.VarChar(10)
   statusLong    String?  @map("status_long") @db.VarChar(50)
   matchWeek     Int?     @map("match_week")
-  periods       Json?
   apiId         Int?     @unique @map("api_id")
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @default(now()) @updatedAt @map("updated_at")
