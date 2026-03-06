@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { apiFootballService } from '@/lib/api-football';
-import { supabaseClient } from '@/lib/supabase';
+import { Match, prisma } from '@/lib/prisma';
 import { IdRouteParams } from '@/types/api/params';
+import { apiFixtureToMatchData } from '@/types/dto/match';
 
 export async function GET(
   request: NextRequest,
   { params }: IdRouteParams
 ) {
   try {
-    const supabase = supabaseClient;
     const { id } = await params;
     const teamId = parseInt(id);
     const { searchParams } = new URL(request.url);
-    const saveToDb = searchParams.get('save') === 'true';
     const season = searchParams.get('season');
     const last = searchParams.get('last');
     const next = searchParams.get('next');
@@ -25,20 +24,25 @@ export async function GET(
     }
 
     // First check if the team exists and get its API ID
-    const { data: team, error: teamError } = await supabase
-      .from('teams')
-      .select('id, api_id, name')
-      .eq('id', teamId)
-      .single();
+    const team = await prisma.team.findUnique({
+      where: {
+        id: teamId
+      },
+      select: {
+        id: true,
+        apiId: true,
+        name: true
+      }
+    });
 
-    if (teamError || !team) {
+    if (!team) {
       return NextResponse.json(
         { error: 'Team not found' },
         { status: 404 }
       );
     }
 
-    if (!team.api_id) {
+    if (!team.apiId) {
       return NextResponse.json(
         { error: 'Team does not have an API ID' },
         { status: 400 }
@@ -46,102 +50,148 @@ export async function GET(
     }
 
     // Fetch fixtures from Football API
+    // Default to current season (2025) and last 10 matches if no params specified
+    const currentSeason = season ? parseInt(season) : 2025;
+    const lastMatches = last ? parseInt(last) : (next ? undefined : 10);
+    const nextMatches = next ? parseInt(next) : undefined;
+    
+    console.log('Fetching fixtures for team:', {
+      teamApiId: team.apiId,
+      season: currentSeason,
+      last: lastMatches,
+      next: nextMatches
+    });
+
     const fixtures = await apiFootballService.getTeamFixtures(
-      team.api_id,
-      season ? parseInt(season) : undefined,
-      last ? parseInt(last) : undefined,
-      next ? parseInt(next) : undefined
+      team.apiId,
+      currentSeason,
+      lastMatches,
+      nextMatches
     );
 
+    console.log('API returned fixtures count:', fixtures.length);
+
     // Transform fixtures to our format
-    const transformedMatches = fixtures.map(fixture => ({
-      api_id: fixture.fixture.id,
-      home_team: fixture.teams.home.name,
-      home_team_logo: fixture.teams.home.logo,
-      away_team: fixture.teams.away.name,
-      away_team_logo: fixture.teams.away.logo,
-      match_date: fixture.fixture.date,
-      home_score: fixture.goals.home,
-      away_score: fixture.goals.away,
-      status: fixture.fixture.status.short,
-      status_long: fixture.fixture.status.long,
-      venue: fixture.fixture.venue.name,
-      venue_city: fixture.fixture.venue.city,
-      league: fixture.league.name,
-      league_logo: fixture.league.logo,
-      season: fixture.league.season,
-      round: fixture.league.round
-    }));
+    const transformedMatches: Omit<Match, 'id'>[] = fixtures.map(fixture => (apiFixtureToMatchData(fixture)));
 
-    // If requested, save matches to database
-    if (saveToDb) {
-      try {
-        // For each fixture, check if teams and venues exist in our database
-        const savePromises = fixtures.map(async (fixture) => {
-          // Get home and away teams from our database
-          const { data: homeTeam } = await supabase
-            .from('teams')
-            .select('id')
-            .eq('api_id', fixture.teams.home.id)
-            .single();
-
-          const { data: awayTeam } = await supabase
-            .from('teams')
-            .select('id')
-            .eq('api_id', fixture.teams.away.id)
-            .single();
-
-          // Get venue from our database
-          const { data: venue } = await supabase
-            .from('venues')
-            .select('id')
-            .eq('api_id', fixture.fixture.venue.id)
-            .single();
-
-          // Get competition from our database
-          const { data: competition } = await supabase
-            .from('competitions')
-            .select('id')
-            .eq('api_id', fixture.league.id)
-            .single();
-
-          // Only save if we have all required relationships
-          if (homeTeam && awayTeam && venue && competition) {
-            const matchData = {
-              api_id: fixture.fixture.id,
-              home_team_id: homeTeam.id,
-              away_team_id: awayTeam.id,
-              venue_id: venue.id,
-              competition_id: competition.id,
-              season_year: fixture.league.season,
-              match_date: fixture.fixture.date,
-              home_score: fixture.goals.home,
-              away_score: fixture.goals.away,
-              status_short: fixture.fixture.status.short,
-              status_long: fixture.fixture.status.long,
-              match_week: parseInt(fixture.league.round.replace(/\D/g, '')) || null,
-              periods: fixture.score
-            };
-
-            // Insert or update match
-            const { error: matchError } = await supabase
-              .from('matches')
-              .upsert(matchData, {
-                onConflict: 'api_id',
-                ignoreDuplicates: false
-              });
-
-            if (matchError) {
-              console.error(`Failed to save match ${fixture.fixture.id}:`, matchError);
+    // Always save matches and related entities to database
+    try {
+      // For each fixture, ensure all related entities exist and save the match
+      const savePromises = fixtures.map(async (fixture) => {
+        try {
+          // Upsert home team
+          const fixtureHomeTeam = fixture.teams.home;
+          const homeTeam = await prisma.team.upsert({
+            where: { apiId: fixtureHomeTeam.id },
+            update: {
+              name: fixtureHomeTeam.name,
+              logoUrl: fixtureHomeTeam.logo,
+              updatedAt: new Date()
+            },
+            create: {
+              name: fixtureHomeTeam.name,
+              logoUrl: fixtureHomeTeam.logo,
+              apiId: fixtureHomeTeam.id,
+              createdAt: new Date(),
+              updatedAt: new Date()
             }
-          }
-        });
+          });
 
-        await Promise.all(savePromises);
-      } catch (saveError) {
-        console.error('Error saving matches to database:', saveError);
-        // Continue execution - return the data even if save failed
-      }
+          // Upsert away team
+          const fixtureAwayTeam = fixture.teams.away;
+          const awayTeam = await prisma.team.upsert({
+            where: { apiId: fixtureAwayTeam.id },
+            update: {
+              name: fixtureAwayTeam.name,
+              logoUrl: fixtureAwayTeam.logo,
+              updatedAt: new Date()
+            },
+            create: {
+              name: fixtureAwayTeam.name,
+              logoUrl: fixtureAwayTeam.logo,
+              apiId: fixtureAwayTeam.id,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          });
+
+          // Upsert venue (handle null venue cases)
+          const fixtureVenue = fixture.fixture.venue;
+          let venue;
+          
+          if (fixtureVenue && fixtureVenue.id) {
+            venue = await prisma.venue.upsert({
+              where: { apiId: fixtureVenue.id },
+              update: {
+                name: fixtureVenue.name || 'Unknown Venue',
+                updatedAt: new Date()
+              },
+              create: {
+                name: fixtureVenue.name || 'Unknown Venue',
+                apiId: fixtureVenue.id,
+                createdAt: new Date(),
+                updatedAt: new Date()
+              }
+            });
+          } else {
+            // Handle matches without venue information - skip venue or use null
+            console.log(`Match ${fixture.fixture.id} has no venue information`);
+            venue = null;
+          }
+
+          // Upsert competition
+          const fixtureLeague = fixture.league;
+          const competition = await prisma.competition.upsert({
+            where: { apiId: fixtureLeague.id },
+            update: {
+              name: fixtureLeague.name,
+              logoUrl: fixtureLeague.logo,
+              updatedAt: new Date()
+            },
+            create: {
+              name: fixtureLeague.name,
+              logoUrl: fixtureLeague.logo,
+              apiId: fixtureLeague.id,
+              type: 'league', // Default type
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+          });
+
+          // Upsert match using the actual database IDs from upserted entities
+          const matchWeek: number | null = parseInt(fixture.league.round.replace(/\D/g, '')) || null;
+          const matchData = {
+            homeTeamId: homeTeam.id,
+            awayTeamId: awayTeam.id,
+            venueId: venue?.id || null, // Use null if no venue
+            competitionId: competition.id,
+            seasonYear: fixture.league.season,
+            matchDate: new Date(fixture.fixture.date),
+            homeScore: fixture.goals.home,
+            awayScore: fixture.goals.away,
+            statusShort: fixture.fixture.status.short,
+            statusLong: fixture.fixture.status.long,
+            matchWeek: matchWeek,
+            apiId: fixture.fixture.id
+          };
+          
+          await prisma.match.upsert({
+            where: {
+              apiId: fixture.fixture.id
+            },
+            update: matchData,
+            create: matchData
+          });
+
+        } catch (fixtureError) {
+          console.error(`Failed to save fixture ${fixture.fixture.id}:`, fixtureError);
+        }
+      });
+
+      await Promise.all(savePromises);
+    } catch (saveError) {
+      console.error('Error saving fixtures to database:', saveError);
+      // Continue execution - return the data even if save failed
     }
 
     return NextResponse.json({
@@ -149,12 +199,12 @@ export async function GET(
       team: {
         id: team.id,
         name: team.name,
-        api_id: team.api_id
-      },
-      saved_to_db: saveToDb
+        apiId: team.apiId
+      }
     });
 
-  } catch (error) {
+  } 
+  catch (error) {
     console.error('Error fetching team matches:', error);
     
     if (error instanceof Error && error.message.includes('API request failed')) {

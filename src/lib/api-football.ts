@@ -115,10 +115,14 @@ class ApiFootballService {
     
     params.append('team', teamId.toString());
     if (season) params.append('season', season.toString());
+
+    // If both last and next are provided, prioritize last
     if (last) params.append('last', last.toString());
-    if (next) params.append('next', next.toString());
+    else if (next) params.append('next', next.toString());
     
     endpoint += `?${params.toString()}`;
+    
+    console.log('🏈 Full API URL being called:', `${API_BASE_URL}${endpoint}`);
     
     return this.makeRequest<ApiFixture[]>(endpoint);
   }

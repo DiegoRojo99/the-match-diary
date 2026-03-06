@@ -59,7 +59,7 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
       
       try {
         // Fetch recent and upcoming matches (last 10 and next 10)
-        const response = await fetch(`/api/teams/${team.id}/matches?last=10&next=10&season=2024`);
+        const response = await fetch(`/api/teams/${team.id}/matches?last=10&next=10&season=2025`);
         
         if (!response.ok) {
           throw new Error('Failed to fetch matches');
@@ -88,7 +88,7 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
     setError(null);
     
     try {
-      const response = await fetch(`/api/teams/${team.id}/matches?save=true&last=20&next=20&season=2024`);
+      const response = await fetch(`/api/teams/${team.id}/matches?save=true&last=20&next=20&season=2025`);
       
       if (!response.ok) {
         throw new Error('Failed to save matches');

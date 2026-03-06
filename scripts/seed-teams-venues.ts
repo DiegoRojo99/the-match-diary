@@ -105,7 +105,7 @@ async function seedTeamsAndVenues() {
           continue;
         }
         
-        const apiResponse = await apiFootballService.getTeams(competitionApiId, 2024);
+        const apiResponse = await apiFootballService.getTeams(competitionApiId, 2025);
         apiTeams = apiResponse as ApiTeamResponse[];
         console.log(`📊 API returned ${apiTeams.length} teams`);
       } 

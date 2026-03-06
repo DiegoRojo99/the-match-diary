@@ -27,10 +27,10 @@ async function seedCompetitionsFromCountry(countryName: string = 'England') {
     const existingIds = new Set(existingComps?.map(c => c.api_id) || []);
     console.log(`📊 Found ${existingIds.size} competitions already in database`);
 
-    // Fetch all leagues from the specified country (current season 2024)
+    // Fetch all leagues from the specified country (current season 2025)
     console.log(`📡 Fetching all competitions from ${countryName}...`);
-    const leagues = await apiFootballService.getLeagues(countryName, 2024);
-    console.log(`✅ Retrieved ${leagues.length} leagues from ${countryName} 2024`);
+    const leagues = await apiFootballService.getLeagues(countryName, 2025);
+    console.log(`✅ Retrieved ${leagues.length} leagues from ${countryName} 2025`);
     
     if (leagues.length === 0) {
       console.log(`❌ No leagues found for ${countryName}`);
