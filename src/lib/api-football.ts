@@ -126,6 +126,12 @@ class ApiFootballService {
     
     return this.makeRequest<ApiFixture[]>(endpoint);
   }
+
+  async getFixtureById(fixtureId: number): Promise<ApiFixture[]> {
+    const endpoint = `/fixtures?id=${fixtureId}`;
+    console.log('🏈 Full API URL being called:', `${API_BASE_URL}${endpoint}`);
+    return this.makeRequest<ApiFixture[]>(endpoint);
+  }
 }
 
 export const apiFootballService = new ApiFootballService();

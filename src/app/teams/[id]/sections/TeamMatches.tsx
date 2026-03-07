@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { TeamWithCountry, VenueRow } from '@/types';
 
 type TeamWithVenue = TeamWithCountry & {
@@ -238,9 +239,10 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
               const isHome = match.home_team === team.name;
               
               return (
-                <div
+                <Link
                   key={match.api_id}
-                  className="group p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all duration-200"
+                  href={`/matches/${match.api_id}`}
+                  className="group block p-4 border border-gray-200 rounded-lg hover:border-green-400 hover:shadow-md transition-all duration-200"
                 >
                   <div className="flex items-center justify-between">
                     
@@ -344,7 +346,7 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
                     </div>
                     
                   </div>
-                </div>
+                </Link>
               );
             })}
             
