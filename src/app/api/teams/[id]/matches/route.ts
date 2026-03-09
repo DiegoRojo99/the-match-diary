@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { apiFootballService } from '@/lib/api-football';
-import { Match, prisma } from '@/lib/prisma';
+import { Competition, Match, prisma, Team, Venue } from '@/lib/prisma';
 import { IdRouteParams } from '@/types/api/params';
-import { apiFixtureToMatchData } from '@/types/dto/match';
+import { apiFixtureToMatchData, transformMatchWithDetails } from '@/types/dto/match';
+import { MatchWithDetails } from '@/types/prisma/match';
 
 export async function GET(
   request: NextRequest,
@@ -41,8 +42,6 @@ export async function GET(
       );
     }
 
-
-
     // Fetch fixtures from Football API
     // Default to current season (2025) and last 10 matches if no params specified
     const currentSeason = season ? parseInt(season) : 2025;
@@ -64,9 +63,7 @@ export async function GET(
     );
 
     console.log('API returned fixtures count:', fixtures.length);
-
-    // Transform fixtures to our format
-    const transformedMatches: Match[] = fixtures.map(fixture => (apiFixtureToMatchData(fixture)));
+    let matchesWithDetails: MatchWithDetails[] = [];
 
     // Always save matches and related entities to database
     try {
@@ -153,20 +150,16 @@ export async function GET(
           });
 
           // Upsert match using the actual database IDs from upserted entities
-          const matchWeek: number | null = parseInt(fixture.league.round.replace(/\D/g, '')) || null;
-          const matchData = {
-            homeTeamId: homeTeam.id,
-            awayTeamId: awayTeam.id,
-            venueId: venue?.id || null, // Use null if no venue
-            competitionId: competition.id,
-            seasonYear: fixture.league.season,
-            matchDate: new Date(fixture.fixture.date),
-            homeScore: fixture.goals.home,
-            awayScore: fixture.goals.away,
-            statusShort: fixture.fixture.status.short,
-            statusLong: fixture.fixture.status.long,
-            matchWeek: matchWeek,
-          };
+          const matchData: Match = apiFixtureToMatchData(fixture);
+          const matchWithDetails = transformMatchWithDetails(
+            matchData,
+            homeTeam as Team,
+            awayTeam as Team,
+            competition as Competition,
+            venue as Venue | null
+          );
+
+          matchesWithDetails.push(matchWithDetails);
           
           await prisma.match.upsert({
             where: {
@@ -174,7 +167,6 @@ export async function GET(
             },
             update: matchData,
             create: {
-              id: fixture.fixture.id,
               ...matchData
             }
           });
@@ -185,13 +177,14 @@ export async function GET(
       });
 
       await Promise.all(savePromises);
-    } catch (saveError) {
+    } 
+    catch (saveError) {
       console.error('Error saving fixtures to database:', saveError);
       // Continue execution - return the data even if save failed
     }
 
     return NextResponse.json({
-      matches: transformedMatches,
+      matches: matchesWithDetails,
       team: {
         id: team.id,
         name: team.name,

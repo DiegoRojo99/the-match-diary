@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { TeamWithCountry, VenueRow } from '@/types';
+import MatchCard from './MatchCard';
+import { MatchWithDetails } from '@/types/prisma/match';
 
 type TeamWithVenue = TeamWithCountry & {
   home_venue: VenueRow | null;
@@ -9,361 +11,224 @@ interface TeamMatchesProps {
   team: TeamWithVenue;
 }
 
-// Real match data structure from API
-interface Match {
-  api_id: number;
-  home_team: string;
-  home_team_logo: string;
-  away_team: string;
-  away_team_logo: string;
-  match_date: string;
-  status: string; // "FT", "NS", "1H", "HT", "2H", etc.
-  status_long: string;
-  home_score?: number | null;
-  away_score?: number | null;
-  venue: string;
-  venue_city: string;
-  league: string;
-  league_logo: string;
-  season: number;
-  round: string;
-}
-
 interface MatchesResponse {
-  matches: Match[];
+  matches: MatchWithDetails[];
   team: {
     id: number;
     name: string;
-    api_id: number;
   };
-  saved_to_db: boolean;
 }
 
 export default function TeamMatches({ team }: TeamMatchesProps) {
-  const [matches, setMatches] = useState<Match[]>([]);
+  const [matches, setMatches] = useState<MatchWithDetails[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'recent'>('upcoming');
-  const [saving, setSaving] = useState(false);
+  
+  // Filter states
+  const [selectedSeason, setSelectedSeason] = useState(2025);
+  const [matchType, setMatchType] = useState<'finished' | 'upcoming'>('finished');
+  
+  // Track how many matches we want to fetch
+  const [matchCount, setMatchCount] = useState(10);
+  const INCREMENT_AMOUNT = 10;
 
-  // Fetch real matches from Football API
-  useEffect(() => {
-    const fetchMatches = async () => {
-      if (!team.api_id) {
-        setError('Team does not have an API ID');
-        return;
-      }
-      
-      setLoading(true);
-      setError(null);
-      
-      try {
-        // Fetch recent and upcoming matches (last 10 and next 10)
-        const response = await fetch(`/api/teams/${team.id}/matches?last=10&next=10&season=2025`);
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch matches');
-        }
-        
-        const data: MatchesResponse = await response.json();
-        setMatches(data.matches);
-      } catch (error) {
-        console.error('Error fetching matches:', error);
-        setError('Failed to load matches. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMatches();
-  }, [team.id, team.api_id]);
-
-  const saveMatchesToDatabase = async () => {
-    if (!team.api_id) {
-      setError('Team does not have an API ID');
-      return;
-    }
-    
-    setSaving(true);
+  // Fetch matches with current filters
+  const fetchMatches = async () => {
+    setLoading(true);
     setError(null);
     
     try {
-      const response = await fetch(`/api/teams/${team.id}/matches?save=true&last=20&next=20&season=2025`);
+      let url = `/api/teams/${team.id}/matches?season=${selectedSeason}`;
       
-      if (!response.ok) {
-        throw new Error('Failed to save matches');
-      }
+      if (matchType === 'finished') url += `&last=${matchCount}`;
+      else url += `&next=${matchCount}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch matches');
       
       const data: MatchesResponse = await response.json();
-      setMatches(data.matches);
       
-      // Show success message briefly
-      const successMessage = "Matches saved to database successfully!";
-      setError(successMessage);
-      setTimeout(() => setError(null), 3000);
-    } catch (error) {
-      console.error('Error saving matches:', error);
-      setError('Failed to save matches to database. Please try again later.');
-    } finally {
-      setSaving(false);
+      // Sort matches by date based on match type
+      const sortedMatches = data.matches.sort((a, b) => {
+        const dateA = new Date(a.matchDate).getTime();
+        const dateB = new Date(b.matchDate).getTime();
+        
+        if (matchType === 'finished') {
+          // For finished matches: most recent first (descending)
+          return dateB - dateA;
+        } else {
+          // For upcoming matches: closest first (ascending)
+          return dateA - dateB;
+        }
+      });
+      
+      setMatches(sortedMatches);
+    } 
+    catch (error) {
+      console.error('Error fetching matches:', error);
+      setError('Failed to load matches. Please try again later.');
+    } 
+    finally {
+      setLoading(false);
     }
   };
 
-  const upcomingMatches = matches.filter(match => match.status === 'NS' || match.status === 'TBD');
-  const recentMatches = matches.filter(match => match.status === 'FT' || match.status === 'AET' || match.status === 'PEN');
+  // Fetch matches when filters change
+  useEffect(() => {
+    setMatchCount(10); // Reset count when filters change
+    fetchMatches();
+  }, [team.id, selectedSeason, matchType]);
 
-  const formatMatchDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return {
-      date: date.toLocaleDateString('en-US', { 
-        weekday: 'short', 
-        month: 'short', 
-        day: 'numeric' 
-      }),
-      time: date.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      })
-    };
+  // Load more matches
+  const loadMore = () => {
+    setMatchCount(prev => prev + INCREMENT_AMOUNT);
   };
 
-  const getMatchResult = (match: Match, teamName: string) => {
-    if (match.status !== 'FT' && match.status !== 'AET' && match.status !== 'PEN') return null;
-    if (match.home_score === null || match.away_score === null) return null;
+  // Re-fetch when match count changes (for load more)
+  useEffect(() => {
+    if (matchCount > 10) {
+      fetchMatches();
+    }
+  }, [matchCount]);
+
+  // Reset count when filters change
+  const handleFilterChange = (filterType: string, value: any) => {
+    setMatchCount(10);
     
-    const isHome = match.home_team === teamName;
-    const teamScore = isHome ? match.home_score : match.away_score;
-    const opponentScore = isHome ? match.away_score : match.home_score;
-    
-    if (teamScore! > opponentScore!) return 'win';
-    if (teamScore! < opponentScore!) return 'loss';
-    return 'draw';
+    switch (filterType) {
+      case 'season':
+        setSelectedSeason(value);
+        break;
+      case 'matchType':
+        setMatchType(value);
+        break;
+    }
   };
 
   return (
-    <div className="mb-8">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+      
+      {/* Header */}
+      <div className="flex items-center space-x-3 mb-6">
+        <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-2 rounded-lg">
+          <span className="text-white text-xl">⚽</span>
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Team Matches</h2>
+          <p className="text-gray-600">Filter and browse matches for {team.name}</p>
+        </div>
+      </div>
+      
+      {/* Filters */}
+      <div className="mb-6 space-y-4">
         
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-2 rounded-lg">
-              <span className="text-white text-xl">⚽</span>
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Team Matches</h2>
-              <p className="text-gray-600">Recent and upcoming games for {team.name}</p>
-            </div>
+        {/* Season Filter */}
+        <div className="flex items-center space-x-2">
+          <label className="text-sm font-medium text-gray-700">Season:</label>
+          <select
+            value={selectedSeason}
+            onChange={(e) => handleFilterChange('season', parseInt(e.target.value))}
+            className="px-3 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          >
+            <option key={2025} value={2025}>2024/25</option>
+            <option key={2024} value={2024}>2023/24</option>
+            <option key={2023} value={2023}>2022/23</option>
+            <option key={2022} value={2022}>2021/22</option>
+          </select>
+        </div>
+        
+        {/* Match Type Tabs */}
+        <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 max-w-md">
+          <button
+            onClick={() => handleFilterChange('matchType', 'finished')}
+            className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all duration-200 ${
+              matchType === 'finished'
+                ? 'bg-white text-green-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Finished Games
+          </button>
+          <button
+            onClick={() => handleFilterChange('matchType', 'upcoming')}
+            className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all duration-200 ${
+              matchType === 'upcoming'
+                ? 'bg-white text-green-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Upcoming Games
+          </button>
+        </div>
+      </div>
+      
+      {/* Loading State */}
+      {loading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+        </div>
+      )}
+      
+      {/* Error State */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+          <div className="flex items-center space-x-2 text-red-700">
+            <span className="text-xl">⚠️</span>
+            <span className="font-medium">{error}</span>
           </div>
+        </div>
+      )}
+      
+      {/* Match List */}
+      {!loading && !error && (
+        <div className="space-y-4">
+          {/* Matches */}
+          {matches.map((match, index) => (
+            <MatchCard 
+              key={match.id || index}
+              match={match} 
+              teamId={team.id} 
+              teamName={team.name}
+            />
+          ))}
           
-          {/* Save to Database Button */}
-          {team.api_id && (
-            <button
-              onClick={saveMatchesToDatabase}
-              disabled={saving || loading}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <span>💾</span>
-                  <span>Save to DB</span>
-                </>
-              )}
-            </button>
+          {/* Actions and States */}
+          {matches.length > 0 ? (
+            /* Load More Button - Show if we have matches (API may have more) */
+            <div key="load-more-section" className="flex justify-center pt-4">
+              <button
+                onClick={loadMore}
+                disabled={loading}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Loading...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Load More Matches</span>
+                    <span className="text-green-200">({matchCount + INCREMENT_AMOUNT})</span>
+                  </>
+                )}
+              </button>
+            </div>
+          ) : (
+            /* Empty State */
+            <div key="empty-state-section" className="text-center py-8">
+              <div className="text-4xl mb-2">⚽</div>
+              <p className="text-gray-500">
+                No {matchType} matches found for {team.name}
+              </p>
+              <p className="text-sm text-gray-400 mt-1">
+                for the {selectedSeason-1}/{selectedSeason.toString().slice(-2)} season
+              </p>
+            </div>
           )}
         </div>
-        
-        {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 mb-6 max-w-md">
-          <button
-            onClick={() => setActiveTab('upcoming')}
-            className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all duration-200 ${
-              activeTab === 'upcoming'
-                ? 'bg-white text-green-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Upcoming ({upcomingMatches.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('recent')}
-            className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-all duration-200 ${
-              activeTab === 'recent'
-                ? 'bg-white text-green-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Recent ({recentMatches.length})
-          </button>
-        </div>
-        
-        {/* Loading State */}
-        {loading && (
-          <div className="flex justify-center items-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
-          </div>
-        )}
-        
-        {/* Error/Success State */}
-        {error && (
-          <div className={`border rounded-lg p-4 mb-4 ${
-            error.includes('successfully') 
-              ? 'bg-green-50 border-green-200'
-              : 'bg-red-50 border-red-200'
-          }`}>
-            <div className={`flex items-center space-x-2 ${
-              error.includes('successfully') 
-                ? 'text-green-700'
-                : 'text-red-700'
-            }`}>
-              <span className="text-xl">
-                {error.includes('successfully') ? '✅' : '⚠️'}
-              </span>
-              <span className="font-medium">{error}</span>
-            </div>
-          </div>
-        )}
-        
-        {/* Match List */}
-        {!loading && !error && (
-          <div className="space-y-4">
-            {(activeTab === 'upcoming' ? upcomingMatches : recentMatches).map((match, index) => {
-              const matchDateTime = formatMatchDate(match.match_date);
-              const result = getMatchResult(match, team.name);
-              const isHome = match.home_team === team.name;
-              
-              return (
-                <div
-                  key={match.api_id}
-                  className="group p-4 border border-gray-200 rounded-lg hover:border-gray-300 hover:shadow-md transition-all duration-200"
-                >
-                  <div className="flex items-center justify-between">
-                    
-                    {/* Match Info */}
-                    <div className="flex-1">
-                      
-                      {/* League Info */}
-                      <div className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-                        <img 
-                          src={match.league_logo} 
-                          alt={match.league} 
-                          className="w-4 h-4 object-contain"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                        <span>{match.league}</span>
-                        <span>•</span>
-                        <span>{match.round}</span>
-                      </div>
-                      
-                      <div className="flex items-center space-x-4">
-                        
-                        {/* Teams with Logos */}
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 text-lg font-semibold">
-                            {/* Home Team */}
-                            <div className={`flex items-center space-x-2 ${match.home_team === team.name ? 'text-green-600' : 'text-gray-900'}`}>
-                              <img 
-                                src={match.home_team_logo} 
-                                alt={match.home_team}
-                                className="w-6 h-6 object-contain"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                              <span>{match.home_team}</span>
-                            </div>
-                            
-                            <span className="text-gray-400">vs</span>
-                            
-                            {/* Away Team */}
-                            <div className={`flex items-center space-x-2 ${match.away_team === team.name ? 'text-green-600' : 'text-gray-900'}`}>
-                              <img 
-                                src={match.away_team_logo} 
-                                alt={match.away_team}
-                                className="w-6 h-6 object-contain"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                              <span>{match.away_team}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center space-x-3 mt-2 text-sm text-gray-600">
-                            <span className="flex items-center space-x-1">
-                              <span>🏟️</span>
-                              <span>{match.venue}</span>
-                              {match.venue_city && (
-                                <span className="text-gray-400">• {match.venue_city}</span>
-                              )}
-                            </span>
-                            <span className="flex items-center space-x-1">
-                              <span>📅</span>
-                              <span>{matchDateTime.date}</span>
-                            </span>
-                            <span className="flex items-center space-x-1">
-                              <span>⏰</span>
-                              <span>{matchDateTime.time}</span>
-                            </span>
-                          </div>
-                        </div>
-                        
-                        {/* Score/Status */}
-                        <div className="text-right">
-                          {(match.status === 'FT' || match.status === 'AET' || match.status === 'PEN') && 
-                           match.home_score !== null && match.away_score !== null ? (
-                            <div className="flex items-center space-x-2">
-                              <div className="text-2xl font-bold text-gray-900">
-                                {match.home_score} - {match.away_score}
-                              </div>
-                              {result && (
-                                <div className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                  result === 'win' ? 'bg-green-100 text-green-800' :
-                                  result === 'loss' ? 'bg-red-100 text-red-800' :
-                                  'bg-yellow-100 text-yellow-800'
-                                }`}>
-                                  {result.toUpperCase()}
-                                </div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-                              {match.status === 'NS' ? matchDateTime.time : match.status_long}
-                            </div>
-                          )}
-                        </div>
-                        
-                      </div>
-                    </div>
-                    
-                  </div>
-                </div>
-              );
-            })}
-            
-            {/* Empty State */}
-            {(activeTab === 'upcoming' ? upcomingMatches : recentMatches).length === 0 && (
-              <div className="text-center py-8">
-                <div className="text-4xl mb-2">⚽</div>
-                <p className="text-gray-500">
-                  No {activeTab} matches found for {team.name}
-                </p>
-                <p className="text-sm text-gray-400 mt-1">
-                  {activeTab === 'upcoming' ? 'Check back later for scheduled matches' : 'No recent matches available'}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-        
-      </div>
+      )}
+      
     </div>
   );
 }
