@@ -17,6 +17,12 @@ const StadiumIcon = ({ className = "w-4 h-4" }) => (
   </svg>
 );
 
+const BookmarkIcon = ({ className = "w-4 h-4" }) => (
+  <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+  </svg>
+);
+
 const LocationIcon = ({ className = "w-4 h-4" }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -104,6 +110,14 @@ export default function Navigation() {
                 >
                   <StadiumIcon />
                   <span className="tracking-wide">Teams</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
+                </Link>
+                <Link
+                  href="/my-matches"
+                  className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
+                >
+                  <BookmarkIcon />
+                  <span className="tracking-wide">My Matches</span>
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
                 </Link>
                 
@@ -194,6 +208,17 @@ export default function Navigation() {
               <StadiumIcon className="w-5 h-5" />
               <span className="tracking-wide">Teams</span>
             </Link>
+            
+            {user && (
+              <Link
+                href="/my-matches"
+                className="text-gray-300 hover:text-green-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <BookmarkIcon className="w-5 h-5" />
+                <span className="tracking-wide">My Matches</span>
+              </Link>
+            )}
             
             {user ? (
               <>
