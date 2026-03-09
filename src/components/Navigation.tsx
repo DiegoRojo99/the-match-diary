@@ -91,14 +91,6 @@ export default function Navigation() {
             {user ? (
               <>
                 <Link
-                  href="/matches"
-                  className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
-                >
-                  <MatchIcon />
-                  <span className="tracking-wide">My Matches</span>
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
-                </Link>
-                <Link
                   href="/venues"
                   className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
                 >
@@ -113,29 +105,6 @@ export default function Navigation() {
                   <StadiumIcon />
                   <span className="tracking-wide">Teams</span>
                   <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
-                </Link>
-                <Link
-                  href="/stats"
-                  className="text-gray-300 hover:text-green-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
-                >
-                  <StatsIcon />
-                  <span className="tracking-wide">Statistics</span>
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-green-400 transition-all group-hover:w-full" />
-                </Link>
-                <Link
-                  href="/admin/competitions"
-                  className="text-gray-300 hover:text-yellow-400 px-3 py-2 text-sm font-semibold transition-colors relative group flex items-center gap-2"
-                >
-                  <AdminIcon />
-                  <span className="tracking-wide">Admin</span>
-                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-yellow-400 transition-all group-hover:w-full" />
-                </Link>
-                <Link
-                  href="/add-match"
-                  className="bg-green-500 hover:bg-green-400 text-black px-5 py-2.5 rounded-lg text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg shadow-green-500/25 flex items-center gap-2"
-                >
-                  <PlusIcon />
-                  <span className="tracking-wide">Add Match</span>
                 </Link>
                 
                 {/* User Menu */}
@@ -226,23 +195,6 @@ export default function Navigation() {
               <span className="tracking-wide">Teams</span>
             </Link>
             
-            <Link
-              href="/admin/competitions"
-              className="text-gray-300 hover:text-yellow-400 hover:bg-gray-900 flex items-center gap-3 px-3 py-3 text-base font-semibold rounded-lg transition-colors"
-              onClick={() => setIsOpen(false)}
-            >
-              <AdminIcon className="w-5 h-5" />
-              <span className="tracking-wide">Admin</span>
-            </Link>
-            
-            <Link
-              href="/add-match"
-              className="bg-green-500 hover:bg-green-400 text-black flex items-center gap-3 px-3 py-3 rounded-lg text-base font-bold transition-colors mt-4"
-              onClick={() => setIsOpen(false)}
-            >
-              <PlusIcon className="w-5 h-5" />
-              <span className="tracking-wide">Add Match</span>
-            </Link>
             {user ? (
               <>
                 {/* User info */}
