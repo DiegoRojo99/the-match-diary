@@ -1,11 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getUserFromRequest } from '@/lib/server-auth';
-import type { UserMatchWithMatch } from '@/types/prisma/match';
+import { getUserDataFromRequest, ensureUserExists } from '@/lib/server-auth';
+import { UserMatchWithMatch, UserMatchWithMatchSerialized } from '@/types/prisma/match';
+import { Match, UserMatch, Team, Competition, Venue } from '@prisma/client';
+
+// Serialization helpers
+function serializeUserMatchWithMatch(userMatch: UserMatchWithMatch): UserMatchWithMatchSerialized {
+  return {
+    ...userMatch,
+    attendedDate: userMatch.attendedDate.toISOString(),
+    createdAt: userMatch.createdAt.toISOString(),
+    updatedAt: userMatch.updatedAt.toISOString(),
+    match: userMatch.match ? {
+      ...userMatch.match,
+      matchDate: userMatch.match.matchDate.toISOString(),
+      createdAt: userMatch.match.createdAt.toISOString(),
+      updatedAt: userMatch.match.updatedAt.toISOString(),
+    } : null
+  };
+}
 
 export async function GET(request: NextRequest) {
-  const userId = await getUserFromRequest(request);
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const userData = await getUserDataFromRequest(request);
+  if (!userData) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // Ensure user exists in our local database
+  await ensureUserExists(userData);
+
+  const userId = userData.id;
 
   try {
     const userMatches = await prisma.userMatch.findMany({
@@ -23,7 +45,7 @@ export async function GET(request: NextRequest) {
       },
     }) as UserMatchWithMatch[];
 
-    return NextResponse.json(userMatches);
+    return NextResponse.json(userMatches.map(serializeUserMatchWithMatch));
   } catch (error) {
     console.error('Error fetching user matches:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -31,10 +53,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const userId = await getUserFromRequest(request);
-  if (!userId) {
+  const userData = await getUserDataFromRequest(request);
+  if (!userData) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  // Ensure user exists in our local database
+  await ensureUserExists(userData);
+
+  const userId = userData.id;
 
   try {
     const body = await request.json();

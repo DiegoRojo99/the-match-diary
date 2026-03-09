@@ -1,10 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getUserFromRequest } from '@/lib/server-auth';
+import { getUserDataFromRequest, ensureUserExists } from '@/lib/server-auth';
 import { IdRouteParams } from '@/types/api/params';
 import { apiFootballService } from '@/lib/api-football';
-import { CombinedMatchResponse } from '@/types/prisma/match';
+import { CombinedMatchResponse, MatchWithDetailsSerialized, UserMatchSerialized } from '@/types/prisma/match';
 import { apiFixtureToMatchData } from '@/types/dto/match';
+import { Match, UserMatch, Team, Competition, Venue } from '@prisma/client';
+
+// Serialization helpers
+function serializeMatch(match: Match & {
+  homeTeam: Team | null;
+  awayTeam: Team | null;
+  competition: Competition | null;
+  venue: (Venue & { city: { name: string } | null }) | null;
+}): MatchWithDetailsSerialized {
+  return {
+    ...match,
+    matchDate: match.matchDate.toISOString(),
+    createdAt: match.createdAt.toISOString(),
+    updatedAt: match.updatedAt.toISOString(),
+  };
+}
+
+function serializeUserMatch(userMatch: UserMatch): UserMatchSerialized {
+  return {
+    ...userMatch,
+    attendedDate: userMatch.attendedDate.toISOString(),
+    createdAt: userMatch.createdAt.toISOString(),
+    updatedAt: userMatch.updatedAt.toISOString(),
+  };
+}
 
 export async function GET(
   request: NextRequest,
@@ -18,8 +43,15 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid match ID' }, { status: 400 });
     }
 
-    // Get user ID for checking visit (optional - might be null for non-authenticated users)
-    const userId = await getUserFromRequest(request);
+    // Get user data if authenticated
+    const userData = await getUserDataFromRequest(request);
+    let userId: string | null = null;
+
+    if (userData) {
+      // Ensure user exists in our local database
+      await ensureUserExists(userData);
+      userId = userData.id;
+    }
 
     // Fetch match details (try DB first, then API)
     let match = await prisma.match.findUnique({
@@ -135,8 +167,8 @@ export async function GET(
     }
 
     const response: CombinedMatchResponse = {
-      match,
-      userVisit
+      match: serializeMatch(match),
+      userVisit: userVisit ? serializeUserMatch(userVisit) : null
     };
 
     return NextResponse.json(response);

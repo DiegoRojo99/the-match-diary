@@ -5,8 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/auth';
-import { CombinedMatchResponse, MatchWithDetails } from '@/types/prisma/match';
-import { UserMatch } from '@prisma/client';
+import { CombinedMatchResponse, MatchWithDetailsSerialized, UserMatchSerialized } from '@/types/prisma/match';
 
 const ArrowLeftIcon = ({ className = 'w-5 h-5' }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,8 +129,8 @@ export default function MatchDetailPage() {
   const openLogModal = () => {
     if (match) {
       const defaultDate = userVisit 
-        ? formatDate(userVisit.attendedDate.toISOString()).input
-        : formatDate(match.matchDate.toISOString()).input;
+        ? formatDate(userVisit.attendedDate).input
+        : formatDate(match.matchDate).input;
       
       setForm((prev) => ({
         ...prev,
@@ -249,7 +248,7 @@ export default function MatchDetailPage() {
 
   const isFinished = match.statusShort !== null && FINISHED_STATUSES.includes(match.statusShort);
   const isLive = match.statusShort !== null && LIVE_STATUSES.includes(match.statusShort);
-  const matchDate = formatDate(match.matchDate.toISOString());
+  const matchDate = formatDate(match.matchDate);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-100">

@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getUserFromRequest } from '@/lib/server-auth';
+import { getUserDataFromRequest, ensureUserExists } from '@/lib/server-auth';
 import { IdRouteParams } from '@/types/api/params';
 
 export async function DELETE(
   request: NextRequest,
   { params }: IdRouteParams
 ) {
-  const userId = await getUserFromRequest(request);
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const userData = await getUserDataFromRequest(request);
+  if (!userData) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // Ensure user exists in our local database
+  await ensureUserExists(userData);
+  const userId = userData.id;
 
   try {
     const { id } = await params;
