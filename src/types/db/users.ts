@@ -18,7 +18,7 @@ export interface UserRow {
 export interface UserMatchRow extends BaseUserTable {
   match_id: number;
   attended_date: string;
-  rating: number | null; // 1-5 stars (optional)
+  rating: number | null; // 1-10 rating (optional)
   notes: string | null;
   photos: any; // JSONB array of photo URLs
 }

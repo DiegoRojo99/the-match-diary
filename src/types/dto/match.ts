@@ -1,4 +1,4 @@
-import { Competition, Match, Team, Venue } from "@prisma/client";
+import { Competition, Match, Team, Venue, UserMatch } from "@prisma/client";
 import { ApiFixture } from "../api";
 import { MatchWithDetails } from "../prisma/match";
 

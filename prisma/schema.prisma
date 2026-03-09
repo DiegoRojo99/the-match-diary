@@ -136,10 +136,6 @@ model UserMatch {
   photos       Json?    @default("[]")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
-  currency     String?  @default("EUR") @db.Char(3)
-  seatSection  String?  @map("seat_section") @db.VarChar(50)
-  ticketPrice  Decimal? @map("ticket_price") @db.Decimal(10, 2)
-  weather      String?  @db.VarChar(50)
   match        Match?   @relation(fields: [matchId], references: [id])
   user         User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 

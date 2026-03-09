@@ -5,7 +5,8 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/auth';
-import type { MatchDetailResponse } from '@/app/api/matches/[id]/route';
+import { CombinedMatchResponse, MatchWithDetails } from '@/types/prisma/match';
+import { UserMatch } from '@prisma/client';
 
 const ArrowLeftIcon = ({ className = 'w-5 h-5' }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,12 +65,8 @@ function formatDate(dateString: string) {
 
 interface LogVisitForm {
   attended_date: string;
-  rating: string;
+  rating: number;
   notes: string;
-  seat_section: string;
-  ticket_price: string;
-  currency: string;
-  weather: string;
 }
 
 export default function MatchDetailPage() {
@@ -77,77 +74,70 @@ export default function MatchDetailPage() {
   const matchId = params.id as string;
   const { user } = useAuth();
 
-  const [match, setMatch] = useState<MatchDetailResponse | null>(null);
+  const [match, setMatch] = useState<CombinedMatchResponse['match'] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [visitId, setVisitId] = useState<string | null>(null);
+  const [userVisit, setUserVisit] = useState<CombinedMatchResponse['userVisit'] | null>(null);
   const [showLogModal, setShowLogModal] = useState(false);
   const [logLoading, setLogLoading] = useState(false);
   const [logError, setLogError] = useState<string | null>(null);
   const [form, setForm] = useState<LogVisitForm>({
     attended_date: '',
-    rating: '',
+    rating: 5,
     notes: '',
-    seat_section: '',
-    ticket_price: '',
-    currency: 'EUR',
-    weather: '',
   });
 
-  useEffect(() => {
-    const fetchMatch = async () => {
-      if (!matchId) return;
-      try {
-        const response = await fetch(`/api/matches/${matchId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setMatch(data);
-        } else if (response.status === 404) {
-          setError('Match not found');
-        } else {
-          setError('Error loading match details');
-        }
-      } catch {
-        setError('Error loading match details');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchMatch();
-  }, [matchId]);
-
-  // Check if this match is already logged by the user
-  useEffect(() => {
-    if (!user || !matchId) return;
-
-    const checkVisit = async () => {
+  // Reusable function to fetch match and visit data
+  const fetchMatchAndVisit = async () => {
+    if (!matchId) return;
+    setLoading(true);
+    try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
-
-      try {
-        const response = await fetch('/api/user/matches', {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
-        if (response.ok) {
-          const visits = await response.json();
-          const existing = visits.find((v: { match_id: number; id: string }) => v.match_id === parseInt(matchId));
-          if (existing) setVisitId(existing.id);
-        }
-      } catch {
-        // ignore
+      const headers: Record<string, string> = {};
+      
+      // Include auth header if user is logged in
+      if (session?.access_token) {
+        headers.Authorization = `Bearer ${session.access_token}`;
       }
-    };
 
-    checkVisit();
-  }, [user, matchId]);
+      const response = await fetch(`/api/users/matches/${matchId}`, {
+        headers
+      });
+      
+      if (response.ok) {
+        const { match: matchData, userVisit } = await response.json();
+        setMatch(matchData);
+        
+        // Set user visit if user has already logged this match
+        setUserVisit(userVisit);
+      } else if (response.status === 404) {
+        setError('Match not found');
+      } else {
+        setError('Error loading match details');
+      }
+    } catch {
+      setError('Error loading match details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMatchAndVisit();
+  }, [matchId, user]); // Include user in dependencies so it refetches when auth state changes
 
   const openLogModal = () => {
     if (match) {
+      const defaultDate = userVisit 
+        ? formatDate(userVisit.attendedDate.toISOString()).input
+        : formatDate(match.matchDate.toISOString()).input;
+      
       setForm((prev) => ({
         ...prev,
-        attended_date: formatDate(match.match_date).input,
+        attended_date: defaultDate,
+        rating: userVisit?.rating ?? 5,
+        notes: userVisit?.notes ?? '',
       }));
     }
     setLogError(null);
@@ -169,12 +159,8 @@ export default function MatchDetailPage() {
       const body = {
         match_id: match.id,
         attended_date: form.attended_date || undefined,
-        rating: form.rating ? parseInt(form.rating) : undefined,
+        rating: form.rating || undefined,
         notes: form.notes || undefined,
-        seat_section: form.seat_section || undefined,
-        ticket_price: form.ticket_price ? parseFloat(form.ticket_price) : undefined,
-        currency: form.currency || 'EUR',
-        weather: form.weather || undefined,
       };
 
       const response = await fetch('/api/user/matches', {
@@ -188,8 +174,9 @@ export default function MatchDetailPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setVisitId(data.id);
         setShowLogModal(false);
+        // Refetch the combined data to get the updated visit info
+        await fetchMatchAndVisit();
       } else {
         const data = await response.json();
         setLogError(data.error ?? 'Failed to log visit');
@@ -202,20 +189,21 @@ export default function MatchDetailPage() {
   };
 
   const handleRemoveVisit = async () => {
-    if (!visitId) return;
+    if (!userVisit) return;
     setLogLoading(true);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(`/api/user/matches/${visitId}`, {
+      const response = await fetch(`/api/user/matches/${userVisit.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
       if (response.ok) {
-        setVisitId(null);
+        // Refetch the combined data to reflect the removed visit
+        await fetchMatchAndVisit();
       }
     } catch {
       // ignore
@@ -259,9 +247,9 @@ export default function MatchDetailPage() {
     );
   }
 
-  const isFinished = match.status !== null && FINISHED_STATUSES.includes(match.status);
-  const isLive = match.status !== null && LIVE_STATUSES.includes(match.status);
-  const matchDate = formatDate(match.match_date);
+  const isFinished = match.statusShort !== null && FINISHED_STATUSES.includes(match.statusShort);
+  const isLive = match.statusShort !== null && LIVE_STATUSES.includes(match.statusShort);
+  const matchDate = formatDate(match.matchDate.toISOString());
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-100">
@@ -278,7 +266,7 @@ export default function MatchDetailPage() {
           </Link>
 
           {user && (
-            visitId ? (
+            userVisit ? (
               <button
                 onClick={handleRemoveVisit}
                 disabled={logLoading}
@@ -304,9 +292,9 @@ export default function MatchDetailPage() {
         {/* Competition & Round Header */}
         {match.competition && (
           <div className="flex items-center justify-center space-x-3 mb-6">
-            {match.competition.logo && (
+            {match.competition.logoUrl && (
               <img
-                src={match.competition.logo}
+                src={match.competition.logoUrl}
                 alt={match.competition.name}
                 className="w-8 h-8 object-contain"
                 onError={(e) => { e.currentTarget.style.display = 'none'; }}
@@ -314,18 +302,16 @@ export default function MatchDetailPage() {
             )}
             <span className="text-gray-600 font-medium">
               {match.competition.name}
-              {match.round && (
+              {match.matchWeek && (
                 <>
                   <span className="mx-2 text-gray-400">·</span>
-                  {match.round}
+                  Round {match.matchWeek}
                 </>
               )}
-              {match.season && (
-                <>
-                  <span className="mx-2 text-gray-400">·</span>
-                  {match.season}
-                </>
-              )}
+              <>
+                <span className="mx-2 text-gray-400">·</span>
+                {match.seasonYear}
+              </>
             </span>
           </div>
         )}
@@ -335,7 +321,7 @@ export default function MatchDetailPage() {
 
           {/* Status Badge */}
           <div className="flex justify-center mb-6">
-            {getStatusBadge(match.status, match.status_long)}
+            {getStatusBadge(match.statusShort, match.statusLong)}
           </div>
 
           {/* Teams & Score */}
@@ -343,26 +329,26 @@ export default function MatchDetailPage() {
 
             {/* Home Team */}
             <div className="flex-1 flex flex-col items-center text-center">
-              {match.home_team?.logo ? (
+              {match.homeTeam?.logoUrl ? (
                 <img
-                  src={match.home_team.logo}
-                  alt={match.home_team.name}
+                  src={match.homeTeam.logoUrl}
+                  alt={match.homeTeam.name}
                   className="w-20 h-20 object-contain mb-3"
                   onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
               ) : (
                 <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                   <span className="text-3xl font-bold text-gray-400">
-                    {match.home_team?.name?.charAt(0) ?? '?'}
+                    {match.homeTeam?.name?.charAt(0) ?? '?'}
                   </span>
                 </div>
               )}
-              {match.home_team ? (
+              {match.homeTeam ? (
                 <Link
-                  href={`/teams/${match.home_team.id}`}
+                  href={`/teams/${match.homeTeam.id}`}
                   className="text-xl font-bold text-gray-900 hover:text-green-600 transition-colors"
                 >
-                  {match.home_team.name}
+                  {match.homeTeam.name}
                 </Link>
               ) : (
                 <span className="text-xl font-bold text-gray-400">TBD</span>
@@ -372,11 +358,11 @@ export default function MatchDetailPage() {
 
             {/* Score */}
             <div className="flex flex-col items-center min-w-[140px]">
-              {(isFinished || isLive) && match.home_score !== null && match.away_score !== null ? (
+              {(isFinished || isLive) && match.homeScore !== null && match.awayScore !== null ? (
                 <div className="text-5xl font-extrabold text-gray-900 tracking-wider">
-                  {match.home_score}
+                  {match.homeScore}
                   <span className="mx-3 text-gray-400">-</span>
-                  {match.away_score}
+                  {match.awayScore}
                 </div>
               ) : (
                 <div className="text-3xl font-bold text-gray-400">vs</div>
@@ -386,26 +372,26 @@ export default function MatchDetailPage() {
 
             {/* Away Team */}
             <div className="flex-1 flex flex-col items-center text-center">
-              {match.away_team?.logo ? (
+              {match.awayTeam?.logoUrl ? (
                 <img
-                  src={match.away_team.logo}
-                  alt={match.away_team.name}
+                  src={match.awayTeam.logoUrl}
+                  alt={match.awayTeam.name}
                   className="w-20 h-20 object-contain mb-3"
                   onError={(e) => { e.currentTarget.style.display = 'none'; }}
                 />
               ) : (
                 <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-3">
                   <span className="text-3xl font-bold text-gray-400">
-                    {match.away_team?.name?.charAt(0) ?? '?'}
+                    {match.awayTeam?.name?.charAt(0) ?? '?'}
                   </span>
                 </div>
               )}
-              {match.away_team ? (
+              {match.awayTeam ? (
                 <Link
-                  href={`/teams/${match.away_team.id}`}
+                  href={`/teams/${match.awayTeam.id}`}
                   className="text-xl font-bold text-gray-900 hover:text-green-600 transition-colors"
                 >
-                  {match.away_team.name}
+                  {match.awayTeam.name}
                 </Link>
               ) : (
                 <span className="text-xl font-bold text-gray-400">TBD</span>
@@ -450,9 +436,6 @@ export default function MatchDetailPage() {
                   >
                     {match.venue.name}
                   </Link>
-                  {match.venue.city && (
-                    <p className="text-gray-500 mt-1">{match.venue.city}</p>
-                  )}
                   {match.venue.capacity && (
                     <p className="text-sm text-gray-400 mt-1">
                       Capacity: {match.venue.capacity.toLocaleString()}
@@ -483,7 +466,7 @@ export default function MatchDetailPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-xl font-bold text-gray-900 mb-1">Log Match Visit</h2>
             <p className="text-sm text-gray-500 mb-5">
-              {match.home_team?.name ?? 'Home'} vs {match.away_team?.name ?? 'Away'}
+              {match.homeTeam?.name ?? 'Home'} vs {match.awayTeam?.name ?? 'Away'}
             </p>
 
             <div className="space-y-4">
@@ -498,21 +481,30 @@ export default function MatchDetailPage() {
                 />
               </div>
 
-              {/* Rating */}
+              {/* Rating Slider */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Rating (1–5)</label>
-                <select
-                  value={form.rating}
-                  onChange={(e) => setForm({ ...form, rating: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
-                >
-                  <option value="">No rating</option>
-                  <option value="1">⭐ 1</option>
-                  <option value="2">⭐⭐ 2</option>
-                  <option value="3">⭐⭐⭐ 3</option>
-                  <option value="4">⭐⭐⭐⭐ 4</option>
-                  <option value="5">⭐⭐⭐⭐⭐ 5</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Rating: {form.rating}/10
+                </label>
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    value={form.rating}
+                    onChange={(e) => setForm({ ...form, rating: parseInt(e.target.value) })}
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: 'linear-gradient(to right, #ef4444 0%, #f59e0b 30%, #10b981 60%, #3b82f6 100%)'
+                    }}
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 px-1">
+                    <span className="text-red-500">Poor</span>
+                    <span className="text-yellow-500">Average</span>
+                    <span className="text-green-500">Good</span>
+                    <span className="text-blue-500">Excellent</span>
+                  </div>
+                </div>
               </div>
 
               {/* Notes */}
@@ -524,58 +516,6 @@ export default function MatchDetailPage() {
                   placeholder="Your memories about this match..."
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900 resize-none"
-                />
-              </div>
-
-              {/* Seat Section */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Seat Section</label>
-                <input
-                  type="text"
-                  value={form.seat_section}
-                  onChange={(e) => setForm({ ...form, seat_section: e.target.value })}
-                  placeholder="e.g. North Stand, Block A"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
-                />
-              </div>
-
-              {/* Ticket Price & Currency */}
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Ticket Price</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.ticket_price}
-                    onChange={(e) => setForm({ ...form, ticket_price: e.target.value })}
-                    placeholder="0.00"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
-                  />
-                </div>
-                <div className="w-24">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
-                  <select
-                    value={form.currency}
-                    onChange={(e) => setForm({ ...form, currency: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
-                  >
-                    <option value="EUR">EUR</option>
-                    <option value="GBP">GBP</option>
-                    <option value="USD">USD</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Weather */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Weather</label>
-                <input
-                  type="text"
-                  value={form.weather}
-                  onChange={(e) => setForm({ ...form, weather: e.target.value })}
-                  placeholder="e.g. Sunny, Rainy, Cold"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-900"
                 />
               </div>
 
