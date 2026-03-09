@@ -63,9 +63,6 @@ export async function GET(
     );
 
     console.log('API returned fixtures count:', fixtures.length);
-
-    // Transform fixtures to our format
-    const transformedMatches: Match[] = fixtures.map(fixture => (apiFixtureToMatchData(fixture)));
     let matchesWithDetails: MatchWithDetails[] = [];
 
     // Always save matches and related entities to database
@@ -153,23 +150,9 @@ export async function GET(
           });
 
           // Upsert match using the actual database IDs from upserted entities
-          const matchWeek: number | null = parseInt(fixture.league.round.replace(/\D/g, '')) || null;
-          const matchData = {
-            homeTeamId: homeTeam.id,
-            awayTeamId: awayTeam.id,
-            venueId: venue?.id || null, // Use null if no venue
-            competitionId: competition.id,
-            seasonYear: fixture.league.season,
-            matchDate: new Date(fixture.fixture.date),
-            homeScore: fixture.goals.home,
-            awayScore: fixture.goals.away,
-            statusShort: fixture.fixture.status.short,
-            statusLong: fixture.fixture.status.long,
-            matchWeek: matchWeek,
-          };
-
+          const matchData: Match = apiFixtureToMatchData(fixture);
           const matchWithDetails = transformMatchWithDetails(
-            matchData as Match,
+            matchData,
             homeTeam as Team,
             awayTeam as Team,
             competition as Competition,
@@ -184,7 +167,6 @@ export async function GET(
             },
             update: matchData,
             create: {
-              id: fixture.fixture.id,
               ...matchData
             }
           });
@@ -195,7 +177,8 @@ export async function GET(
       });
 
       await Promise.all(savePromises);
-    } catch (saveError) {
+    } 
+    catch (saveError) {
       console.error('Error saving fixtures to database:', saveError);
       // Continue execution - return the data even if save failed
     }
