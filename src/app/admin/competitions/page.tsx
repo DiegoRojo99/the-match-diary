@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import FootballLoader from '@/components/FootballLoader';
 
 interface Competition {
   id: number;
@@ -140,10 +141,7 @@ export default function AdminCompetitions() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading competitions...</p>
-        </div>
+        <FootballLoader size="xl" text="Loading competitions..." />
       </div>
     );
   }

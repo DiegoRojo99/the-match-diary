@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { TeamWithCountry, VenueRow } from '@/types';
+import FootballLoader from '@/components/FootballLoader';
 
 type TeamWithVenue = TeamWithCountry & {
   home_venue: VenueRow | null;
@@ -98,7 +99,7 @@ export default function TeamVenue({ team, venue }: TeamVenueProps) {
             
             {imageLoading && venue.image_url && !imageError && (
               <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <FootballLoader size="md" text="" />
               </div>
             )}
           </div>

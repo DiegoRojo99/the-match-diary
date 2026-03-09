@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/auth';
 import { UserMatchWithMatch } from '@/types/prisma/match';
+import FootballLoader from '@/components/FootballLoader';
 
 const FINISHED_STATUSES = ['FT', 'AET', 'PEN'];
 
@@ -87,10 +88,7 @@ export default function MyMatchesPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-100 flex items-center justify-center">
-        <div className="flex items-center space-x-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
-          <span className="text-gray-600 font-medium text-lg">Loading your matches...</span>
-        </div>
+        <FootballLoader size="xl" text="Loading your matches..." />
       </div>
     );
   }

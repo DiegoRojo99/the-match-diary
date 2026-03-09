@@ -9,6 +9,7 @@ import TeamHeader from './sections/TeamHeader';
 // import TeamStats from './sections/TeamStats';
 // import TeamVenue from './sections/TeamVenue';
 import TeamMatches from './sections/TeamMatches';
+import FootballLoader from '@/components/FootballLoader';
 
 type TeamWithVenue = TeamWithCountry & {
   home_venue: VenueRow | null;
@@ -51,10 +52,7 @@ export default function TeamDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-100">
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-center items-center py-20">
-            <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-3 border-green-600"></div>
-              <span className="text-gray-600 font-medium text-lg">Loading team details...</span>
-            </div>
+            <FootballLoader size="xl" text="Loading team details..." />
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { VenueWithDetails } from '@/types/db/venues';
+import FootballLoader from '@/components/FootballLoader';
 
 // Icon components
 const ArrowLeftIcon = ({ className = "w-5 h-5" }) => (
@@ -58,10 +59,7 @@ export default function VenuePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center space-x-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-3 border-blue-600"></div>
-          <span className="text-gray-700 font-medium text-lg">Loading venue details...</span>
-        </div>
+        <FootballLoader size="xl" text="Loading venue details..." />
       </div>
     );
   }

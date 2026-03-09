@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { TeamWithCountry, VenueRow } from '@/types';
+import FootballLoader from '@/components/FootballLoader';
 
 // Icon components
 const HomeIcon = ({ className = "w-4 h-4" }) => (
@@ -65,10 +66,7 @@ export default function TeamCard({ team }: TeamCardProps) {
               {/* Loading state overlay */}
               {logoLoading && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-white text-center">
-                    <div className="text-3xl mb-1">{team.national ? '🌍' : '⚽'}</div>
-                    <div className="text-xs font-medium opacity-90">Loading...</div>
-                  </div>
+                  <FootballLoader size="sm" text="" className="text-white" />
                 </div>
               )}
             </div>

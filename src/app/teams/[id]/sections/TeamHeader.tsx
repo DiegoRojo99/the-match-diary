@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { TeamWithCountry, VenueRow } from '@/types';
+import FootballLoader from '@/components/FootballLoader';
 
 type TeamWithVenue = TeamWithCountry & {
   home_venue: VenueRow | null;
@@ -50,7 +51,7 @@ export default function TeamHeader({ team }: TeamHeaderProps) {
           
           {logoLoading && team.logo_url && !logoError && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-3 border-green-600"></div>
+              <FootballLoader size="md" text="" />
             </div>
           )}
         </div>

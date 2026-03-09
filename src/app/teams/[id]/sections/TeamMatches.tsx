@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { TeamWithCountry, VenueRow } from '@/types';
 import MatchCard from './MatchCard';
 import { MatchWithDetails } from '@/types/prisma/match';
+import FootballLoader from '@/components/FootballLoader';
 
 type TeamWithVenue = TeamWithCountry & {
   home_venue: VenueRow | null;
@@ -165,7 +166,7 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
       {/* Loading State */}
       {loading && (
         <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+          <FootballLoader size="lg" text="Loading matches..." />
         </div>
       )}
       
@@ -203,7 +204,7 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
               >
                 {loading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <FootballLoader size="sm" text="" className="text-white" />
                     <span>Loading...</span>
                   </>
                 ) : (

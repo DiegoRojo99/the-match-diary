@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/auth';
 import { CombinedMatchResponse, MatchWithDetailsSerialized, UserMatchSerialized } from '@/types/prisma/match';
+import FootballLoader from '@/components/FootballLoader';
 
 const ArrowLeftIcon = ({ className = 'w-5 h-5' }) => (
   <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,10 +215,7 @@ export default function MatchDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-100 flex items-center justify-center">
-        <div className="flex items-center space-x-3">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-3 border-green-600"></div>
-          <span className="text-gray-600 font-medium text-lg">Loading match details...</span>
-        </div>
+        <FootballLoader size="xl" text="Loading match details..." />
       </div>
     );
   }
