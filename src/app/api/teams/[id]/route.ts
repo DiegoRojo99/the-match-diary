@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { prisma } from '@/lib/prisma';
 import { IdRouteParams } from '@/types/api/params';
 
 export async function GET(
@@ -7,11 +7,6 @@ export async function GET(
   { params }: IdRouteParams
 ) {
   try {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-    
     const { id } = await params;
     const teamId = parseInt(id);
     
@@ -22,32 +17,16 @@ export async function GET(
       );
     }
 
-    // Fetch team with country and venue information
-    const { data: team, error } = await supabase
-      .from('teams')
-      .select(`
-        *,
-        country: countries!inner (*),
-        home_venue: venues!home_venue_id (*)
-      `)
-      .eq('id', teamId)
-      .single();
-
-    if (error) {
-      console.error('Supabase error:', error);
-      
-      if (error.code === 'PGRST116') {
-        return NextResponse.json(
-          { error: 'Team not found' },
-          { status: 404 }
-        );
+    // Fetch team with country and venue information using Prisma
+    const team = await prisma.team.findUnique({
+      where: {
+        id: teamId
+      },
+      include: {
+        country: true,
+        homeVenue: true
       }
-      
-      return NextResponse.json(
-        { error: 'Failed to fetch team details' },
-        { status: 500 }
-      );
-    }
+    });
 
     if (!team) {
       return NextResponse.json(
@@ -56,7 +35,23 @@ export async function GET(
       );
     }
 
-    return NextResponse.json(team);
+    // Transform data to match expected format (snake_case for compatibility)
+    const transformedTeam = {
+      id: team.id,
+      name: team.name,
+      team_code: team.teamCode,
+      country_id: team.countryId,
+      founded_year: team.foundedYear,
+      national: team.national,
+      logo_url: team.logoUrl,
+      home_venue_id: team.homeVenueId,
+      created_at: team.createdAt,
+      updated_at: team.updatedAt,
+      country: team.country,
+      home_venue: team.homeVenue
+    };
+
+    return NextResponse.json(transformedTeam);
   } 
   catch (error) {
     console.error('Error fetching team details:', error);

@@ -1,5 +1,6 @@
-import { Match } from "@prisma/client";
+import { Competition, Match, Team, Venue } from "@prisma/client";
 import { ApiFixture } from "../api";
+import { MatchWithDetails } from "../prisma/match";
 
 export function apiFixtureToMatchData(apiFixture: ApiFixture): Match {
   const homeTeam = apiFixture.teams.home;
@@ -24,5 +25,21 @@ export function apiFixtureToMatchData(apiFixture: ApiFixture): Match {
     matchWeek: matchWeek,
     createdAt: new Date(),
     updatedAt: new Date(),
+  };
+}
+
+type MatchWithDetailsExtraProps = {
+  homeTeam: Team | null;
+  awayTeam: Team | null;
+  competition: Competition | null;
+  venue: Venue | null;
+}
+export function transformMatchWithDetails(match: Match, homeTeam: Team | null, awayTeam: Team | null, competition: Competition | null, venue: Venue | null): MatchWithDetails & MatchWithDetailsExtraProps {
+  return {
+    ...match,
+    homeTeam: homeTeam,
+    awayTeam: awayTeam,
+    competition: competition,
+    venue: venue
   };
 }
