@@ -128,7 +128,7 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
           <select
             value={selectedSeason}
             onChange={(e) => handleFilterChange('season', parseInt(e.target.value))}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="px-3 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
           >
             <option key={2025} value={2025}>2024/25</option>
             <option key={2024} value={2024}>2023/24</option>
