@@ -5,6 +5,14 @@ import { IdRouteParams } from '@/types/api/params';
 import { apiFixtureToMatchData, transformMatchWithDetails } from '@/types/dto/match';
 import { MatchWithDetails } from '@/types/prisma/match';
 
+// Simple type for this endpoint that doesn't need venue city info
+type SimpleMatchWithDetails = Match & {
+  homeTeam: Team | null;
+  awayTeam: Team | null;
+  competition: Competition | null;
+  venue: Venue | null;
+};
+
 export async function GET(
   request: NextRequest,
   { params }: IdRouteParams
@@ -63,7 +71,7 @@ export async function GET(
     );
 
     console.log('API returned fixtures count:', fixtures.length);
-    let matchesWithDetails: MatchWithDetails[] = [];
+    let matchesWithDetails: SimpleMatchWithDetails[] = [];
 
     // Always save matches and related entities to database
     try {

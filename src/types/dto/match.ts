@@ -1,4 +1,4 @@
-import { Competition, Match, Team, Venue } from "@prisma/client";
+import { Competition, Match, Team, Venue, UserMatch } from "@prisma/client";
 import { ApiFixture } from "../api";
 import { MatchWithDetails } from "../prisma/match";
 
@@ -34,7 +34,15 @@ type MatchWithDetailsExtraProps = {
   competition: Competition | null;
   venue: Venue | null;
 }
-export function transformMatchWithDetails(match: Match, homeTeam: Team | null, awayTeam: Team | null, competition: Competition | null, venue: Venue | null): MatchWithDetails & MatchWithDetailsExtraProps {
+
+type SimpleMatchWithDetails = Match & {
+  homeTeam: Team | null;
+  awayTeam: Team | null;
+  competition: Competition | null;
+  venue: Venue | null;
+};
+
+export function transformMatchWithDetails(match: Match, homeTeam: Team | null, awayTeam: Team | null, competition: Competition | null, venue: Venue | null): SimpleMatchWithDetails {
   return {
     ...match,
     homeTeam: homeTeam,
