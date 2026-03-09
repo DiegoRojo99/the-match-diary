@@ -21,6 +21,7 @@ export default function TeamDetailPage() {
   const [team, setTeam] = useState<TeamWithVenue | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'matches' | 'stats' | 'venue'>('matches');
 
   useEffect(() => {
     const fetchTeam = async () => {
@@ -91,16 +92,56 @@ export default function TeamDetailPage() {
         {/* Team Header Section */}
         <TeamHeader team={team} />
         
-        {/* Team Stats Section */}
-        {/* <TeamStats team={team} /> */}
+        {/* Main Tab Navigation */}
+        <div className="mb-8">
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+            <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 max-w-md">
+              <button
+                onClick={() => setActiveTab('matches')}
+                className={`flex-1 py-3 px-6 text-sm font-medium rounded-md transition-all duration-200 ${
+                  activeTab === 'matches'
+                    ? 'bg-white text-green-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Team Matches
+              </button>
+              <button
+                onClick={() => setActiveTab('stats')}
+                className={`flex-1 py-3 px-6 text-sm font-medium rounded-md transition-all duration-200 ${
+                  activeTab === 'stats'
+                    ? 'bg-white text-green-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Statistics
+              </button>
+              <button
+                onClick={() => setActiveTab('venue')}
+                className={`flex-1 py-3 px-6 text-sm font-medium rounded-md transition-all duration-200 ${
+                  activeTab === 'venue'
+                    ? 'bg-white text-green-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Home Venue
+              </button>
+            </div>
+          </div>
+        </div>
         
-        {/* Team Venue Section */}
-        {/* {team.home_venue && (
-          <TeamVenue team={team} venue={team.home_venue} />
-        )} */}
-        
-        {/* Team Matches Section */}
-        <TeamMatches team={team} />
+        {/* Tab Content */}
+        {activeTab === 'matches' && <TeamMatches team={team} />}
+        {activeTab === 'stats' && (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+            <p className="text-gray-500 text-center py-8">Team statistics coming soon...</p>
+          </div>
+        )}
+        {activeTab === 'venue' && team.home_venue && (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
+            <p className="text-gray-500 text-center py-8">Venue details coming soon...</p>
+          </div>
+        )}
         
       </div>
     </div>
