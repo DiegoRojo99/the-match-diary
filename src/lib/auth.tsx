@@ -2,10 +2,9 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { createClient, User, AuthError } from '@supabase/supabase-js';
-import type { Database } from '@/types/db';
 
 // Create Supabase client
-const supabase = createClient<Database>(
+const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );

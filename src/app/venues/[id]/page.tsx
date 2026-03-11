@@ -203,9 +203,9 @@ export default function VenuePage() {
                     <div key={team.id} className="group p-5 border border-gray-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all duration-200 hover:-translate-y-1">
                       <div className="flex items-center space-x-4">
                         <div className="flex-shrink-0">
-                          {team.logo_url ? (
+                          {team.logoUrl ? (
                             <Image
-                              src={team.logo_url}
+                              src={team.logoUrl}
                               alt={team.name}
                               width={56}
                               height={56}

@@ -2,6 +2,3 @@
 
 // API types
 export * from './api';
-
-// Database types  
-export * from './db';
