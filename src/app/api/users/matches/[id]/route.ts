@@ -4,7 +4,6 @@ import { getUserDataFromRequest, ensureUserExists } from '@/lib/server-auth';
 import { IdRouteParams } from '@/types/api/params';
 import { apiFootballService } from '@/lib/api-football';
 import { CombinedMatchResponse, MatchWithDetailsSerialized, UserMatchSerialized } from '@/types/prisma/match';
-import { apiFixtureToMatchData } from '@/types/dto/match';
 import { Match, UserMatch, Team, Competition, Venue } from '@prisma/client';
 
 // Serialization helpers
@@ -12,7 +11,7 @@ function serializeMatch(match: Match & {
   homeTeam: Team | null;
   awayTeam: Team | null;
   competition: Competition | null;
-  venue: (Venue & { city: { name: string } | null }) | null;
+  venue: Venue | null;
 }): MatchWithDetailsSerialized {
   return {
     ...match,
@@ -59,9 +58,7 @@ export async function GET(
       include: {
         homeTeam: true,
         awayTeam: true,
-        venue: {
-          include: { city: true },
-        },
+        venue: true,
         competition: true,
       },
     });
@@ -135,11 +132,7 @@ export async function GET(
           include: {
             homeTeam: true,
             awayTeam: true,
-            venue: {
-              include: {
-                city: true
-              }
-            },
+            venue: true,
             competition: true,
           },
         });

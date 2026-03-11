@@ -8,7 +8,7 @@ export type MatchWithDetails = Match & {
   homeTeam: Team | null;
   awayTeam: Team | null;
   competition: Competition | null;
-  venue: (Venue & { city: { name: string } | null }) | null;
+  venue: Venue | null;
 };
 
 // Serialized versions for API responses (dates as strings)
@@ -25,7 +25,7 @@ export type MatchWithDetailsSerialized = Omit<Match, 'matchDate' | 'createdAt' |
   homeTeam: Team | null;
   awayTeam: Team | null;
   competition: Competition | null;
-  venue: (Venue & { city: { name: string } | null }) | null;
+  venue: Venue | null;
 };
 
 export type UserMatchWithMatchSerialized = UserMatchSerialized & {

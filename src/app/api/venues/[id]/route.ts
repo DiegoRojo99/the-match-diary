@@ -22,11 +22,6 @@ export async function GET(
           include: {
             country: true
           }
-        },
-        city: {
-          include: {
-            country: true
-          }
         }
       }
     });

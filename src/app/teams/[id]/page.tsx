@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { TeamWithCountry, VenueRow } from '@/types';
 
 // Import section components
 import TeamHeader from './sections/TeamHeader';
@@ -10,10 +9,7 @@ import TeamHeader from './sections/TeamHeader';
 // import TeamVenue from './sections/TeamVenue';
 import TeamMatches from './sections/TeamMatches';
 import FootballLoader from '@/components/FootballLoader';
-
-type TeamWithVenue = TeamWithCountry & {
-  home_venue: VenueRow | null;
-};
+import { TeamWithVenue } from '@/lib/prisma';
 
 export default function TeamDetailPage() {
   const params = useParams();
@@ -135,7 +131,7 @@ export default function TeamDetailPage() {
             <p className="text-gray-500 text-center py-8">Team statistics coming soon...</p>
           </div>
         )}
-        {activeTab === 'venue' && team.home_venue && (
+        {activeTab === 'venue' && team.homeVenue && (
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
             <p className="text-gray-500 text-center py-8">Venue details coming soon...</p>
           </div>

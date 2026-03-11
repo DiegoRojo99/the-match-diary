@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { prisma, TeamWithVenue } from '@/lib/prisma';
 import { IdRouteParams } from '@/types/api/params';
 
 export async function GET(
@@ -24,7 +24,7 @@ export async function GET(
         country: true,
         homeVenue: true
       }
-    });
+    }) as TeamWithVenue | null;
 
     if (!team) {
       return NextResponse.json(
@@ -33,23 +33,7 @@ export async function GET(
       );
     }
 
-    // Transform data to match expected format (snake_case for compatibility)
-    const transformedTeam = {
-      id: team.id,
-      name: team.name,
-      team_code: team.teamCode,
-      country_id: team.countryId,
-      founded_year: team.foundedYear,
-      national: team.national,
-      logo_url: team.logoUrl,
-      home_venue_id: team.homeVenueId,
-      created_at: team.createdAt,
-      updated_at: team.updatedAt,
-      country: team.country,
-      home_venue: team.homeVenue
-    };
-
-    return NextResponse.json(transformedTeam);
+    return NextResponse.json(team);
   } 
   catch (error) {
     console.error('Error fetching team details:', error);

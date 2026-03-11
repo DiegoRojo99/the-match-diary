@@ -26,30 +26,16 @@ model Country {
   name         String        @db.VarChar(100)
   code         String        @unique @db.VarChar(10)
   flag         String?
-  cities       City[]
   competitions Competition[]
   teams        Team[]
 
   @@map("countries")
 }
 
-model City {
-  id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(100)
-  countryId Int?     @map("country_id")
-  latitude  Decimal? @db.Decimal(10, 8)
-  longitude Decimal? @db.Decimal(11, 8)
-  timezone  String?  @db.VarChar(50)
-  country   Country? @relation(fields: [countryId], references: [id])
-  venues    Venue[]
-
-  @@map("cities")
-}
-
 model Venue {
-  id         Int         @id // API ID as primary key
+  id         Int         @id
   name       String      @db.VarChar(200)
-  cityId     Int?        @map("city_id")
+  city       String?     @db.VarChar(100)
   capacity   Int?
   address    String?
   surface    String?     @db.VarChar(20)
@@ -61,13 +47,12 @@ model Venue {
   matches    Match[]
   teams      Team[]      @relation("HomeVenue")
   userVenues UserVenue[]
-  city       City?       @relation(fields: [cityId], references: [id])
 
   @@map("venues")
 }
 
 model Team {
-  id          Int      @id // API ID as primary key
+  id          Int      @id
   name        String   @db.VarChar(100)
   teamCode    String?  @map("team_code") @db.VarChar(10)
   countryId   Int?     @map("country_id")
@@ -86,7 +71,7 @@ model Team {
 }
 
 model Competition {
-  id        Int      @id // API ID as primary key
+  id        Int      @id
   name      String   @db.VarChar(100)
   type      String   @db.VarChar(20)
   countryId Int?     @map("country_id")
@@ -103,7 +88,7 @@ model Competition {
 }
 
 model Match {
-  id            Int          @id // API ID as primary key
+  id            Int          @id
   homeTeamId    Int?         @map("home_team_id")
   awayTeamId    Int?         @map("away_team_id")
   venueId       Int?         @map("venue_id")
@@ -158,13 +143,4 @@ model UserVenue {
 
   @@unique([userId, venueId])
   @@map("user_venues")
-}
-
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
-model spatial_ref_sys {
-  srid      Int     @id
-  auth_name String? @db.VarChar(256)
-  auth_srid Int?
-  srtext    String? @db.VarChar(2048)
-  proj4text String? @db.VarChar(2048)
 }

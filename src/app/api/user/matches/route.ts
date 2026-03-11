@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
           include: {
             homeTeam: true,
             awayTeam: true,
-            venue: { include: { city: true } },
+            venue: true,
             competition: true,
           },
         },

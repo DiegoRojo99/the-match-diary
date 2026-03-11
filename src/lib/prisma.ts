@@ -1,4 +1,4 @@
-import { City, Competition, Country, Match, PrismaClient, Team, Venue } from '@prisma/client';
+import { Competition, Country, Match, PrismaClient, Team, Venue } from '@prisma/client';
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 
@@ -22,7 +22,6 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 export type { 
   User,
   Country,
-  City,
   Venue,
   Team,
   Competition,
@@ -50,12 +49,6 @@ export type MatchWithTeamsAndVenue = Match & {
   awayTeam: Team | null;
   venue: Venue | null;
   competition: Competition | null;
-};
-
-export type VenueWithCity = Venue & {
-  city: (City & {
-    country: Country | null;
-  }) | null;
 };
 
 export default prisma;
