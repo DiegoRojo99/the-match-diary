@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { VenueWithDetails } from '@/types/db/venues';
 import FootballLoader from '@/components/FootballLoader';
+import { VenueWithDetails } from '@/lib/prisma';
 
 // Icon components
 const ArrowLeftIcon = ({ className = "w-5 h-5" }) => (
@@ -87,9 +87,9 @@ export default function VenuePage() {
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section with Full-Width Image */}
       <div className="relative w-full h-[60vh] min-h-[400px] overflow-hidden">
-        {venue.image_url && !imageError ? (
+        {venue.imageUrl && !imageError ? (
           <Image
-            src={venue.image_url}
+            src={venue.imageUrl}
             alt={venue.name}
             fill
             className="object-cover"

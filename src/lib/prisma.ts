@@ -51,4 +51,9 @@ export type MatchWithTeamsAndVenue = Match & {
   competition: Competition | null;
 };
 
+export type VenueWithDetails = Venue & {
+  teams: TeamWithCountry[];
+  country: Country | null;
+}
+
 export default prisma;
