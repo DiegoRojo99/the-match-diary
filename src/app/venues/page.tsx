@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TeamWithCountry } from '@/types/db/teams';
-import { VenueRow } from '@/types';
 import VenueCard from './VenueCard';
 import FootballLoader from '@/components/FootballLoader';
+import { Venue } from '@prisma/client';
+import { TeamWithCountry } from '@/lib/prisma';
 
 // Custom hook for debounced values
 function useDebounce<T>(value: T, delay: number): T {
@@ -23,7 +23,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-type VenueWithTeams = VenueRow & {
+type VenueWithTeams = Venue & {
   teams: TeamWithCountry[];
 }
 

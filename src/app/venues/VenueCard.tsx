@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useState } from 'react';
-import { TeamWithCountry } from '@/types/db/teams';
-import { VenueRow } from '@/types';
+import { Venue } from '@prisma/client';
+import { TeamWithCountry } from '@/lib/prisma';
 
 // Icon components
 const MapPinIcon = ({ className = "w-4 h-4" }) => (
@@ -23,7 +23,7 @@ const HomeIcon = ({ className = "w-4 h-4" }) => (
   </svg>
 );
 
-type VenueWithTeams = VenueRow & {
+type VenueWithTeams = Venue & {
   teams: TeamWithCountry[];
 };
 
@@ -51,10 +51,10 @@ export default function VenueCard({ venue }: VenueCardProps) {
     >
       {/* Venue Image */}
       <div className="h-48 relative overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600">
-        {venue.image_url && !imageError ? (
+        {venue.imageUrl && !imageError ? (
           <>
             <img
-              src={venue.image_url}
+              src={venue.imageUrl}
               alt={venue.name}
               className={`w-full h-full object-cover transition-opacity duration-300 ${
                 imageLoading ? 'opacity-0' : 'opacity-100'

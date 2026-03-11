@@ -1,20 +1,28 @@
 import { useState } from 'react';
 import Link from 'next/link';
-import { TeamWithCountry, VenueRow } from '@/types';
 import FootballLoader from '@/components/FootballLoader';
-
-type TeamWithVenue = TeamWithCountry & {
-  home_venue: VenueRow | null;
-};
+import { TeamWithVenue } from '@/lib/prisma';
 
 interface TeamVenueProps {
   team: TeamWithVenue;
-  venue: VenueRow;
 }
 
-export default function TeamVenue({ team, venue }: TeamVenueProps) {
+export default function TeamVenue({ team }: TeamVenueProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoading, setImageLoading] = useState(true);
+  const venue = team.homeVenue;
+
+  if (!venue) {
+    return (
+      <div className="mb-8">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 text-center">
+          <div className="text-6xl mb-4">🏟️</div>
+          <h3 className="text-2xl font-bold mb-2">{team.name}</h3>
+          <p className="text-gray-600">No home stadium information available</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleImageError = () => {
     setImageError(true);
@@ -67,10 +75,10 @@ export default function TeamVenue({ team, venue }: TeamVenueProps) {
           
           {/* Venue Image */}
           <div className="relative h-64 md:h-full">
-            {venue.image_url && !imageError ? (
+            {venue.imageUrl && !imageError ? (
               <>
                 <img
-                  src={venue.image_url}
+                  src={venue.imageUrl}
                   alt={venue.name}
                   className={`w-full h-full object-cover transition-opacity duration-300 ${
                     imageLoading ? 'opacity-0' : 'opacity-100'
@@ -97,7 +105,7 @@ export default function TeamVenue({ team, venue }: TeamVenueProps) {
               </div>
             )}
             
-            {imageLoading && venue.image_url && !imageError && (
+            {imageLoading && venue.imageUrl && !imageError && (
               <div className="absolute inset-0 bg-gray-200 flex items-center justify-center">
                 <FootballLoader size="md" text="" />
               </div>

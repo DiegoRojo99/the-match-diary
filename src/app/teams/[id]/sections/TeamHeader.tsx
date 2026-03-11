@@ -1,10 +1,6 @@
 import { useState } from 'react';
-import { TeamWithCountry, VenueRow } from '@/types';
 import FootballLoader from '@/components/FootballLoader';
-
-type TeamWithVenue = TeamWithCountry & {
-  home_venue: VenueRow | null;
-};
+import { TeamWithVenue } from '@/lib/prisma';
 
 interface TeamHeaderProps {
   team: TeamWithVenue;
@@ -33,9 +29,9 @@ export default function TeamHeader({ team }: TeamHeaderProps) {
       {/* Team Logo */}
       <div className="flex justify-center mb-6">
         <div className="w-32 h-32 relative">
-          {team.logo_url && !logoError ? (
+          {team.logoUrl && !logoError ? (
             <img
-              src={team.logo_url}
+              src={team.logoUrl}
               alt={`${team.name} logo`}
               className={`w-full h-full object-contain transition-opacity duration-300 ${
                 logoLoading ? 'opacity-0' : 'opacity-100'
@@ -49,7 +45,7 @@ export default function TeamHeader({ team }: TeamHeaderProps) {
             </div>
           )}
           
-          {logoLoading && team.logo_url && !logoError && (
+          {logoLoading && team.logoUrl && !logoError && (
             <div className="absolute inset-0 flex items-center justify-center">
               <FootballLoader size="md" text="" />
             </div>
@@ -58,7 +54,7 @@ export default function TeamHeader({ team }: TeamHeaderProps) {
       </div>
       
       {/* Country with Flag */}
-      {team.country && (
+      {/* {team.country && (
         <div className="flex items-center justify-center space-x-3 mb-4">
           <span className="text-3xl">
             {team.country.flag ? (
@@ -77,14 +73,14 @@ export default function TeamHeader({ team }: TeamHeaderProps) {
             {team.country.name}
           </span>
         </div>
-      )}
+      )} */}
       
       {/* Stadium */}
-      {team.home_venue && (
+      {team.homeVenue && (
         <div className="flex items-center justify-center space-x-3">
           <span className="text-2xl">🏟️</span>
           <span className="text-lg font-medium text-gray-700">
-            {team.home_venue.name}
+            {team.homeVenue.name}
           </span>
         </div>
       )}

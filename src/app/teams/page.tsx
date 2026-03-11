@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TeamWithCountry, VenueRow } from '@/types';
 import TeamCard from './TeamCard';
 import FootballLoader from '@/components/FootballLoader';
+import { TeamWithVenue } from '@/lib/prisma';
 
 // Custom hook for debounced values
 function useDebounce<T>(value: T, delay: number): T {
@@ -21,10 +21,6 @@ function useDebounce<T>(value: T, delay: number): T {
 
   return debouncedValue;
 }
-
-type TeamWithVenue = TeamWithCountry & {
-  home_venue: VenueRow | null;
-};
 
 export default function TeamsPage() {
   const [teams, setTeams] = useState<TeamWithVenue[]>([]);

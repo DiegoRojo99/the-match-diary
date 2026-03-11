@@ -1,6 +1,6 @@
 import type { BaseTable, TableType } from './common';
 import { CountryRow } from './countries';
-import { TeamWithCountry } from './teams';
+import { TeamWithCountry } from '@/lib/prisma';
 
 // Venues table row structure
 export interface VenueRow extends BaseTable {

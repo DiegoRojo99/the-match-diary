@@ -1,8 +1,4 @@
-import { TeamWithCountry, VenueRow } from '@/types';
-
-type TeamWithVenue = TeamWithCountry & {
-  home_venue: VenueRow | null;
-};
+import { TeamWithVenue } from "@/lib/prisma";
 
 interface TeamStatsProps {
   team: TeamWithVenue;
@@ -16,38 +12,32 @@ export default function TeamStats({ team }: TeamStatsProps) {
       icon: team.national ? '🌍' : '🏟️',
       color: team.national ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 'bg-green-100 text-green-800 border-green-200'
     },
-    {
-      label: 'Country',
-      value: team.country?.name || 'Unknown',
-      icon: '🌍',
-      color: 'bg-blue-100 text-blue-800 border-blue-200',
-      extra: team.country?.code
-    },
+    // {
+    //   label: 'Country',
+    //   value: team.country?.name || 'Unknown',
+    //   icon: '🌍',
+    //   color: 'bg-blue-100 text-blue-800 border-blue-200',
+    //   extra: team.country?.code
+    // },
     {
       label: 'Founded Year',
-      value: team.founded_year ? team.founded_year.toString() : 'Unknown',
+      value: team.foundedYear ? team.foundedYear.toString() : 'Unknown',
       icon: '📅',
       color: 'bg-purple-100 text-purple-800 border-purple-200',
-      extra: team.founded_year ? `${new Date().getFullYear() - team.founded_year} years ago` : null
+      extra: team.foundedYear ? `${new Date().getFullYear() - team.foundedYear} years ago` : null
     },
     {
       label: 'Team Code',
-      value: team.team_code || 'N/A',
+      value: team.teamCode || 'N/A',
       icon: '🏷️',
       color: 'bg-gray-100 text-gray-800 border-gray-200'
     },
     {
       label: 'Home Venue',
-      value: team.home_venue?.name || 'No Stadium',
+      value: team.homeVenue?.name || 'No Stadium',
       icon: '🏟️',
       color: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-      extra: team.home_venue?.capacity ? `${team.home_venue.capacity.toLocaleString()} capacity` : null
-    },
-    {
-      label: 'Database ID',
-      value: team.id.toString(),
-      icon: '🆔',
-      color: 'bg-slate-100 text-slate-800 border-slate-200'
+      extra: team.homeVenue?.capacity ? `${team.homeVenue.capacity.toLocaleString()} capacity` : null
     }
   ];
 

@@ -1,12 +1,8 @@
 import { useState, useEffect } from 'react';
-import { TeamWithCountry, VenueRow } from '@/types';
 import MatchCard from './MatchCard';
 import { MatchWithDetails } from '@/types/prisma/match';
 import FootballLoader from '@/components/FootballLoader';
-
-type TeamWithVenue = TeamWithCountry & {
-  home_venue: VenueRow | null;
-};
+import { TeamWithVenue } from '@/lib/prisma';
 
 interface TeamMatchesProps {
   team: TeamWithVenue;
