@@ -194,10 +194,10 @@ function StadiumCard({ venue }: { venue: StadiumArchiveEntry }) {
 
         <div className="mt-6 flex gap-2">
           <Link
-            href={`/venues/${venue.venueId}`}
+            href={`/my-stadiums/${venue.venueId}`}
             className="flex-1 rounded-full border border-sky-400/30 bg-sky-500/10 px-3 py-2 text-center text-sm font-semibold text-sky-200 transition hover:border-sky-300/60 hover:bg-sky-500/15"
           >
-            View venue
+            View stadium
           </Link>
           <Link
             href="/my-matches"
