@@ -66,9 +66,34 @@ export default function MyMatchesPage() {
     }
   };
 
-  const averageRating = visits.filter((visit) => typeof visit.rating === 'number').reduce((sum, visit) => sum + (visit.rating ?? 0), 0) / Math.max(1, visits.filter((visit) => typeof visit.rating === 'number').length);
+  const ratedVisits = visits.filter((visit) => typeof visit.rating === 'number');
+  const averageRating = ratedVisits.reduce((sum, visit) => sum + (visit.rating ?? 0), 0) / Math.max(1, ratedVisits.length);
   const uniqueVenues = new Set(visits.filter((visit) => visit.match?.venue?.id != null).map((visit) => visit.match!.venue!.id)).size;
   const uniqueCountries = new Set(visits.filter((visit) => visit.match?.venue?.city).map((visit) => visit.match!.venue!.city)).size;
+
+  const mostRecentVisit = [...visits].sort(
+    (a, b) => new Date(b.attendedDate).getTime() - new Date(a.attendedDate).getTime(),
+  )[0];
+
+  const highestRatedVisit = [...ratedVisits].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))[0];
+
+  const archiveHighlights = [
+    {
+      label: 'Last match',
+      value: mostRecentVisit ? formatShortDate(mostRecentVisit.attendedDate) : '—',
+      caption: mostRecentVisit ? `${mostRecentVisit.match?.homeTeam?.name ?? 'Home'} vs ${mostRecentVisit.match?.awayTeam?.name ?? 'Away'}` : 'No entries yet',
+    },
+    {
+      label: 'Best rated',
+      value: highestRatedVisit ? `${highestRatedVisit.rating}/10` : '—',
+      caption: highestRatedVisit ? `${highestRatedVisit.match?.competition?.name ?? 'Match'} memory` : 'No ratings yet',
+    },
+    {
+      label: 'Cities seen',
+      value: String(uniqueCountries),
+      caption: 'Across your football travels',
+    },
+  ];
 
   if (authLoading || loading) {
     return (
@@ -95,10 +120,23 @@ export default function MyMatchesPage() {
           </div>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
-            <StatTile label="Matches logged" value={String(visits.length)} />
-            <StatTile label="Avg. rating" value={visits.some((visit) => visit.rating) ? `${averageRating.toFixed(1)}/10` : '—'} />
-            <StatTile label="Venues visited" value={String(uniqueVenues)} />
+            <StatTile label="Matches logged" value={String(visits.length)} tone="emerald" />
+            <StatTile label="Avg. rating" value={ratedVisits.length ? `${averageRating.toFixed(1)}/10` : '—'} tone="amber" />
+            <StatTile label="Venues visited" value={String(uniqueVenues)} tone="sky" />
           </div>
+        </div>
+
+        <div className="mb-8 grid gap-4 md:grid-cols-3">
+          {archiveHighlights.map((highlight) => (
+            <div
+              key={highlight.label}
+              className="rounded-[24px] border border-white/10 bg-white/5 p-4 shadow-[0_14px_40px_rgba(3,9,8,0.28)]"
+            >
+              <div className="text-[10px] font-bold uppercase tracking-[0.24em] text-slate-400">{highlight.label}</div>
+              <div className="mt-3 text-2xl font-black tracking-[-0.05em] text-white">{highlight.value}</div>
+              <div className="mt-2 text-sm text-slate-300">{highlight.caption}</div>
+            </div>
+          ))}
         </div>
 
         {visits.length === 0 ? (
@@ -140,12 +178,29 @@ export default function MyMatchesPage() {
   );
 }
 
-function StatTile({ label, value }: { label: string; value: string }) {
+function StatTile({ label, value, tone }: { label: string; value: string; tone: 'emerald' | 'amber' | 'sky' }) {
+  const toneStyles = {
+    emerald: 'border-emerald-400/20 bg-emerald-500/5 text-emerald-200',
+    amber: 'border-amber-400/20 bg-amber-500/5 text-amber-200',
+    sky: 'border-sky-400/20 bg-sky-500/5 text-sky-200',
+  };
+
   return (
-    <div className="rounded-[22px] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">{label}</div>
+    <div className={`rounded-[22px] border p-4 backdrop-blur-sm ${toneStyles[tone]}`}>
+      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-300">{label}</div>
       <div className="mt-3 text-2xl font-black text-white">{value}</div>
     </div>
   );
+}
+
+function formatShortDate(value: string | Date) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 

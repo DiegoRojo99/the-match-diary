@@ -66,6 +66,7 @@ export default function Navigation() {
               <>
                 <NavLink href="/venues" icon={<LocationIcon />} label="Venues" />
                 <NavLink href="/teams" icon={<StadiumIcon />} label="Teams" />
+                <NavLink href="/my-stadiums" icon={<BookmarkIcon />} label="My Stadiums" />
                 <NavLink href="/my-matches" icon={<BookmarkIcon />} label="My Matches" />
 
                 <div className="ml-4 flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-3 py-2">
@@ -126,7 +127,10 @@ export default function Navigation() {
             <NavLink href="/venues" icon={<LocationIcon />} label="Venues" mobile onClick={() => setIsOpen(false)} />
             <NavLink href="/teams" icon={<StadiumIcon />} label="Teams" mobile onClick={() => setIsOpen(false)} />
             {user && (
-              <NavLink href="/my-matches" icon={<BookmarkIcon />} label="My Matches" mobile onClick={() => setIsOpen(false)} />
+              <>
+                <NavLink href="/my-stadiums" icon={<BookmarkIcon />} label="My Stadiums" mobile onClick={() => setIsOpen(false)} />
+                <NavLink href="/my-matches" icon={<BookmarkIcon />} label="My Matches" mobile onClick={() => setIsOpen(false)} />
+              </>
             )}
 
             {user ? (

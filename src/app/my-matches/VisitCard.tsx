@@ -27,6 +27,17 @@ export default function VisitCard({ visit, onDelete, deletingId }: VisitCardProp
 
   return (
     <div className="group flex flex-col gap-4 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,20,0.96),rgba(8,17,14,0.9))] p-5 shadow-[0_18px_50px_rgba(4,8,7,0.45)] transition duration-300 hover:-translate-y-1 hover:border-emerald-400/30 hover:shadow-[0_24px_60px_rgba(16,185,129,0.12)]">
+      <div className="flex items-center justify-between gap-3">
+        <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">
+          Match memory
+        </span>
+        {visit.rating ? (
+          <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-200">
+            {visit.rating}/10
+          </span>
+        ) : null}
+      </div>
+
       <Link href={`/matches/${visit.matchId}`} className="block">
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-[#0b1a17] px-3 py-3">
           {teamDisplay(m?.homeTeam ?? null, 'home')}
