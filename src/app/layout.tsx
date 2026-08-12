@@ -38,15 +38,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-black`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#06130d] text-slate-100`}
       >
         <ServiceWorkerRegistration />
         <AuthProvider>
-          <div className="min-h-screen flex flex-col bg-black">
+          <div className="min-h-screen flex flex-col bg-[radial-gradient(circle_at_top,_rgba(56,211,159,0.12),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(247,215,122,0.08),_transparent_22%)] text-slate-100">
             <Navigation />
-            <main className="flex-1">
-              {children}
-            </main>
+            <main className="flex-1">{children}</main>
             <Footer />
           </div>
         </AuthProvider>
