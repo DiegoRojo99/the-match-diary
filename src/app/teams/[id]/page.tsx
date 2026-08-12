@@ -2,11 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-
-// Import section components
 import TeamHeader from './sections/TeamHeader';
-// import TeamStats from './sections/TeamStats';
-// import TeamVenue from './sections/TeamVenue';
 import TeamMatches from './sections/TeamMatches';
 import FootballLoader from '@/components/FootballLoader';
 import { TeamWithVenue } from '@/lib/prisma';
@@ -14,7 +10,7 @@ import { TeamWithVenue } from '@/lib/prisma';
 export default function TeamDetailPage() {
   const params = useParams();
   const teamId = params.id as string;
-  
+
   const [team, setTeam] = useState<TeamWithVenue | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +19,7 @@ export default function TeamDetailPage() {
   useEffect(() => {
     const fetchTeam = async () => {
       if (!teamId) return;
-      
+
       try {
         const response = await fetch(`/api/teams/${teamId}`);
         if (response.ok) {
@@ -45,98 +41,65 @@ export default function TeamDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-100">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-center items-center py-20">
-            <FootballLoader size="xl" text="Loading team details..." />
-          </div>
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-[#05150f]">
+        <FootballLoader size="xl" text="Loading team details..." />
       </div>
     );
   }
 
   if (error || !team) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-100">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">😞</div>
-            <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-              {error || 'Team not found'}
-            </h3>
-            <p className="text-gray-500 mb-6">
-              The team you're looking for doesn't exist or there was an error loading the details.
-            </p>
-            <a 
-              href="/teams"
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-            >
-              Back to Teams
-            </a>
-          </div>
+      <div className="min-h-screen bg-[#05150f] text-white">
+        <div className="mx-auto max-w-4xl px-4 py-20 text-center">
+          <div className="mb-6 text-7xl">😞</div>
+          <h3 className="text-3xl font-black text-white">{error || 'Team not found'}</h3>
+          <p className="mt-3 text-slate-400">The team you&apos;re looking for doesn&apos;t exist or there was an issue loading it.</p>
+          <a href="/teams" className="mt-8 inline-flex rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-6 py-3 text-sm font-black text-[#052814] shadow-[0_18px_40px_rgba(16,185,129,0.35)]">
+            Back to teams
+          </a>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-100">
-      <div className="container mx-auto px-4 py-8">
-        
-        {/* Team Header Section */}
+    <div className="min-h-screen bg-[#05150f] text-white">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <TeamHeader team={team} />
-        
-        {/* Main Tab Navigation */}
-        <div className="mb-8">
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-            <div className="flex space-x-1 bg-gray-100 rounded-lg p-1 max-w-md">
+
+        <div className="mb-8 rounded-[28px] border border-white/10 bg-white/5 p-4 shadow-[0_24px_60px_rgba(4,10,8,0.8)]">
+          <div className="flex flex-wrap gap-2 md:max-w-lg">
+            {[
+              ['matches', 'Team Matches'],
+              ['stats', 'Statistics'],
+              ['venue', 'Home Venue'],
+            ].map(([value, label]) => (
               <button
-                onClick={() => setActiveTab('matches')}
-                className={`flex-1 py-3 px-6 text-sm font-medium rounded-md transition-all duration-200 ${
-                  activeTab === 'matches'
-                    ? 'bg-white text-green-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                key={value}
+                onClick={() => setActiveTab(value as 'matches' | 'stats' | 'venue')}
+                className={`flex-1 rounded-full px-4 py-3 text-sm font-semibold transition ${
+                  activeTab === value
+                    ? 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-[#052814]'
+                    : 'border border-white/10 bg-white/5 text-slate-300 hover:border-emerald-400/40 hover:text-emerald-300'
                 }`}
               >
-                Team Matches
+                {label}
               </button>
-              <button
-                onClick={() => setActiveTab('stats')}
-                className={`flex-1 py-3 px-6 text-sm font-medium rounded-md transition-all duration-200 ${
-                  activeTab === 'stats'
-                    ? 'bg-white text-green-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Statistics
-              </button>
-              <button
-                onClick={() => setActiveTab('venue')}
-                className={`flex-1 py-3 px-6 text-sm font-medium rounded-md transition-all duration-200 ${
-                  activeTab === 'venue'
-                    ? 'bg-white text-green-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Home Venue
-              </button>
-            </div>
+            ))}
           </div>
         </div>
-        
-        {/* Tab Content */}
+
         {activeTab === 'matches' && <TeamMatches team={team} />}
         {activeTab === 'stats' && (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-            <p className="text-gray-500 text-center py-8">Team statistics coming soon...</p>
+          <div className="rounded-[28px] border border-white/10 bg-white/5 p-8 text-center shadow-[0_24px_60px_rgba(4,10,8,0.8)]">
+            <p className="text-slate-400">Team statistics coming soon.</p>
           </div>
         )}
         {activeTab === 'venue' && team.homeVenue && (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-            <p className="text-gray-500 text-center py-8">Venue details coming soon...</p>
+          <div className="rounded-[28px] border border-white/10 bg-white/5 p-8 text-center shadow-[0_24px_60px_rgba(4,10,8,0.8)]">
+            <p className="text-slate-400">Venue details coming soon.</p>
           </div>
         )}
-        
       </div>
     </div>
   );

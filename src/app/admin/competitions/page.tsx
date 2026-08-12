@@ -16,10 +16,7 @@ interface Competition {
 
 interface CountryGroup {
   countryName: string;
-  country: {
-    name: string;
-    code: string | null;
-  };
+  country: { name: string; code: string | null };
   competitions: Competition[];
 }
 
@@ -30,20 +27,17 @@ export default function AdminCompetitions() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'visible' | 'hidden'>('all');
-  const [expandedCountries, setExpandedCountries] = useState<Set<string>>(new Set(['World'])); // World expanded by default
+  const [expandedCountries, setExpandedCountries] = useState<Set<string>>(new Set(['World']));
   const [updating, setUpdating] = useState<Set<number>>(new Set());
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/auth/login');
     }
   }, [user, authLoading, router]);
 
-  // Fetch competitions data
   useEffect(() => {
     if (!user) return;
-    
     fetchCompetitions();
   }, [user]);
 
@@ -51,7 +45,6 @@ export default function AdminCompetitions() {
     try {
       const response = await fetch('/api/admin/competitions');
       if (!response.ok) throw new Error('Failed to fetch competitions');
-      
       const data = await response.json();
       setCompetitions(data);
     } catch (error) {
@@ -62,37 +55,30 @@ export default function AdminCompetitions() {
   };
 
   const toggleCompetitionVisibility = async (competitionId: number, currentVisible: boolean) => {
-    setUpdating(prev => new Set(prev).add(competitionId));
-    
+    setUpdating((prev) => new Set(prev).add(competitionId));
+
     try {
       const response = await fetch('/api/admin/competitions/update', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          competitionId,
-          visible: !currentVisible
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ competitionId, visible: !currentVisible }),
       });
 
       if (!response.ok) throw new Error('Failed to update competition');
 
-      // Update local state
-      setCompetitions(prevCompetitions => 
-        prevCompetitions.map(countryGroup => ({
+      setCompetitions((prevCompetitions) =>
+        prevCompetitions.map((countryGroup) => ({
           ...countryGroup,
-          competitions: countryGroup.competitions.map(comp =>
-            comp.id === competitionId ? { ...comp, visible: !currentVisible } : comp
-          )
-        }))
+          competitions: countryGroup.competitions.map((comp) =>
+            comp.id === competitionId ? { ...comp, visible: !currentVisible } : comp,
+          ),
+        })),
       );
-      
     } catch (error) {
       console.error('Error updating competition:', error);
       alert('Failed to update competition visibility');
     } finally {
-      setUpdating(prev => {
+      setUpdating((prev) => {
         const newSet = new Set(prev);
         newSet.delete(competitionId);
         return newSet;
@@ -101,7 +87,7 @@ export default function AdminCompetitions() {
   };
 
   const toggleCountryExpansion = (countryName: string) => {
-    setExpandedCountries(prev => {
+    setExpandedCountries((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(countryName)) {
         newSet.delete(countryName);
@@ -113,254 +99,140 @@ export default function AdminCompetitions() {
   };
 
   const filteredCompetitions = competitions
-    .map(countryGroup => ({
+    .map((countryGroup) => ({
       ...countryGroup,
-      competitions: countryGroup.competitions.filter(comp => {
+      competitions: countryGroup.competitions.filter((comp) => {
         const matchesSearch = comp.name.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesVisibility = 
-          visibilityFilter === 'all' || 
+        const matchesVisibility =
+          visibilityFilter === 'all' ||
           (visibilityFilter === 'visible' && comp.visible) ||
           (visibilityFilter === 'hidden' && !comp.visible);
         return matchesSearch && matchesVisibility;
-      })
+      }),
     }))
-    .filter(countryGroup => countryGroup.competitions.length > 0);
+    .filter((countryGroup) => countryGroup.competitions.length > 0);
 
-  // Calculate statistics for filtered results
   const filteredTotalCompetitions = filteredCompetitions.reduce((sum, group) => sum + group.competitions.length, 0);
-  const filteredVisibleCompetitions = filteredCompetitions.reduce((sum, group) => 
-    sum + group.competitions.filter(comp => comp.visible).length, 0
-  );
-
-  // Calculate overall statistics
+  const filteredVisibleCompetitions = filteredCompetitions.reduce((sum, group) => sum + group.competitions.filter((comp) => comp.visible).length, 0);
   const totalCompetitions = competitions.reduce((sum, group) => sum + group.competitions.length, 0);
-  const visibleCompetitions = competitions.reduce((sum, group) => 
-    sum + group.competitions.filter(comp => comp.visible).length, 0
-  );
+  const visibleCompetitions = competitions.reduce((sum, group) => sum + group.competitions.filter((comp) => comp.visible).length, 0);
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#05150f]">
         <FootballLoader size="xl" text="Loading competitions..." />
       </div>
     );
   }
 
-  if (!user) {
-    return null; // Will redirect via useEffect
-  }
+  if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Competition Management</h1>
-                <p className="mt-2 text-gray-600">Manage visibility of competitions in your match diary</p>
-              </div>
-              <button 
-                onClick={() => router.push('/')}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                ← Back to Home
-              </button>
+    <div className="min-h-screen bg-[#05150f] text-white">
+      <div className="border-b border-white/10 bg-[#081a12]/80 backdrop-blur-xl">
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-300/80">Admin</p>
+              <h1 className="mt-2 text-3xl font-black md:text-4xl">Competition management</h1>
             </div>
+            <button onClick={() => router.push('/')} className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:border-emerald-400/40 hover:text-emerald-300">
+              ← Back home
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm text-gray-500">
-                  {(searchTerm || visibilityFilter !== 'all') ? 'Filtered / ' : ''}Total Competitions
-                </p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {(searchTerm || visibilityFilter !== 'all') ? 
-                    `${filteredTotalCompetitions} / ${totalCompetitions}` : 
-                    totalCompetitions
-                  }
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <span className="text-blue-600 text-xl">🏆</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm text-gray-500">
-                  {(searchTerm || visibilityFilter !== 'all') ? 'Filtered / ' : ''}Visible Competitions
-                </p>
-                <p className="text-2xl font-semibold text-green-600">
-                  {(searchTerm || visibilityFilter !== 'all') ? 
-                    `${filteredVisibleCompetitions} / ${visibleCompetitions}` : 
-                    visibleCompetitions
-                  }
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <span className="text-green-600 text-xl">👁️</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-lg shadow">
-            <div className="flex items-center">
-              <div className="flex-1">
-                <p className="text-sm text-gray-500">
-                  {(searchTerm || visibilityFilter !== 'all') ? 'Filtered / ' : ''}Hidden Competitions
-                </p>
-                <p className="text-2xl font-semibold text-gray-600">
-                  {(searchTerm || visibilityFilter !== 'all') ? 
-                    `${filteredTotalCompetitions - filteredVisibleCompetitions} / ${totalCompetitions - visibleCompetitions}` : 
-                    totalCompetitions - visibleCompetitions
-                  }
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-gray-600 text-xl">🚫</span>
-              </div>
-            </div>
-          </div>
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8 grid gap-4 md:grid-cols-3">
+          <OverviewCard label="Total competitions" value={(searchTerm || visibilityFilter !== 'all') ? `${filteredTotalCompetitions} / ${totalCompetitions}` : totalCompetitions} icon="🏆" accent="sky" />
+          <OverviewCard label="Visible" value={(searchTerm || visibilityFilter !== 'all') ? `${filteredVisibleCompetitions} / ${visibleCompetitions}` : visibleCompetitions} icon="👁️" accent="emerald" />
+          <OverviewCard label="Hidden" value={(searchTerm || visibilityFilter !== 'all') ? `${filteredTotalCompetitions - filteredVisibleCompetitions} / ${totalCompetitions - visibleCompetitions}` : totalCompetitions - visibleCompetitions} icon="🚫" accent="slate" />
         </div>
 
-        {/* Search and Filters */}
-        <div className="mb-6 space-y-4">
+        <div className="mb-6 rounded-[24px] border border-white/10 bg-white/5 p-4 shadow-[0_24px_60px_rgba(4,10,8,0.8)]">
           <input
             type="text"
-            placeholder="Search competitions..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Search competitions..."
+            className="w-full rounded-2xl border border-white/10 bg-[#0b1d16] px-4 py-3 text-white placeholder:text-slate-500 focus:border-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
           />
-          
-          {/* Visibility Filter */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-700">Show:</span>
-            <div className="bg-white rounded-lg border border-gray-200 p-1 flex">
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {[
+              ['all', `All (${totalCompetitions})`],
+              ['visible', `Visible (${visibleCompetitions})`],
+              ['hidden', `Hidden (${totalCompetitions - visibleCompetitions})`],
+            ].map(([value, label]) => (
               <button
-                onClick={() => setVisibilityFilter('all')}
-                className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                  visibilityFilter === 'all'
-                    ? 'bg-blue-500 text-white font-medium'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                key={value}
+                onClick={() => setVisibilityFilter(value as 'all' | 'visible' | 'hidden')}
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                  visibilityFilter === value
+                    ? 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-[#052814]'
+                    : 'border border-white/10 bg-white/5 text-slate-300 hover:border-emerald-400/40 hover:text-emerald-300'
                 }`}
               >
-                All ({totalCompetitions})
+                {label}
               </button>
-              <button
-                onClick={() => setVisibilityFilter('visible')}
-                className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                  visibilityFilter === 'visible'
-                    ? 'bg-green-500 text-white font-medium'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                Visible ({visibleCompetitions})
-              </button>
-              <button
-                onClick={() => setVisibilityFilter('hidden')}
-                className={`px-4 py-2 text-sm rounded-md transition-colors ${
-                  visibilityFilter === 'hidden'
-                    ? 'bg-gray-500 text-white font-medium'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-              >
-                Hidden ({totalCompetitions - visibleCompetitions})
-              </button>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* Competitions by Country */}
         <div className="space-y-6">
           {filteredCompetitions.map((countryGroup) => {
             const isExpanded = expandedCountries.has(countryGroup.countryName);
-            const visibleCount = countryGroup.competitions.filter(comp => comp.visible).length;
-            
+            const visibleCount = countryGroup.competitions.filter((comp) => comp.visible).length;
+
             return (
-              <div key={countryGroup.countryName} className="bg-white rounded-lg shadow overflow-hidden">
-                <button
-                  onClick={() => toggleCountryExpansion(countryGroup.countryName)}
-                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <span className="text-2xl">
-                      {countryGroup.countryName === 'World' ? '🌍' : '🏴'}
-                    </span>
-                    <div className="text-left">
-                      <h3 className="text-lg font-semibold text-gray-900">
+              <div key={countryGroup.countryName} className="overflow-hidden rounded-[28px] border border-white/10 bg-white/5 shadow-[0_24px_60px_rgba(4,10,8,0.8)]">
+                <button onClick={() => toggleCountryExpansion(countryGroup.countryName)} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition hover:bg-white/5 md:px-6">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{countryGroup.countryName === 'World' ? '🌍' : '🏴'}</span>
+                    <div>
+                      <div className="text-lg font-bold text-white">
                         {countryGroup.countryName}
                         {countryGroup.country.code && ` (${countryGroup.country.code})`}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {visibleCount}/{countryGroup.competitions.length} visible
-                      </p>
+                      </div>
+                      <div className="text-sm text-slate-400">{visibleCount}/{countryGroup.competitions.length} visible</div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm text-gray-500">
-                      {countryGroup.competitions.length} competitions
-                    </span>
-                    <span className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
-                      ▼
-                    </span>
+
+                  <div className="flex items-center gap-3 text-sm text-slate-400">
+                    <span>{countryGroup.competitions.length} competitions</span>
+                    <span className={`transition ${isExpanded ? 'rotate-180' : ''}`}>▼</span>
                   </div>
                 </button>
-                
+
                 {isExpanded && (
-                  <div className="border-t border-gray-200">
-                    <div className="px-6 py-4 space-y-4">
+                  <div className="border-t border-white/10 px-4 py-4 md:px-6">
+                    <div className="space-y-3">
                       {countryGroup.competitions.map((competition) => (
-                        <div key={competition.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div key={competition.id} className="flex flex-col gap-3 rounded-[22px] border border-white/10 bg-[#0b1d16] p-4 md:flex-row md:items-center md:justify-between">
                           <div className="flex-1">
-                            <div className="flex items-center space-x-3">
-                              <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                                competition.type === 'League' 
-                                  ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }`}>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${competition.type === 'League' ? 'bg-sky-500/10 text-sky-100' : 'bg-amber-500/10 text-amber-100'}`}>
                                 {competition.type}
                               </span>
-                              <h4 className="font-medium text-gray-900">{competition.name}</h4>
-                              <span className="text-sm text-gray-500">ID: {competition.api_id}</span>
-                              <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                                competition.seeded 
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-gray-100 text-gray-600'
-                              }`}>
-                                {competition.seeded ? '✅ Seeded' : '⏳ Not Seeded'}
+                              <span className="text-base font-bold text-white">{competition.name}</span>
+                              <span className="text-xs text-slate-400">ID: {competition.api_id}</span>
+                              <span className={`rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${competition.seeded ? 'bg-emerald-500/10 text-emerald-200' : 'bg-slate-500/10 text-slate-200'}`}>
+                                {competition.seeded ? 'Seeded' : 'Not seeded'}
                               </span>
                             </div>
                           </div>
-                          
-                          <div className="flex items-center space-x-3">
-                            <span className={`text-sm font-medium ${
-                              competition.visible ? 'text-green-600' : 'text-gray-500'
-                            }`}>
+
+                          <div className="flex items-center gap-3 md:justify-end">
+                            <span className={`text-sm font-semibold ${competition.visible ? 'text-emerald-300' : 'text-slate-400'}`}>
                               {competition.visible ? 'Visible' : 'Hidden'}
                             </span>
-                            
                             <button
                               onClick={() => toggleCompetitionVisibility(competition.id, competition.visible)}
                               disabled={updating.has(competition.id)}
-                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                                competition.visible ? 'bg-blue-600' : 'bg-gray-200'
-                              } ${updating.has(competition.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                              className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${competition.visible ? 'bg-emerald-500' : 'bg-slate-600'} ${updating.has(competition.id) ? 'cursor-not-allowed opacity-60' : ''}`}
                             >
-                              <span
-                                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                  competition.visible ? 'translate-x-6' : 'translate-x-1'
-                                }`}
-                              />
+                              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${competition.visible ? 'translate-x-6' : 'translate-x-1'}`} />
                             </button>
                           </div>
                         </div>
@@ -374,28 +246,39 @@ export default function AdminCompetitions() {
         </div>
 
         {filteredCompetitions.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">🔍</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No competitions found</h3>
-            <p className="text-gray-500">
-              {searchTerm 
-                ? `No ${visibilityFilter === 'all' ? '' : visibilityFilter + ' '}competitions match "${searchTerm}"` 
-                : `No ${visibilityFilter} competitions found`
-              }
+          <div className="mt-8 rounded-[28px] border border-white/10 bg-white/5 px-6 py-16 text-center shadow-[0_24px_60px_rgba(4,10,8,0.8)]">
+            <div className="mb-4 text-6xl">🔍</div>
+            <h3 className="text-2xl font-bold text-white">No competitions found</h3>
+            <p className="mt-3 text-slate-400">
+              {searchTerm ? `No ${visibilityFilter === 'all' ? '' : visibilityFilter + ' '}competitions match “${searchTerm}”.` : `No ${visibilityFilter} competitions found.`}
             </p>
             {(searchTerm || visibilityFilter !== 'all') && (
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setVisibilityFilter('all');
-                }}
-                className="mt-4 text-blue-600 hover:text-blue-800 font-medium text-sm"
-              >
+              <button onClick={() => { setSearchTerm(''); setVisibilityFilter('all'); }} className="mt-6 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-5 py-2.5 text-sm font-black text-[#052814]">
                 Clear filters
               </button>
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function OverviewCard({ label, value, icon, accent }: { label: string; value: string | number; icon: string; accent: 'sky' | 'emerald' | 'slate' }) {
+  const accentStyles = {
+    sky: 'border-sky-400/30 bg-sky-500/10 text-sky-200',
+    emerald: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200',
+    slate: 'border-white/10 bg-white/5 text-slate-200',
+  };
+
+  return (
+    <div className={`rounded-[24px] border p-5 ${accentStyles[accent]}`}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.25em] text-slate-300">{label}</p>
+          <p className="mt-3 text-3xl font-black text-white">{value}</p>
+        </div>
+        <div className="text-3xl">{icon}</div>
       </div>
     </div>
   );
