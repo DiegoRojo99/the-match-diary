@@ -37,11 +37,9 @@ export default function MyMatchesPage() {
         });
 
         setVisits(responseData);
-      } 
-      catch (error) {
+      } catch (error) {
         console.error('Error fetching visits:', error);
-      } 
-      finally {
+      } finally {
         setLoading(false);
       }
     };
@@ -61,18 +59,16 @@ export default function MyMatchesPage() {
       });
 
       if (response.ok) setVisits((prev) => prev.filter((v) => v.id !== visitId));
-    } 
-    catch (error) {
+    } catch (error) {
       console.error('Error deleting visit:', error);
-    } 
-    finally {
+    } finally {
       setDeletingId(null);
     }
   };
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-100 flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#05150f]">
         <FootballLoader size="xl" text="Loading your matches..." />
       </div>
     );
@@ -81,35 +77,36 @@ export default function MyMatchesPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-100">
-      <div className="container mx-auto px-4 py-8">
-
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">My Matches</h1>
-          <p className="text-gray-500">
-            {visits.length === 0
-              ? 'You haven\'t logged any match visits yet.'
-              : `You have visited ${visits.length} match${visits.length !== 1 ? 'es' : ''}.`}
-          </p>
+    <div className="min-h-screen bg-[#05150f] text-white">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8 overflow-hidden rounded-[28px] border border-emerald-400/20 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),transparent_35%),linear-gradient(135deg,#081a12,#0f2b1d_45%,#06140d)] p-6 shadow-[0_30px_80px_rgba(4,10,8,0.8)] md:p-8">
+          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-300/80">Journal</p>
+              <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">My Matches</h1>
+            </div>
+            <div className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
+              {visits.length === 0 ? 'No matches logged yet' : `${visits.length} match${visits.length !== 1 ? 'es' : ''} saved`}
+            </div>
+          </div>
         </div>
 
         {visits.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-200">
-            <div className="text-8xl mb-6">⚽</div>
-            <h3 className="text-2xl font-semibold text-gray-900 mb-4">No matches logged yet</h3>
-            <p className="text-gray-500 mb-6 max-w-md mx-auto">
-              Start logging the matches you attend! Browse matches and click &ldquo;Log as Visited&rdquo; on the match details page.
+          <div className="rounded-[28px] border border-white/10 bg-white/5 px-6 py-20 text-center shadow-[0_24px_60px_rgba(4,10,8,0.8)]">
+            <div className="mb-6 text-7xl">⚽</div>
+            <h3 className="text-2xl font-bold text-white">No matches logged yet</h3>
+            <p className="mx-auto mt-3 max-w-xl text-slate-400">
+              Start keeping your football memories. Browse fixtures and save the matches you’ve attended.
             </p>
             <Link
               href="/"
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+              className="mt-6 inline-flex rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-6 py-3 text-sm font-black text-[#052814] shadow-[0_18px_40px_rgba(16,185,129,0.35)] transition hover:brightness-110"
             >
-              Browse Matches
+              Browse matches
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {visits.map((visit) => (
               <VisitCard
                 key={visit.id}
@@ -124,3 +121,4 @@ export default function MyMatchesPage() {
     </div>
   );
 }
+
