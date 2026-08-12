@@ -6,17 +6,13 @@ const FINISHED_STATUSES = ['FT', 'AET', 'PEN'];
 
 function RatingDisplay({ rating }: { rating: number }) {
   const getColor = (rating: number) => {
-    if (rating <= 3) return 'text-red-500';
-    if (rating <= 5) return 'text-yellow-500';
-    if (rating <= 7) return 'text-green-500';
-    return 'text-blue-500';
+    if (rating <= 3) return 'text-red-400';
+    if (rating <= 5) return 'text-amber-300';
+    if (rating <= 7) return 'text-emerald-400';
+    return 'text-sky-400';
   };
 
-  return (
-    <span className={`text-sm font-semibold ${getColor(rating)}`}>
-      {rating}/10
-    </span>
-  );
+  return <span className={`text-sm font-semibold ${getColor(rating)}`}>{rating}/10</span>;
 }
 
 interface VisitCardProps {
@@ -28,51 +24,38 @@ interface VisitCardProps {
 export default function VisitCard({ visit, onDelete, deletingId }: VisitCardProps) {
   const m = visit.match;
   const isFinished = m?.statusShort ? FINISHED_STATUSES.includes(m.statusShort) : false;
-  const attendedDate = new Date(visit.attendedDate).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 flex flex-col gap-4 hover:shadow-md transition-shadow">
-      {/* Teams & Score */}
-      <Link href={`/matches/${visit.matchId}`} className="block group">
-        <div className="flex items-center justify-between gap-2">
-          {/* Home team */}
-          {teamDisplay(m?.homeTeam ?? null)}
+    <div className="group flex flex-col gap-4 rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,20,0.96),rgba(8,17,14,0.9))] p-5 shadow-[0_18px_50px_rgba(4,8,7,0.45)] transition duration-300 hover:-translate-y-1 hover:border-emerald-400/30 hover:shadow-[0_24px_60px_rgba(16,185,129,0.12)]">
+      <Link href={`/matches/${visit.matchId}`} className="block">
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-[#0b1a17] px-3 py-3">
+          {teamDisplay(m?.homeTeam ?? null, 'home')}
 
-          {/* Score */}
-          <div className="flex flex-col items-center min-w-[60px]">
+          <div className="flex min-w-[72px] flex-col items-center justify-center">
             {isFinished && m != null && m.homeScore !== null && m.awayScore !== null ? (
-              <span className="text-2xl font-extrabold text-gray-900">
-                {m.homeScore}–{m.awayScore}
-              </span>
+              <span className="text-2xl font-black tracking-[-0.06em] text-white">{m.homeScore}-{m.awayScore}</span>
             ) : (
-              <span className="text-lg font-bold text-gray-400">vs</span>
+              <span className="text-base font-bold uppercase tracking-[0.14em] text-slate-400">vs</span>
             )}
           </div>
 
-          {/* Away team */}
-          {teamDisplay(m?.awayTeam ?? null)}
+          {teamDisplay(m?.awayTeam ?? null, 'away')}
         </div>
       </Link>
 
-      {/* Metadata */}
       <VisitCardMeta visit={visit} />
 
-      {/* Actions */}
       <div className="flex gap-2 pt-1">
         <Link
           href={`/matches/${visit.matchId}`}
-          className="flex-1 text-center px-3 py-1.5 text-sm border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+          className="flex-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-center text-sm font-semibold text-emerald-200 transition hover:border-emerald-300/60 hover:bg-emerald-500/15"
         >
-          View Match
+          View match
         </Link>
         <button
           onClick={() => onDelete(visit.id)}
           disabled={deletingId === visit.id}
-          className="px-3 py-1.5 text-sm border border-red-200 text-red-500 rounded-lg hover:bg-red-50 transition-colors font-medium disabled:opacity-50"
+          className="rounded-full border border-red-400/30 bg-red-500/5 px-3 py-2 text-sm font-semibold text-red-300 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {deletingId === visit.id ? '...' : 'Remove'}
         </button>
@@ -81,42 +64,41 @@ export default function VisitCard({ visit, onDelete, deletingId }: VisitCardProp
   );
 }
 
-function teamDisplay(team: Team | null) {
+function teamDisplay(team: Team | null, side: 'home' | 'away') {
   if (!team) {
     return (
-      <div className="flex-1 flex flex-col items-center text-center">
-        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-          <span className="text-lg font-bold text-gray-400">?</span>
+      <div className="flex flex-1 flex-col items-center justify-center text-center">
+        <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg font-bold text-slate-400">
+          ?
         </div>
-        <span className="text-sm font-semibold text-gray-800 group-hover:text-green-600 transition-colors line-clamp-2">
-          Unknown Team
-        </span>
+        <span className="max-w-[88px] text-xs font-semibold text-slate-300">Unknown Team</span>
       </div>
-    )
+    );
   }
 
   const teamName = team.name ?? 'Unknown Team';
+
   return (
-    <div className="flex-1 flex flex-col items-center text-center">
+    <div className="flex flex-1 flex-col items-center justify-center text-center">
       {team.logoUrl ? (
         <img
           src={team.logoUrl}
           alt={teamName}
-          className="w-12 h-12 object-contain mb-1"
-          onError={(e) => { e.currentTarget.style.display = 'none'; }}
+          className="mb-2 h-12 w-12 object-contain"
+          onError={(e) => {
+            e.currentTarget.style.display = 'none';
+          }}
         />
       ) : (
-        <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-1">
-          <span className="text-lg font-bold text-gray-400">
-            {teamName.charAt(0)}
-          </span>
+        <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-white/5 text-lg font-bold text-slate-300">
+          {teamName.charAt(0)}
         </div>
       )}
-      <span className="text-sm font-semibold text-gray-800 group-hover:text-green-600 transition-colors line-clamp-2">
+      <span className={`max-w-[88px] text-xs font-semibold text-white ${side === 'home' ? 'text-left' : 'text-right'}`}>
         {teamName}
       </span>
     </div>
-  )
+  );
 }
 
 function VisitCardMeta({ visit }: { visit: UserMatchWithMatch }) {
@@ -128,40 +110,46 @@ function VisitCardMeta({ visit }: { visit: UserMatchWithMatch }) {
   });
 
   return (
-    <div className="border-t border-gray-100 pt-3 space-y-1.5 text-sm text-gray-500">
+    <div className="space-y-2 border-t border-white/10 pt-3 text-sm text-slate-300">
       {m?.competition && (
         <div className="flex items-center gap-2">
           {m.competition.logoUrl && (
             <img
               src={m.competition.logoUrl}
               alt={m.competition.name}
-              className="w-4 h-4 object-contain"
-              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              className="h-4 w-4 object-contain"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
             />
           )}
-          <span>{m.competition.name}</span>
+          <span className="text-slate-200">{m.competition.name}</span>
         </div>
       )}
+
       {m?.venue && (
         <div className="flex items-center gap-2">
-          <span>🏟️</span>
-          <span>{m.venue.name}</span>
+          <span className="text-emerald-300">🏟️</span>
+          <span className="line-clamp-1">{m.venue.name}</span>
         </div>
       )}
+
       <div className="flex items-center gap-2">
-        <span>📅</span>
+        <span className="text-amber-300">📅</span>
         <span>Attended: {attendedDate}</span>
       </div>
+
       {visit.rating && (
         <div className="flex items-center gap-2">
-          <span>⭐</span>
+          <span className="text-yellow-300">⭐</span>
           <RatingDisplay rating={visit.rating} />
         </div>
       )}
+
       {visit.notes && (
         <div className="flex items-start gap-2">
-          <span>📝</span>
-          <span className="line-clamp-2 italic">{visit.notes}</span>
+          <span className="text-sky-300">📝</span>
+          <span className="line-clamp-3 italic text-slate-300">{visit.notes}</span>
         </div>
       )}
     </div>
@@ -170,20 +158,20 @@ function VisitCardMeta({ visit }: { visit: UserMatchWithMatch }) {
 
 export function VisitCardSkeleton() {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5 animate-pulse">
-      <div className="flex items-center justify-between gap-2 mb-4">
-        <div className="w-24 h-12 bg-gray-200 rounded-lg"></div>
-        <div className="w-16 h-8 bg-gray-200 rounded-lg"></div>
-        <div className="w-24 h-12 bg-gray-200 rounded-lg"></div>
+    <div className="animate-pulse rounded-[28px] border border-white/10 bg-[#0d1a17] p-5">
+      <div className="mb-4 flex items-center justify-between gap-2">
+        <div className="h-12 w-20 rounded-xl bg-white/10"></div>
+        <div className="h-8 w-16 rounded-full bg-white/10"></div>
+        <div className="h-12 w-20 rounded-xl bg-white/10"></div>
       </div>
       <div className="space-y-2">
-        <div className="w-3/4 h-4 bg-gray-200 rounded-lg"></div>
-        <div className="w-1/2 h-4 bg-gray-200 rounded-lg"></div>
-        <div className="w-5/6 h-4 bg-gray-200 rounded-lg"></div>
+        <div className="h-4 w-3/4 rounded bg-white/10"></div>
+        <div className="h-4 w-1/2 rounded bg-white/10"></div>
+        <div className="h-4 w-5/6 rounded bg-white/10"></div>
       </div>
-      <div className="flex gap-2 mt-4">
-        <div className="flex-1 h-8 bg-gray-200 rounded-lg"></div>
-        <div className="w-24 h-8 bg-gray-200 rounded-lg"></div>
+      <div className="mt-4 flex gap-2">
+        <div className="h-9 flex-1 rounded-full bg-white/10"></div>
+        <div className="h-9 w-20 rounded-full bg-white/10"></div>
       </div>
     </div>
   );

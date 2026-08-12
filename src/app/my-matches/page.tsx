@@ -66,10 +66,14 @@ export default function MyMatchesPage() {
     }
   };
 
+  const averageRating = visits.filter((visit) => typeof visit.rating === 'number').reduce((sum, visit) => sum + (visit.rating ?? 0), 0) / Math.max(1, visits.filter((visit) => typeof visit.rating === 'number').length);
+  const uniqueVenues = new Set(visits.filter((visit) => visit.match?.venue?.id != null).map((visit) => visit.match!.venue!.id)).size;
+  const uniqueCountries = new Set(visits.filter((visit) => visit.match?.venue?.city).map((visit) => visit.match!.venue!.city)).size;
+
   if (authLoading || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#05150f]">
-        <FootballLoader size="xl" text="Loading your matches..." />
+        <FootballLoader size="xl" text="Loading your football diary..." />
       </div>
     );
   }
@@ -82,28 +86,42 @@ export default function MyMatchesPage() {
         <div className="mb-8 overflow-hidden rounded-[28px] border border-emerald-400/20 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),transparent_35%),linear-gradient(135deg,#081a12,#0f2b1d_45%,#06140d)] p-6 shadow-[0_30px_80px_rgba(4,10,8,0.8)] md:p-8">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-300/80">Journal</p>
-              <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">My Matches</h1>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-300/80">My diary</p>
+              <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">Football memories</h1>
             </div>
             <div className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
               {visits.length === 0 ? 'No matches logged yet' : `${visits.length} match${visits.length !== 1 ? 'es' : ''} saved`}
             </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            <StatTile label="Matches logged" value={String(visits.length)} />
+            <StatTile label="Avg. rating" value={visits.some((visit) => visit.rating) ? `${averageRating.toFixed(1)}/10` : '—'} />
+            <StatTile label="Venues visited" value={String(uniqueVenues)} />
           </div>
         </div>
 
         {visits.length === 0 ? (
           <div className="rounded-[28px] border border-white/10 bg-white/5 px-6 py-20 text-center shadow-[0_24px_60px_rgba(4,10,8,0.8)]">
             <div className="mb-6 text-7xl">⚽</div>
-            <h3 className="text-2xl font-bold text-white">No matches logged yet</h3>
+            <h3 className="text-2xl font-bold text-white">Your football diary is empty right now</h3>
             <p className="mx-auto mt-3 max-w-xl text-slate-400">
-              Start keeping your football memories. Browse fixtures and save the matches you’ve attended.
+              Start building your archive by saving the matches you have attended, the cities you have travelled for, and the memories that made the day special.
             </p>
-            <Link
-              href="/"
-              className="mt-6 inline-flex rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-6 py-3 text-sm font-black text-[#052814] shadow-[0_18px_40px_rgba(16,185,129,0.35)] transition hover:brightness-110"
-            >
-              Browse matches
-            </Link>
+            <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link
+                href="/venues"
+                className="inline-flex rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm font-black text-white transition hover:border-emerald-400/40 hover:text-emerald-300"
+              >
+                Discover stadiums
+              </Link>
+              <Link
+                href="/"
+                className="inline-flex rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-6 py-3 text-sm font-black text-[#052814] shadow-[0_18px_40px_rgba(16,185,129,0.35)] transition hover:brightness-110"
+              >
+                Browse fixtures
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
@@ -118,6 +136,15 @@ export default function MyMatchesPage() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function StatTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[22px] border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
+      <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">{label}</div>
+      <div className="mt-3 text-2xl font-black text-white">{value}</div>
     </div>
   );
 }
