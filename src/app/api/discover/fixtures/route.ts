@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { apiFootballService } from '@/lib/api-football';
+import {
+  findDiscoverFixturesByDate,
+  saveApiFixtureToDatabase,
+} from '@/lib/db';
+import {
+  createDiscoverCompetitionSummaries,
+  normalizeDbFixture,
+  normalizeFixture,
+  sortDiscoverFixtures,
+} from '@/types/dto/discover';
+
 import type {
   DiscoverCompetitionSummary,
-  DiscoverFixtureApiResponse,
   DiscoverFixtureNormalized,
 } from '@/types';
 
@@ -13,44 +23,6 @@ const discoverFixtureCache = new Map<
   { expiresAt: number; value: { competitions: DiscoverCompetitionSummary[]; fixtures: DiscoverFixtureNormalized[] } }
 >();
 const discoverFixtureRequests = new Map<string, Promise<{ competitions: DiscoverCompetitionSummary[]; fixtures: DiscoverFixtureNormalized[] }>>();
-
-function normalizeFixture(fixture: DiscoverFixtureApiResponse): DiscoverFixtureNormalized {
-  return {
-    id: fixture.fixture?.id ?? null,
-    date: fixture.fixture?.date ?? null,
-    status: {
-      short: fixture.fixture?.status?.short ?? null,
-      long: fixture.fixture?.status?.long ?? null,
-    },
-    homeTeam: {
-      id: fixture.teams?.home?.id ?? null,
-      name: fixture.teams?.home?.name ?? null,
-      logoUrl: fixture.teams?.home?.logo ?? null,
-    },
-    awayTeam: {
-      id: fixture.teams?.away?.id ?? null,
-      name: fixture.teams?.away?.name ?? null,
-      logoUrl: fixture.teams?.away?.logo ?? null,
-    },
-    venue: fixture.fixture?.venue
-      ? {
-          id: fixture.fixture.venue.id ?? null,
-          name: fixture.fixture.venue.name ?? null,
-          city: fixture.fixture.venue.city ?? null,
-        }
-      : null,
-    competition: {
-      id: fixture.league?.id ?? null,
-      name: fixture.league?.name ?? null,
-      logoUrl: fixture.league?.logo ?? null,
-      country: fixture.league?.country ?? null,
-    },
-    goals: {
-      home: fixture.goals?.home ?? null,
-      away: fixture.goals?.away ?? null,
-    },
-  };
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -90,13 +62,7 @@ export async function GET(request: NextRequest) {
             take: 8,
           });
 
-      const competitionSummaries: DiscoverCompetitionSummary[] = competitions.map((competition) => ({
-        id: competition.id,
-        name: competition.name,
-        type: competition.type,
-        logoUrl: competition.logoUrl,
-        country: competition.country,
-      }));
+      const competitionSummaries = createDiscoverCompetitionSummaries(competitions);
 
       if (!competitions.length) {
         const emptyResponse = { competitions: [], fixtures: [] };
@@ -105,6 +71,26 @@ export async function GET(request: NextRequest) {
           value: emptyResponse,
         });
         return emptyResponse;
+      }
+
+      const dbMatches = await findDiscoverFixturesByDate({
+        season,
+        competitionId,
+        from,
+        to,
+        limit,
+      });
+
+      if (dbMatches.length > 0) {
+        const response = {
+          competitions: competitionSummaries,
+          fixtures: dbMatches.map(normalizeDbFixture).slice(0, limit),
+        };
+        discoverFixtureCache.set(cacheKey, {
+          expiresAt: Date.now() + DISCOVER_FIXTURE_CACHE_TTL_MS,
+          value: response,
+        });
+        return response;
       }
 
       const fixtureBatches = await Promise.all(
@@ -117,6 +103,8 @@ export async function GET(request: NextRequest) {
               to
             );
 
+            await Promise.all(fixtures.map((fixture) => saveApiFixtureToDatabase(fixture)));
+
             return fixtures.map(normalizeFixture).slice(0, 10);
           } catch (error) {
             console.error(`Error loading fixtures for competition ${competition.id}:`, error);
@@ -127,7 +115,7 @@ export async function GET(request: NextRequest) {
 
       const fixtures = fixtureBatches
         .flat()
-        .sort(sortByDate)
+        .sort(sortDiscoverFixtures)
         .slice(0, Number.isFinite(limit) ? limit : 12);
 
       const response = {
@@ -157,11 +145,3 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function sortByDate(a: DiscoverFixtureNormalized, b: DiscoverFixtureNormalized): number {
-  if (!a.date && !b.date) return 0;
-  if (!a.date) return 1;
-  if (!b.date) return -1;
-  const dateA = new Date(a.date);
-  const dateB = new Date(b.date);
-  return dateA.getTime() - dateB.getTime();
-}

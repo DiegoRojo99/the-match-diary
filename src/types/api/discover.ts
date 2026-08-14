@@ -21,6 +21,8 @@ export interface DiscoverFixtureApiLeague {
   logo?: string | null;
   country?: string | null;
   flag?: string | null;
+  season?: number | null;
+  round?: string | null;
 }
 
 export interface DiscoverFixtureApiFixture {
@@ -86,4 +88,37 @@ export interface DiscoverFixtureNormalized {
     home: number | null;
     away: number | null;
   };
+}
+
+export interface DiscoverFixtureDatabaseMatch {
+  id: number;
+  matchDate: Date;
+  statusShort: string | null;
+  statusLong: string | null;
+  homeScore: number | null;
+  awayScore: number | null;
+  homeTeam: {
+    id: number;
+    name: string;
+    logoUrl: string | null;
+  } | null;
+  awayTeam: {
+    id: number;
+    name: string;
+    logoUrl: string | null;
+  } | null;
+  venue: {
+    id: number;
+    name: string;
+    city: string | null;
+  } | null;
+  competition: {
+    id: number;
+    name: string;
+    logoUrl: string | null;
+    country: {
+      name: string | null;
+      code: string | null;
+    } | null;
+  } | null;
 }
