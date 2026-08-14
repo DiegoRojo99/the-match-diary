@@ -65,6 +65,7 @@ export default function Navigation() {
             {user ? (
               <>
                 <NavLink href="/dashboard" icon={<BookmarkIcon />} label="Dashboard" />
+                <NavLink href="/discover" icon={<StadiumIcon />} label="Discover" />
                 <NavLink href="/venues" icon={<LocationIcon />} label="Venues" />
                 <NavLink href="/teams" icon={<StadiumIcon />} label="Teams" />
                 <NavLink href="/my-stadiums" icon={<BookmarkIcon />} label="My Stadiums" />
@@ -128,6 +129,7 @@ export default function Navigation() {
             {user && (
               <>
                 <NavLink href="/dashboard" icon={<BookmarkIcon />} label="Dashboard" mobile onClick={() => setIsOpen(false)} />
+                <NavLink href="/discover" icon={<StadiumIcon />} label="Discover" mobile onClick={() => setIsOpen(false)} />
                 <NavLink href="/my-stadiums" icon={<BookmarkIcon />} label="My Stadiums" mobile onClick={() => setIsOpen(false)} />
                 <NavLink href="/my-matches" icon={<BookmarkIcon />} label="My Matches" mobile onClick={() => setIsOpen(false)} />
               </>
