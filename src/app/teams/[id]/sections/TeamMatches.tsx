@@ -16,13 +16,16 @@ interface MatchesResponse {
   };
 }
 
+const SEASON_OPTIONS = [2026, 2025, 2024, 2023, 2022];
+const getSeasonLabel = (season: number) => `${season}/${String(season + 1).slice(-2)}`;
+
 export default function TeamMatches({ team }: TeamMatchesProps) {
   const [matches, setMatches] = useState<MatchWithDetails[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Filter states
-  const [selectedSeason, setSelectedSeason] = useState(2025);
+  const [selectedSeason, setSelectedSeason] = useState(SEASON_OPTIONS[0]);
   const [matchType, setMatchType] = useState<'finished' | 'upcoming'>('finished');
   
   // Track how many matches we want to fetch
@@ -119,10 +122,11 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
             onChange={(e) => handleFilterChange('season', parseInt(e.target.value))}
             className="rounded-full border border-white/10 bg-[#081612] px-4 py-2.5 text-sm text-white focus:border-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
           >
-            <option value={2025}>2024/25</option>
-            <option value={2024}>2023/24</option>
-            <option value={2023}>2022/23</option>
-            <option value={2022}>2021/22</option>
+            {SEASON_OPTIONS.map((season) => (
+              <option key={season} value={season}>
+                {getSeasonLabel(season)}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -202,7 +206,7 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
                 No {matchType} matches found for {team.name}
               </p>
               <p className="mt-1 text-sm text-slate-400">
-                for the {selectedSeason - 1}/{selectedSeason.toString().slice(-2)} season
+                for the {getSeasonLabel(selectedSeason)} season
               </p>
             </div>
           )}
