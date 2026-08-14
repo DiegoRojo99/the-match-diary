@@ -91,10 +91,20 @@ export default function DiscoverHistoryPage() {
           </Link>
         </div>
 
-        <div className="mb-8 rounded-[28px] border border-emerald-400/20 bg-[linear-gradient(135deg,#081a12,#0b271d_45%,#06140d)] p-4 shadow-[0_30px_80px_rgba(4,10,8,0.8)] sm:p-5">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="mb-8 rounded-[30px] border border-emerald-400/20 bg-[linear-gradient(135deg,#081a12,#0b271d_45%,#06140d)] p-4 shadow-[0_30px_80px_rgba(4,10,8,0.8)] sm:p-5">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-emerald-300/80">Past games</p>
+              <h2 className="mt-2 text-xl font-bold text-white sm:text-2xl">Search by team, competition and date</h2>
+            </div>
+            <div className="inline-flex items-center self-start rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-300 sm:self-auto">
+              {fixtures.length > 0 ? `${fixtures.length} results` : 'Ready'}
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.5fr_1.2fr_0.9fr_0.8fr_0.8fr_auto]">
             <label className="flex min-w-0 flex-col gap-2 text-sm text-slate-300">
-              <span>Team</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Team</span>
               <input
                 value={selectedTeam}
                 onChange={(event) => setSelectedTeam(event.target.value)}
@@ -104,37 +114,47 @@ export default function DiscoverHistoryPage() {
             </label>
 
             <label className="flex min-w-0 flex-col gap-2 text-sm text-slate-300">
-              <span>Competition</span>
-              <select
-                value={selectedCompetition}
-                onChange={(event) => setSelectedCompetition(event.target.value)}
-                className="w-full min-w-0 rounded-2xl border border-white/10 bg-[#0b1a17] px-3 py-3 text-sm text-white focus:border-emerald-400/50 focus:outline-none"
-              >
-                <option value="">All competitions</option>
-                {competitions.map((competition) => (
-                  <option key={competition.id} value={competition.id}>
-                    {competition.name}
-                  </option>
-                ))}
-              </select>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Competition</span>
+              <div className="relative">
+                <select
+                  value={selectedCompetition}
+                  onChange={(event) => setSelectedCompetition(event.target.value)}
+                  className="w-full min-w-0 appearance-none rounded-2xl border border-white/10 bg-[#0b1a17] px-3 py-3 pr-10 text-sm text-white focus:border-emerald-400/50 focus:outline-none"
+                >
+                  <option value="">All competitions</option>
+                  {competitions.map((competition) => (
+                    <option key={competition.id} value={competition.id}>
+                      {competition.name}
+                    </option>
+                  ))}
+                </select>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+                  <path d="M5.5 7.5 10 12l4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
             </label>
 
             <label className="flex min-w-0 flex-col gap-2 text-sm text-slate-300">
-              <span>Season</span>
-              <select
-                value={selectedSeason}
-                onChange={(event) => setSelectedSeason(event.target.value)}
-                className="w-full min-w-0 rounded-2xl border border-white/10 bg-[#0b1a17] px-3 py-3 text-sm text-white focus:border-emerald-400/50 focus:outline-none"
-              >
-                <option value="">Any season</option>
-                {YEARS.map((year) => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Season</span>
+              <div className="relative">
+                <select
+                  value={selectedSeason}
+                  onChange={(event) => setSelectedSeason(event.target.value)}
+                  className="w-full min-w-0 appearance-none rounded-2xl border border-white/10 bg-[#0b1a17] px-3 py-3 pr-10 text-sm text-white focus:border-emerald-400/50 focus:outline-none"
+                >
+                  <option value="">Any season</option>
+                  {YEARS.map((year) => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+                  <path d="M5.5 7.5 10 12l4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
             </label>
 
             <label className="flex min-w-0 flex-col gap-2 text-sm text-slate-300">
-              <span>From</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">From</span>
               <input
                 type="date"
                 value={fromDate}
@@ -144,7 +164,7 @@ export default function DiscoverHistoryPage() {
             </label>
 
             <label className="flex min-w-0 flex-col gap-2 text-sm text-slate-300">
-              <span>To</span>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">To</span>
               <input
                 type="date"
                 value={toDate}
@@ -152,16 +172,16 @@ export default function DiscoverHistoryPage() {
                 className="w-full min-w-0 rounded-2xl border border-white/10 bg-[#0b1a17] px-3 py-3 text-sm text-white focus:border-emerald-400/50 focus:outline-none"
               />
             </label>
-          </div>
 
-          <div className="mt-5 flex justify-center sm:justify-end">
-            <button
-              onClick={searchFixtures}
-              disabled={loading}
-              className="w-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-5 py-3 text-sm font-black text-[#052814] shadow-[0_18px_40px_rgba(16,185,129,0.35)] transition hover:brightness-110 disabled:opacity-60 sm:w-auto"
-            >
-              {loading ? 'Searching...' : 'Search fixtures'}
-            </button>
+            <div className="flex items-end">
+              <button
+                onClick={searchFixtures}
+                disabled={loading}
+                className="w-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 px-5 py-3 text-sm font-black text-[#052814] shadow-[0_18px_40px_rgba(16,185,129,0.35)] transition hover:brightness-110 disabled:opacity-60"
+              >
+                {loading ? 'Searching...' : 'Search'}
+              </button>
+            </div>
           </div>
         </div>
 
