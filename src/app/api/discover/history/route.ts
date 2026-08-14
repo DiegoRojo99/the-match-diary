@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const teamId = searchParams.get('teamId');
     const competitionId = searchParams.get('competitionId');
+    const country = searchParams.get('country');
     const season = searchParams.get('season');
     const from = searchParams.get('from');
     const to = searchParams.get('to');
@@ -18,6 +19,7 @@ export async function GET(request: NextRequest) {
     const filters = {
       teamId: teamId ? Number(teamId) : null,
       competitionId: competitionId ? Number(competitionId) : null,
+      country: country && country !== 'all' ? country : null,
       season: season ? Number(season) : null,
       from,
       to,
@@ -31,7 +33,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    if (!filters.teamId && !filters.competitionId && !filters.season && !filters.from && !filters.to) {
+    if (!filters.teamId && !filters.competitionId && !filters.country && !filters.season && !filters.from && !filters.to) {
       return NextResponse.json({ fixtures: [] });
     }
 
@@ -49,9 +51,10 @@ export async function GET(request: NextRequest) {
         const matchDate = new Date(fixture.fixture.date);
         const passesCompetition = !filters.competitionId || fixture.league.id === filters.competitionId;
         const passesSeason = !filters.season || fixture.league.season === filters.season;
+        const passesCountry = !filters.country || fixture.league.country?.toLowerCase() === filters.country.toLowerCase();
         const passesFrom = !filters.from || matchDate >= new Date(filters.from);
         const passesTo = !filters.to || matchDate <= new Date(`${filters.to}T23:59:59.999Z`);
-        return passesCompetition && passesSeason && passesFrom && passesTo;
+        return passesCompetition && passesSeason && passesCountry && passesFrom && passesTo;
       });
     } else if (filters.competitionId) {
       const competition = await prisma.competition.findUnique({
@@ -68,6 +71,32 @@ export async function GET(request: NextRequest) {
         filters.from ?? undefined,
         filters.to ?? undefined
       );
+
+      if (filters.country) {
+        apiFixtures = apiFixtures.filter((fixture) => (
+          fixture.league.country?.toLowerCase() === filters.country?.toLowerCase()
+        ));
+      }
+    } else if (filters.country) {
+      const leagues = await apiFootballService.getLeagues(filters.country, filters.season ?? undefined);
+      const competitionIds = leagues
+        .map((league) => league.league?.id)
+        .filter((id): id is number => typeof id === 'number');
+
+      if (competitionIds.length === 0) {
+        return NextResponse.json({ fixtures: [] });
+      }
+
+      const countryFixtures = await Promise.all(
+        competitionIds.map((competitionId) => apiFootballService.getFixtures(
+          competitionId,
+          filters.season ?? undefined,
+          filters.from ?? undefined,
+          filters.to ?? undefined
+        ))
+      );
+
+      apiFixtures = countryFixtures.flat();
     } else {
       apiFixtures = [];
     }

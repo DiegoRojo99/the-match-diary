@@ -25,10 +25,12 @@ type SearchState = {
 export default function DiscoverHistoryPage() {
   const [competitions, setCompetitions] = useState<DiscoverCompetitionSummary[]>([]);
   const [fixtures, setFixtures] = useState<DiscoverFixtureNormalized[]>([]);
-  const [selectedTeam, setSelectedTeam] = useState('');
+  const [teamSearch, setTeamSearch] = useState('');
+  const [selectedTeamId, setSelectedTeamId] = useState('');
+  const [teamOptions, setTeamOptions] = useState<Array<{ id: number; name: string; country?: { name?: string | null } | null }>>([]);
   const [selectedCountry, setSelectedCountry] = useState('all');
   const [selectedCompetition, setSelectedCompetition] = useState('');
-  const [selectedSeason, setSelectedSeason] = useState(String(CURRENT_YEAR));
+  const [selectedSeason, setSelectedSeason] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [loading, setLoading] = useState(false);
@@ -68,13 +70,43 @@ export default function DiscoverHistoryPage() {
     loadCompetitions();
   }, []);
 
+  useEffect(() => {
+    const trimmed = teamSearch.trim();
+    if (trimmed.length < 2) {
+      setTeamOptions([]);
+      if (!trimmed) {
+        setSelectedTeamId('');
+      }
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ q: trimmed });
+        if (selectedCountry !== 'all') {
+          params.set('country', selectedCountry);
+        }
+
+        const response = await fetch(`/api/teams?${params.toString()}`);
+        if (!response.ok) return;
+
+        const data = await response.json();
+        setTeamOptions(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Error loading team suggestions:', error);
+      }
+    }, 250);
+
+    return () => clearTimeout(timeout);
+  }, [teamSearch, selectedCountry]);
+
   const searchState = useMemo<SearchState>(() => ({
-    teamId: selectedTeam,
+    teamId: selectedTeamId,
     competitionId: selectedCompetition,
     season: selectedSeason,
     from: fromDate,
     to: toDate,
-  }), [selectedTeam, selectedCompetition, selectedSeason, fromDate, toDate]);
+  }), [selectedTeamId, selectedCompetition, selectedSeason, fromDate, toDate]);
 
   const searchFixtures = async () => {
     setLoading(true);
@@ -85,6 +117,7 @@ export default function DiscoverHistoryPage() {
 
       if (searchState.teamId) params.set('teamId', searchState.teamId);
       if (searchState.competitionId) params.set('competitionId', searchState.competitionId);
+      if (selectedCountry !== 'all') params.set('country', selectedCountry);
       if (searchState.season) params.set('season', searchState.season);
       if (searchState.from) params.set('from', searchState.from);
       if (searchState.to) params.set('to', searchState.to);
@@ -131,11 +164,25 @@ export default function DiscoverHistoryPage() {
             <label className="flex min-w-0 flex-col gap-2 text-sm text-slate-300">
               <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Team</span>
               <input
-                value={selectedTeam}
-                onChange={(event) => setSelectedTeam(event.target.value)}
+                list="team-history-options"
+                value={teamSearch}
+                onChange={(event) => {
+                  const nextValue = event.target.value;
+                  setTeamSearch(nextValue);
+
+                  const matchingTeam = teamOptions.find(
+                    (team) => team.name.toLowerCase() === nextValue.trim().toLowerCase()
+                  );
+                  setSelectedTeamId(matchingTeam ? String(matchingTeam.id) : '');
+                }}
                 placeholder="Search team name"
                 className="w-full min-w-0 rounded-2xl border border-white/10 bg-[#0b1a17] px-3 py-3 text-sm text-white placeholder:text-slate-500 focus:border-emerald-400/50 focus:outline-none"
               />
+              <datalist id="team-history-options">
+                {teamOptions.map((team) => (
+                  <option key={team.id} value={team.name} />
+                ))}
+              </datalist>
             </label>
 
             <label className="flex min-w-0 flex-col gap-2 text-sm text-slate-300">

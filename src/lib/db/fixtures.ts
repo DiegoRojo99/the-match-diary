@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { discoverApiFixtureResponseToMatchData } from '@/types/dto/match';
 import type { DiscoverFixtureApiResponse, DiscoverFixtureDatabaseMatch } from '@/types';
@@ -47,6 +48,7 @@ export async function findDiscoverFixturesByDate({
 export async function searchHistoricalFixtures({
   teamId,
   competitionId,
+  country,
   season,
   from,
   to,
@@ -54,6 +56,7 @@ export async function searchHistoricalFixtures({
 }: {
   teamId?: number | null;
   competitionId?: number | null;
+  country?: string | null;
   season?: number | null;
   from?: string | null;
   to?: string | null;
@@ -64,9 +67,20 @@ export async function searchHistoricalFixtures({
     ...(to ? { lte: new Date(`${to}T23:59:59.999Z`) } : {}),
   } : undefined;
 
-  const where = {
+  const where: Prisma.MatchWhereInput = {
     ...(teamId ? { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }] } : {}),
     ...(competitionId ? { competitionId } : {}),
+    ...(country ? {
+      competition: {
+        is: {
+          country: {
+            is: {
+              name: { contains: country },
+            },
+          },
+        },
+      },
+    } : {}),
     ...(season ? { seasonYear: season } : {}),
     ...(dateFilter ? { matchDate: dateFilter } : {}),
   };
