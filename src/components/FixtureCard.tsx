@@ -1,10 +1,56 @@
 'use client';
 
+import { createClient } from '@supabase/supabase-js';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import type { DiscoverFixtureNormalized } from '@/types';
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 export default function FixtureCard({ fixture }: {fixture: DiscoverFixtureNormalized}) {
+  const router = useRouter();
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddToDiary = async () => {
+    setIsAdding(true);
+
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        router.push('/auth/login');
+        return;
+      }
+
+      const response = await fetch('/api/user/matches', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          match_id: fixture.id,
+          attended_date: fixture.date ?? new Date().toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error ?? 'Failed to add match to diary');
+      }
+
+      router.push(`/matches/${fixture.id}`);
+    } catch (error) {
+      console.error('Failed to add match to diary:', error);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   return (
     <div className="w-full min-w-0 overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_24px_60px_rgba(4,10,8,0.7)]">
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -86,12 +132,14 @@ export default function FixtureCard({ fixture }: {fixture: DiscoverFixtureNormal
         >
           View match
         </Link>
-        <Link
-          href={`/matches/${fixture.id}`}
-          className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-emerald-400/40 hover:text-emerald-300"
+        <button
+          type="button"
+          onClick={handleAddToDiary}
+          disabled={isAdding}
+          className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-emerald-400/40 hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Add to diary
-        </Link>
+          {isAdding ? 'Adding...' : 'Add to diary'}
+        </button>
       </div>
     </div>
   );
