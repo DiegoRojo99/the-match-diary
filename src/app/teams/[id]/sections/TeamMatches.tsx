@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import MatchCard from './MatchCard';
 import { MatchWithDetails } from '@/types/prisma/match';
 import FootballLoader from '@/components/FootballLoader';
@@ -30,74 +30,71 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
   const INCREMENT_AMOUNT = 10;
 
   // Fetch matches with current filters
-  const fetchMatches = async () => {
+  const fetchMatches = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
+
     try {
       let url = `/api/teams/${team.id}/matches?season=${selectedSeason}`;
-      
+
       if (matchType === 'finished') url += `&last=${matchCount}`;
       else url += `&next=${matchCount}`;
-      
+
       const response = await fetch(url);
       if (!response.ok) throw new Error('Failed to fetch matches');
-      
+
       const data: MatchesResponse = await response.json();
-      
-      // Sort matches by date based on match type
+
       const sortedMatches = data.matches.sort((a, b) => {
         const dateA = new Date(a.matchDate).getTime();
         const dateB = new Date(b.matchDate).getTime();
-        
+
         if (matchType === 'finished') {
-          // For finished matches: most recent first (descending)
           return dateB - dateA;
-        } else {
-          // For upcoming matches: closest first (ascending)
-          return dateA - dateB;
         }
+
+        return dateA - dateB;
       });
-      
+
       setMatches(sortedMatches);
-    } 
-    catch (error) {
+    } catch (error) {
       console.error('Error fetching matches:', error);
       setError('Failed to load matches. Please try again later.');
-    } 
-    finally {
+    } finally {
       setLoading(false);
     }
-  };
+  }, [matchCount, matchType, selectedSeason, team.id]);
 
   // Fetch matches when filters change
   useEffect(() => {
-    setMatchCount(10); // Reset count when filters change
+    setMatchCount(10);
     fetchMatches();
-  }, [team.id, selectedSeason, matchType]);
+  }, [fetchMatches]);
 
   // Load more matches
   const loadMore = () => {
     setMatchCount(prev => prev + INCREMENT_AMOUNT);
   };
 
-  // Re-fetch when match count changes (for load more)
   useEffect(() => {
     if (matchCount > 10) {
       fetchMatches();
     }
-  }, [matchCount]);
+  }, [fetchMatches, matchCount]);
 
   // Reset count when filters change
-  const handleFilterChange = (filterType: string, value: any) => {
+  const handleFilterChange = (
+    filterType: 'season' | 'matchType',
+    value: number | 'finished' | 'upcoming'
+  ) => {
     setMatchCount(10);
-    
+
     switch (filterType) {
       case 'season':
-        setSelectedSeason(value);
+        setSelectedSeason(typeof value === 'number' ? value : selectedSeason);
         break;
       case 'matchType':
-        setMatchType(value);
+        setMatchType(value === 'finished' || value === 'upcoming' ? value : 'finished');
         break;
     }
   };
@@ -181,11 +178,10 @@ export default function TeamMatches({ team }: TeamMatchesProps) {
         <div className="space-y-4">
           {/* Matches */}
           {matches.map((match, index) => (
-            <MatchCard 
+            <MatchCard
               key={match.id || index}
-              match={match} 
-              teamId={team.id} 
-              teamName={team.name}
+              match={match}
+              teamId={team.id}
             />
           ))}
           
