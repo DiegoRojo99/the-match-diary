@@ -1,11 +1,16 @@
 'use client';
 
+import { createClient } from '@supabase/supabase-js';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { supabase } from '@/lib/auth';
 import type { DiscoverFixtureNormalized } from '@/types';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function FixtureCard({ fixture }: {fixture: DiscoverFixtureNormalized}) {
   const router = useRouter();

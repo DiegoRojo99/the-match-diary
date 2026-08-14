@@ -1,9 +1,14 @@
+import { createClient } from '@supabase/supabase-js';
 import { MatchWithDetails } from '@/types/prisma/match';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { supabase } from '@/lib/auth';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface MatchCardProps {
   match: MatchWithDetails;
