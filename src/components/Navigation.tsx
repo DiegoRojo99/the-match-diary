@@ -66,12 +66,11 @@ export default function Navigation() {
               <>
                 <NavLink href="/dashboard" icon={<BookmarkIcon />} label="Dashboard" />
                 <NavLink href="/discover" icon={<StadiumIcon />} label="Discover" />
+                <NavLink href="/my-matches" icon={<BookmarkIcon />} label="My Matches" />
                 <NavLink href="/venues" icon={<LocationIcon />} label="Venues" />
                 <NavLink href="/teams" icon={<StadiumIcon />} label="Teams" />
-                <NavLink href="/my-stadiums" icon={<BookmarkIcon />} label="My Stadiums" />
-                <NavLink href="/my-matches" icon={<BookmarkIcon />} label="My Matches" />
 
-                <div className="ml-4 flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-3 py-2">
+                <div className="ml-3 flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-3 py-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-xs font-black text-[#062217]">
                     {user.user_metadata?.display_name?.[0]?.toUpperCase() ||
                       user.user_metadata?.username?.[0]?.toUpperCase() ||
@@ -130,7 +129,6 @@ export default function Navigation() {
               <>
                 <NavLink href="/dashboard" icon={<BookmarkIcon />} label="Dashboard" mobile onClick={() => setIsOpen(false)} />
                 <NavLink href="/discover" icon={<StadiumIcon />} label="Discover" mobile onClick={() => setIsOpen(false)} />
-                <NavLink href="/my-stadiums" icon={<BookmarkIcon />} label="My Stadiums" mobile onClick={() => setIsOpen(false)} />
                 <NavLink href="/my-matches" icon={<BookmarkIcon />} label="My Matches" mobile onClick={() => setIsOpen(false)} />
               </>
             )}
