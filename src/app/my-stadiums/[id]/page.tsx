@@ -121,7 +121,7 @@ export default function MyStadiumDetailPage() {
       id: baseVenue.id,
       name: baseVenue.name,
       city: baseVenue.city ?? null,
-      country: baseVenue.country?.name ?? null,
+      country: fallbackVenue?.country?.name ?? null,
       imageUrl: baseVenue.imageUrl ?? null,
       capacity: baseVenue.capacity ?? null,
       surface: baseVenue.surface ?? null,
