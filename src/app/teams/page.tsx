@@ -69,19 +69,19 @@ export default function TeamsPage() {
 
   return (
     <div className="min-h-screen bg-[#05150f] text-white">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8 overflow-hidden rounded-[28px] border border-emerald-400/20 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),transparent_35%),linear-gradient(135deg,#081a12,#0e271d_45%,#06140d)] p-6 shadow-[0_30px_80px_rgba(4,10,8,0.8)] md:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-[28px] border border-emerald-400/20 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),transparent_35%),linear-gradient(135deg,#081a12,#0e271d_45%,#06140d)] p-5 shadow-[0_30px_80px_rgba(4,10,8,0.8)] md:p-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-emerald-300/80">Discover</p>
-              <h1 className="mt-3 text-4xl font-black tracking-tight md:text-5xl">Teams</h1>
+              <h1 className="mt-2 text-4xl font-black tracking-tight md:text-5xl">Teams</h1>
             </div>
             <div className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
               {hasSearched ? `${filteredTeams.length} found` : 'Explore the world of football'}
             </div>
           </div>
 
-          <div className="mt-8 rounded-[20px] border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
+          <div className="mt-6 rounded-[20px] border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
             <div className="relative mx-auto max-w-2xl">
               <input
                 type="text"
@@ -122,7 +122,7 @@ export default function TeamsPage() {
         </div>
 
         {hasSearched && teams.length > 0 && (
-          <div className="mb-8 grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3">
             <StatCard label="Results" value={String(filteredTeams.length)} accent="emerald" icon="⚽" />
             <StatCard label="Clubs" value={String(filteredTeams.filter(team => !team.national).length)} accent="blue" icon="🏟️" />
             <StatCard label="National" value={String(filteredTeams.filter(team => team.national).length)} accent="amber" icon="🌍" />
@@ -130,7 +130,7 @@ export default function TeamsPage() {
         )}
 
         {filteredTeams.length > 0 && (
-          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
             {filteredTeams.map((team) => (
               <TeamCard key={team.id} team={team} />
             ))}

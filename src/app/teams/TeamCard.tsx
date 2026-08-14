@@ -24,9 +24,9 @@ export default function TeamCard({ team }: TeamCardProps) {
   return (
     <Link
       href={`/teams/${team.id}`}
-      className="group block overflow-hidden rounded-[28px] border border-white/10 bg-[#0b1a17] shadow-[0_24px_60px_rgba(4,10,8,0.7)] transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/40 hover:shadow-[0_30px_80px_rgba(16,185,129,0.15)]"
+      className="group block min-h-[280px] overflow-hidden rounded-[24px] border border-white/10 bg-[#0b1a17] shadow-[0_24px_60px_rgba(4,10,8,0.7)] transition-all duration-300 hover:-translate-y-1 hover:border-emerald-400/40 hover:shadow-[0_30px_80px_rgba(16,185,129,0.15)]"
     >
-      <div className={`relative h-32 overflow-hidden ${team.national ? 'bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.35),transparent_35%),linear-gradient(135deg,#2a220d,#1c140b)]' : 'bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.35),transparent_35%),linear-gradient(135deg,#0f2d22,#0b1d18)]'}`}>
+      <div className={`relative h-28 overflow-hidden ${team.national ? 'bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.35),transparent_35%),linear-gradient(135deg,#2a220d,#1c140b)]' : 'bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.35),transparent_35%),linear-gradient(135deg,#0f2d22,#0b1d18)]'}`}>
         <div className="absolute inset-0 bg-gradient-to-t from-[#081612] via-transparent to-black/10" />
 
         <div className="absolute inset-0 flex items-center justify-center">
@@ -67,9 +67,9 @@ export default function TeamCard({ team }: TeamCardProps) {
         )}
       </div>
 
-      <div className="p-5">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h3 className="line-clamp-2 flex-1 text-xl font-black tracking-[-0.04em] text-white transition-colors group-hover:text-emerald-300">
+      <div className="flex h-[calc(100%-7rem)] flex-col p-4">
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <h3 className="line-clamp-2 flex-1 text-lg font-black tracking-[-0.04em] text-white transition-colors group-hover:text-emerald-300">
             {team.name}
           </h3>
           <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${team.national ? 'bg-amber-500/10 text-amber-200' : 'bg-emerald-500/10 text-emerald-200'}`}>
@@ -77,7 +77,7 @@ export default function TeamCard({ team }: TeamCardProps) {
           </span>
         </div>
 
-        <div className="space-y-2.5 text-sm text-slate-300">
+        <div className="space-y-2 text-sm text-slate-300">
           {team.homeVenue && (
             <div className="flex items-center gap-2">
               <span className="text-base text-sky-300">🏟️</span>
@@ -93,7 +93,7 @@ export default function TeamCard({ team }: TeamCardProps) {
           )}
         </div>
 
-        <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4">
+        <div className="mt-auto flex items-center justify-between border-t border-white/10 pt-3">
           <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
             {team.national ? 'National team' : 'Club team'}
           </div>
