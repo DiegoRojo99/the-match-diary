@@ -11,6 +11,19 @@ export default function DiscoverPage() {
   const [selectedCompetition, setSelectedCompetition] = useState<number | 'all'>('all');
   const [loading, setLoading] = useState(true);
 
+  const competitionGroups = useMemo(() => {
+    const groups = new Map<string, DiscoverCompetitionSummary[]>();
+
+    competitions.forEach((competition) => {
+      const countryName = competition.country?.name ?? 'Other';
+      const countryCompetitions = groups.get(countryName) ?? [];
+      countryCompetitions.push(competition);
+      groups.set(countryName, countryCompetitions);
+    });
+
+    return Array.from(groups.entries()).sort(([countryA], [countryB]) => countryA.localeCompare(countryB));
+  }, [competitions]);
+
   const fetchFixtures = async (competitionId?: number | 'all') => {
     setLoading(true);
 
@@ -69,10 +82,14 @@ export default function DiscoverPage() {
                 className="w-full appearance-none rounded-full border border-white/10 bg-[#0b1a17] px-4 py-2.5 pr-10 text-sm font-semibold text-white outline-none transition focus:border-emerald-400/50"
               >
                 <option value="all">All competitions</option>
-                {competitions.map((competition) => (
-                  <option key={competition.id} value={competition.id}>
-                    {competition.name}
-                  </option>
+                {competitionGroups.map(([countryName, countryCompetitions]) => (
+                  <optgroup key={countryName} label={countryName}>
+                    {countryCompetitions.map((competition) => (
+                      <option key={competition.id} value={competition.id}>
+                        {competition.name}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
               <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="pointer-events-none absolute right-4 top-[62%] h-4 w-4 -translate-y-1/2 text-slate-400">

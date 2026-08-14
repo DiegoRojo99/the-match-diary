@@ -20,12 +20,31 @@ export default function DiscoverHistoryPage() {
   const [competitions, setCompetitions] = useState<DiscoverCompetitionSummary[]>([]);
   const [fixtures, setFixtures] = useState<DiscoverFixtureNormalized[]>([]);
   const [selectedTeam, setSelectedTeam] = useState('');
+  const [selectedCountry, setSelectedCountry] = useState('all');
   const [selectedCompetition, setSelectedCompetition] = useState('');
   const [selectedSeason, setSelectedSeason] = useState(String(CURRENT_YEAR));
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+
+  const competitionGroups = useMemo(() => {
+    const groups = new Map<string, DiscoverCompetitionSummary[]>();
+
+    competitions.forEach((competition) => {
+      const countryName = competition.country?.name ?? 'Other';
+      const countryCompetitions = groups.get(countryName) ?? [];
+      countryCompetitions.push(competition);
+      groups.set(countryName, countryCompetitions);
+    });
+
+    return Array.from(groups.entries()).sort(([countryA], [countryB]) => countryA.localeCompare(countryB));
+  }, [competitions]);
+
+  const visibleCompetitions = useMemo(() => {
+    if (selectedCountry === 'all') return competitions;
+    return competitions.filter((competition) => (competition.country?.name ?? 'Other') === selectedCountry);
+  }, [competitions, selectedCountry]);
 
   useEffect(() => {
     const loadCompetitions = async () => {
@@ -102,7 +121,7 @@ export default function DiscoverHistoryPage() {
             </div>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.5fr_1.2fr_0.9fr_0.8fr_0.8fr_auto]">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.5fr_1.2fr_1.2fr_0.8fr_0.8fr_auto]">
             <label className="flex min-w-0 flex-col gap-2 text-sm text-slate-300">
               <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Team</span>
               <input
@@ -114,6 +133,30 @@ export default function DiscoverHistoryPage() {
             </label>
 
             <label className="flex min-w-0 flex-col gap-2 text-sm text-slate-300">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Country</span>
+              <div className="relative">
+                <select
+                  value={selectedCountry}
+                  onChange={(event) => {
+                    setSelectedCountry(event.target.value);
+                    setSelectedCompetition('');
+                  }}
+                  className="w-full min-w-0 appearance-none rounded-2xl border border-white/10 bg-[#0b1a17] px-3 py-3 pr-10 text-sm text-white focus:border-emerald-400/50 focus:outline-none"
+                >
+                  <option value="all">All countries</option>
+                  {competitionGroups.map(([countryName]) => (
+                    <option key={countryName} value={countryName}>
+                      {countryName}
+                    </option>
+                  ))}
+                </select>
+                <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
+                  <path d="M5.5 7.5 10 12l4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </label>
+
+            <label className="flex min-w-0 flex-col gap-2 text-sm text-slate-300">
               <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">Competition</span>
               <div className="relative">
                 <select
@@ -122,7 +165,7 @@ export default function DiscoverHistoryPage() {
                   className="w-full min-w-0 appearance-none rounded-2xl border border-white/10 bg-[#0b1a17] px-3 py-3 pr-10 text-sm text-white focus:border-emerald-400/50 focus:outline-none"
                 >
                   <option value="">All competitions</option>
-                  {competitions.map((competition) => (
+                  {visibleCompetitions.map((competition) => (
                     <option key={competition.id} value={competition.id}>
                       {competition.name}
                     </option>
