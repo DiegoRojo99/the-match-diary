@@ -107,7 +107,7 @@ export default function MatchDetailPage() {
 
   useEffect(() => {
     fetchMatchAndVisit();
-  }, [fetchMatchAndVisit]);
+  }, [fetchMatchAndVisit, user]);
 
   const openLogModal = () => {
     if (match) {

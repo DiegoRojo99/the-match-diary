@@ -25,7 +25,7 @@ const getSiteOrigin = () => {
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
     const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
-    if (isLocal) return 'http://localhost:3000';
+    if (isLocal) return window.location.origin;
     return process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || window.location.origin;
   }
 

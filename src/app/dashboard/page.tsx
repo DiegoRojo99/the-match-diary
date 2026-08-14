@@ -125,7 +125,7 @@ export default function DashboardPage() {
             <StatTile label="Matches logged" value={String(visits.length)} tone="emerald" />
             <StatTile label="Avg. rating" value={metrics.averageRating > 0 ? `${metrics.averageRating.toFixed(1)}/10` : '—'} tone="amber" />
             <StatTile label="Stadiums" value={String(metrics.uniqueVenues)} tone="sky" />
-            <StatTile label="Cities" value={String(metrics.topCities.length ? metrics.topCities.length : 0)} tone="violet" />
+            <StatTile label="Cities" value={String(metrics.cityHistory.length)} tone="violet" />
           </div>
         </div>
 
