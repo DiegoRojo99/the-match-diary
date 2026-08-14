@@ -40,18 +40,25 @@ export default function VisitCard({ visit, onDelete, deletingId }: VisitCardProp
       </div>
 
       <Link href={`/matches/${visit.matchId}`} className="block">
-        <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-[#0b1a17] px-3 py-3">
-          {teamDisplay(m?.homeTeam ?? null, 'home')}
-
-          <div className="flex min-w-[72px] flex-col items-center justify-center">
-            {isFinished && m != null && m.homeScore !== null && m.awayScore !== null ? (
-              <span className="text-2xl font-black tracking-[-0.06em] text-white">{m.homeScore}-{m.awayScore}</span>
-            ) : (
-              <span className="text-base font-bold uppercase tracking-[0.14em] text-slate-400">vs</span>
-            )}
+        <div className="rounded-[22px] border border-white/5 bg-[#0b1a17] p-3">
+          <div className="mb-3 flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+            <span>{formatMemoryDate(visit.attendedDate)}</span>
+            {m?.venue?.name && <span className="text-emerald-300">{m.venue.name}</span>}
           </div>
 
-          {teamDisplay(m?.awayTeam ?? null, 'away')}
+          <div className="flex items-center justify-between gap-3">
+            {teamDisplay(m?.homeTeam ?? null, 'home')}
+
+            <div className="flex min-w-[82px] flex-col items-center justify-center">
+              {isFinished && m != null && m.homeScore !== null && m.awayScore !== null ? (
+                <span className="text-2xl font-black tracking-[-0.06em] text-white">{m.homeScore}-{m.awayScore}</span>
+              ) : (
+                <span className="text-base font-bold uppercase tracking-[0.16em] text-slate-400">vs</span>
+              )}
+            </div>
+
+            {teamDisplay(m?.awayTeam ?? null, 'away')}
+          </div>
         </div>
       </Link>
 
@@ -167,13 +174,26 @@ function VisitCardMeta({ visit }: { visit: UserMatchWithMatch }) {
       )}
 
       {visit.notes && (
-        <div className="flex items-start gap-2">
-          <span className="text-sky-300">📝</span>
-          <span className="line-clamp-3 italic text-slate-300">{visit.notes}</span>
+        <div className="rounded-2xl border border-sky-400/20 bg-sky-500/5 p-3">
+          <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-sky-200">
+            <span>Memory</span>
+          </div>
+          <span className="line-clamp-3 text-sm leading-6 italic text-slate-200">{visit.notes}</span>
         </div>
       )}
     </div>
   );
+}
+
+function formatMemoryDate(value: string | Date) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Match day';
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 export function VisitCardSkeleton() {

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import Image from 'next/image';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
@@ -75,7 +76,7 @@ export default function MatchDetailPage() {
     notes: '',
   });
 
-  const fetchMatchAndVisit = async () => {
+  const fetchMatchAndVisit = useCallback(async () => {
     if (!matchId) return;
     setLoading(true);
     try {
@@ -102,11 +103,11 @@ export default function MatchDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [matchId]);
 
   useEffect(() => {
     fetchMatchAndVisit();
-  }, [matchId, user]);
+  }, [fetchMatchAndVisit]);
 
   const openLogModal = () => {
     if (match) {
@@ -153,7 +154,8 @@ export default function MatchDetailPage() {
       if (response.ok) {
         setShowLogModal(false);
         await fetchMatchAndVisit();
-      } else {
+      } 
+      else {
         const data = await response.json();
         setLogError(data.error ?? 'Failed to log visit');
       }
@@ -177,14 +179,10 @@ export default function MatchDetailPage() {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
 
-      if (response.ok) {
-        await fetchMatchAndVisit();
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLogLoading(false);
-    }
+      if (response.ok) await fetchMatchAndVisit();
+    } 
+    catch { /* ignore */ } 
+    finally { setLogLoading(false); }
   };
 
   if (loading) {
@@ -239,8 +237,17 @@ export default function MatchDetailPage() {
         </div>
 
         {match.competition && (
-          <div className="mb-6 flex items-center justify-center gap-3 text-sm text-slate-300">
-            {match.competition.logoUrl && <img src={match.competition.logoUrl} alt={match.competition.name} className="h-8 w-8 object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />}
+          <div className="mb-6 flex items-center justify-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300">
+            {match.competition.logoUrl && (
+              <Image
+                src={match.competition.logoUrl}
+                alt={match.competition.name}
+                width={28}
+                height={28}
+                unoptimized
+                className="h-7 w-7 object-contain"
+              />
+            )}
             <span>
               {match.competition.name}
               {match.matchWeek && <><span className="mx-2 text-slate-500">·</span>Round {match.matchWeek}</>}
@@ -256,7 +263,9 @@ export default function MatchDetailPage() {
           <div className="grid items-center gap-6 md:grid-cols-[1fr_auto_1fr]">
             <div className="flex flex-col items-center text-center">
               {match.homeTeam?.logoUrl ? (
-                <img src={match.homeTeam.logoUrl} alt={match.homeTeam.name} className="mb-4 h-20 w-20 object-contain md:h-24 md:w-24" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                <div className="mb-4 overflow-hidden rounded-full border border-white/10 bg-white/5 p-3">
+                  <Image src={match.homeTeam.logoUrl} alt={match.homeTeam.name} width={72} height={72} unoptimized className="h-16 w-16 object-contain md:h-20 md:w-20" />
+                </div>
               ) : (
                 <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-white/5 text-3xl font-black text-slate-300 md:h-24 md:w-24">
                   {match.homeTeam?.name?.charAt(0) ?? '?'}
@@ -285,7 +294,9 @@ export default function MatchDetailPage() {
 
             <div className="flex flex-col items-center text-center">
               {match.awayTeam?.logoUrl ? (
-                <img src={match.awayTeam.logoUrl} alt={match.awayTeam.name} className="mb-4 h-20 w-20 object-contain md:h-24 md:w-24" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                <div className="mb-4 overflow-hidden rounded-full border border-white/10 bg-white/5 p-3">
+                  <Image src={match.awayTeam.logoUrl} alt={match.awayTeam.name} width={72} height={72} unoptimized className="h-16 w-16 object-contain md:h-20 md:w-20" />
+                </div>
               ) : (
                 <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-white/10 bg-white/5 text-3xl font-black text-slate-300 md:h-24 md:w-24">
                   {match.awayTeam?.name?.charAt(0) ?? '?'}
@@ -300,6 +311,25 @@ export default function MatchDetailPage() {
             </div>
           </div>
         </div>
+
+        {userVisit && (
+          <div className="mt-8 rounded-[24px] border border-emerald-400/20 bg-emerald-500/5 p-6 shadow-[0_24px_60px_rgba(4,10,8,0.5)]">
+            <div className="mb-3 flex items-center justify-between gap-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-emerald-200">Your memory</p>
+              {userVisit.rating != null && (
+                <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-200">
+                  {userVisit.rating}/10
+                </span>
+              )}
+            </div>
+            <div className="text-lg font-bold text-white">
+              {userVisit.attendedDate ? formatDate(userVisit.attendedDate).full : matchDate.full}
+            </div>
+            {userVisit.notes && (
+              <p className="mt-3 text-sm leading-7 text-slate-200">“{userVisit.notes}”</p>
+            )}
+          </div>
+        )}
 
         <div className="mt-8 grid gap-6 md:grid-cols-2">
           <div className="rounded-[24px] border border-white/10 bg-white/5 p-6 shadow-[0_24px_60px_rgba(4,10,8,0.5)]">
