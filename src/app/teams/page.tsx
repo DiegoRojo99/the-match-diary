@@ -81,22 +81,22 @@ export default function TeamsPage() {
             </div>
           </div>
 
-          <div className="mt-8 rounded-[24px] border border-white/10 bg-black/20 p-4 backdrop-blur-sm">
-            <div className="relative max-w-3xl mx-auto">
+          <div className="mt-8 rounded-[20px] border border-white/10 bg-white/5 p-3 backdrop-blur-sm">
+            <div className="relative mx-auto max-w-2xl">
               <input
                 type="text"
                 placeholder="Search teams, codes, or countries..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-2xl border border-white/10 bg-[#0b1d16] px-4 py-4 pl-12 text-base text-white placeholder:text-slate-500 focus:border-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+                className="w-full rounded-full border border-white/10 bg-[#0b1d16] px-4 py-3 pl-11 text-sm text-white placeholder:text-slate-500 focus:border-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
               />
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                {loading ? <FootballLoader size="sm" text="" /> : <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>}
+                {loading ? <FootballLoader size="sm" text="" /> : <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>}
               </div>
             </div>
 
             {teams.length > 0 && (
-              <div className="mt-5 flex justify-center">
+              <div className="mt-4 flex justify-center">
                 <div className="inline-flex gap-2 rounded-full border border-white/10 bg-white/5 p-1">
                   {[
                     ['all', 'All'],
