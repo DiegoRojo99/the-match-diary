@@ -57,7 +57,7 @@ export default function DiscoverPage() {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-wrap gap-2">
+          <div className="mt-8 flex flex-wrap items-center gap-2">
             <button
               onClick={() => setSelectedCompetition('all')}
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
@@ -81,6 +81,12 @@ export default function DiscoverPage() {
                 {competition.name}
               </button>
             ))}
+            <Link
+              href="/discover/history"
+              className="ml-auto inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/15"
+            >
+              Search past games
+            </Link>
           </div>
         </div>
 
