@@ -56,21 +56,37 @@ export default function DashboardPage() {
     const averageRating = rated.reduce((sum, visit) => sum + (visit.rating ?? 0), 0) / Math.max(1, rated.length);
     const uniqueVenues = new Set(visits.filter((visit) => visit.match?.venue?.id != null).map((visit) => visit.match!.venue!.id)).size;
     const cityCounts = new Map<string, number>();
+    const stadiumCounts = new Map<string, number>();
 
     for (const visit of visits) {
       const city = visit.match?.venue?.city;
-      if (!city) continue;
-      cityCounts.set(city, (cityCounts.get(city) ?? 0) + 1);
+      if (city) cityCounts.set(city, (cityCounts.get(city) ?? 0) + 1);
+
+      const stadiumName = visit.match?.venue?.name;
+      if (stadiumName) stadiumCounts.set(stadiumName, (stadiumCounts.get(stadiumName) ?? 0) + 1);
     }
 
     const topCities = [...cityCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3);
-    const topStadiums = [...aggregateStadiums(visits)].sort((a, b) => b.visits - a.visits).slice(0, 3);
+    const cityHistory = [...cityCounts.entries()].sort((a, b) => b[1] - a[1]);
+    const topStadiums = [...stadiumCounts.entries()].map(([name, visits]) => ({ name, visits })).sort((a, b) => b.visits - a.visits).slice(0, 3);
+    const noteHighlights = [...visits]
+      .filter((visit) => visit.notes && visit.notes.trim().length > 0)
+      .sort((a, b) => new Date(b.attendedDate).getTime() - new Date(a.attendedDate).getTime())
+      .slice(0, 3)
+      .map((visit) => ({
+        id: visit.id,
+        date: visit.attendedDate,
+        matchLabel: `${visit.match?.homeTeam?.name ?? 'Home team'} vs ${visit.match?.awayTeam?.name ?? 'Away team'}`,
+        text: visit.notes ?? '',
+      }));
 
     return {
       averageRating,
       uniqueVenues,
       topCities,
+      cityHistory,
       topStadiums,
+      noteHighlights,
       bestRating: rated.length ? [...rated].sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))[0] : null,
       recentVisits: [...visits].sort((a, b) => new Date(b.attendedDate).getTime() - new Date(a.attendedDate).getTime()).slice(0, 4),
     };
@@ -209,6 +225,63 @@ export default function DashboardPage() {
             </div>
           </aside>
         </div>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <section className="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-[0_24px_60px_rgba(4,10,8,0.8)]">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h2 className="text-2xl font-black text-white">Travel ledger</h2>
+              <span className="rounded-full border border-violet-400/20 bg-violet-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-violet-200">
+                {metrics.cityHistory.length} cities
+              </span>
+            </div>
+
+            <div className="space-y-3">
+              {metrics.cityHistory.length === 0 ? (
+                <div className="text-sm text-slate-300">Your city history is still empty.</div>
+              ) : (
+                metrics.cityHistory.map(([city, count]) => (
+                  <div key={city} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#0b1a17] px-3 py-3">
+                    <div>
+                      <div className="text-base font-semibold text-white">{city}</div>
+                      <div className="text-xs uppercase tracking-[0.2em] text-slate-400">Football visits</div>
+                    </div>
+                    <span className="rounded-full border border-violet-400/20 bg-violet-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-violet-200">
+                      {count}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className="rounded-[28px] border border-white/10 bg-white/5 p-6 shadow-[0_24px_60px_rgba(4,10,8,0.8)]">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h2 className="text-2xl font-black text-white">Notes from the road</h2>
+              <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-amber-200">
+                {metrics.noteHighlights.length} notes
+              </span>
+            </div>
+
+            <div className="space-y-4">
+              {metrics.noteHighlights.length === 0 ? (
+                <div className="text-sm text-slate-300">No notes yet. Add a few thoughts after matches to capture the atmosphere.</div>
+              ) : (
+                metrics.noteHighlights.map((note) => (
+                  <div key={note.id} className="rounded-[22px] border border-white/10 bg-[#0b1a17] p-4">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">{formatDate(note.date)}</div>
+                      <span className="rounded-full border border-sky-400/20 bg-sky-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-sky-200">
+                        Match
+                      </span>
+                    </div>
+                    <div className="text-sm font-semibold text-white">{note.matchLabel}</div>
+                    <p className="mt-3 text-sm leading-6 text-slate-300">{note.text}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );
@@ -228,20 +301,6 @@ function StatTile({ label, value, tone }: { label: string; value: string; tone: 
       <div className="mt-3 text-2xl font-black text-white">{value}</div>
     </div>
   );
-}
-
-function aggregateStadiums(visits: UserMatchWithMatch[]) {
-  const map = new Map<string, { name: string; visits: number }>();
-
-  for (const visit of visits) {
-    const name = visit.match?.venue?.name;
-    if (!name) continue;
-    const current = map.get(name) ?? { name, visits: 0 };
-    current.visits += 1;
-    map.set(name, current);
-  }
-
-  return [...map.values()];
 }
 
 function formatDate(value: string | Date) {
