@@ -34,9 +34,11 @@ export async function GET(request: NextRequest) {
       searchParams.get('to') ??
       new Date(Date.now() + 1000 * 60 * 60 * 24 * 45).toISOString().slice(0, 10);
 
-    const limit = Number(limitParam ?? 12);
+    const parsedLimit = Number(limitParam);
+    const limit = Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.min(Math.trunc(parsedLimit), 50) : 12;
     const season = new Date().getFullYear();
-    const competitionId = competitionIdParam ? Number(competitionIdParam) : null;
+    const parsedCompetitionId = competitionIdParam ? Number(competitionIdParam) : null;
+    const competitionId = parsedCompetitionId != null && Number.isFinite(parsedCompetitionId) ? parsedCompetitionId : null;
     const cacheKey = JSON.stringify({ competitionId, season, from, to, limit });
 
     const cached = discoverFixtureCache.get(cacheKey);
