@@ -64,6 +64,7 @@ export default function Navigation() {
           <div className="hidden items-center gap-2 lg:flex">
             {user ? (
               <>
+                <NavLink href="/dashboard" icon={<BookmarkIcon />} label="Dashboard" />
                 <NavLink href="/venues" icon={<LocationIcon />} label="Venues" />
                 <NavLink href="/teams" icon={<StadiumIcon />} label="Teams" />
                 <NavLink href="/my-stadiums" icon={<BookmarkIcon />} label="My Stadiums" />
@@ -124,14 +125,15 @@ export default function Navigation() {
       {isOpen && (
         <div className="border-t border-white/10 bg-[#06130d] lg:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4">
-            <NavLink href="/venues" icon={<LocationIcon />} label="Venues" mobile onClick={() => setIsOpen(false)} />
-            <NavLink href="/teams" icon={<StadiumIcon />} label="Teams" mobile onClick={() => setIsOpen(false)} />
             {user && (
               <>
+                <NavLink href="/dashboard" icon={<BookmarkIcon />} label="Dashboard" mobile onClick={() => setIsOpen(false)} />
                 <NavLink href="/my-stadiums" icon={<BookmarkIcon />} label="My Stadiums" mobile onClick={() => setIsOpen(false)} />
                 <NavLink href="/my-matches" icon={<BookmarkIcon />} label="My Matches" mobile onClick={() => setIsOpen(false)} />
               </>
             )}
+            <NavLink href="/venues" icon={<LocationIcon />} label="Venues" mobile onClick={() => setIsOpen(false)} />
+            <NavLink href="/teams" icon={<StadiumIcon />} label="Teams" mobile onClick={() => setIsOpen(false)} />
 
             {user ? (
               <>
