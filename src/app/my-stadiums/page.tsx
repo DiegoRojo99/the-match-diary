@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase, useAuth } from '@/lib/auth';
@@ -138,7 +139,14 @@ function StadiumCard({ venue }: { venue: StadiumArchiveEntry }) {
     <div className="group flex flex-col overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,20,0.96),rgba(8,17,14,0.9))] shadow-[0_18px_50px_rgba(4,8,7,0.45)] transition duration-300 hover:-translate-y-1 hover:border-sky-400/30 hover:shadow-[0_24px_60px_rgba(56,189,248,0.12)]">
       <div className="relative h-40 overflow-hidden border-b border-white/10 bg-[#0c1b19]">
         {venue.imageUrl ? (
-          <img src={venue.imageUrl} alt={venue.venueName} className="h-full w-full object-cover transition duration-300 group-hover:scale-105" />
+          <Image
+            src={venue.imageUrl}
+            alt={venue.venueName}
+            fill
+            unoptimized
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+            className="object-cover transition duration-300 group-hover:scale-105"
+          />
         ) : (
           <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.22),transparent_35%),linear-gradient(135deg,#0c2030,#0f2b1d_45%,#06140d)] text-5xl">
             🏟️

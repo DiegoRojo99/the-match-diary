@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { UserMatchWithMatch } from '@/types/prisma/match';
 import { Team } from '@prisma/client';
@@ -92,12 +93,16 @@ function teamDisplay(team: Team | null, side: 'home' | 'away') {
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center">
       {team.logoUrl ? (
-        <img
+        <Image
           src={team.logoUrl}
           alt={teamName}
+          width={48}
+          height={48}
+          unoptimized
           className="mb-2 h-12 w-12 object-contain"
           onError={(e) => {
-            e.currentTarget.style.display = 'none';
+            const target = e.currentTarget as HTMLImageElement;
+            target.style.display = 'none';
           }}
         />
       ) : (
@@ -125,12 +130,16 @@ function VisitCardMeta({ visit }: { visit: UserMatchWithMatch }) {
       {m?.competition && (
         <div className="flex items-center gap-2">
           {m.competition.logoUrl && (
-            <img
+            <Image
               src={m.competition.logoUrl}
               alt={m.competition.name}
+              width={16}
+              height={16}
+              unoptimized
               className="h-4 w-4 object-contain"
               onError={(e) => {
-                e.currentTarget.style.display = 'none';
+                const target = e.currentTarget as HTMLImageElement;
+                target.style.display = 'none';
               }}
             />
           )}
