@@ -6,7 +6,7 @@ import type { DiscoverFixtureNormalized } from '@/types';
 
 export default function FixtureCard({ fixture }: {fixture: DiscoverFixtureNormalized}) {
   return (
-    <div className="rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_24px_60px_rgba(4,10,8,0.7)]">
+    <div className="w-full min-w-0 overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-5 shadow-[0_24px_60px_rgba(4,10,8,0.7)]">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
           {fixture.competition.logoUrl && (
@@ -22,11 +22,11 @@ export default function FixtureCard({ fixture }: {fixture: DiscoverFixtureNormal
           <span className="truncate">{fixture.competition.name}</span>
         </div>
         <span className="shrink-0 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">
-          {fixture.status.short ?? 'TBD'}
+          {fixture.status.long ?? 'TBD'}
         </span>
       </div>
 
-      <div className="flex items-center justify-between gap-3 rounded-[22px] border border-white/5 bg-[#0b1a17] p-4">
+      <div className="flex flex-col gap-3 rounded-[22px] border border-white/5 bg-[#0b1a17] p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
         <div className="flex min-w-0 flex-1 flex-col items-center text-center">
           {fixture.homeTeam.logoUrl && (
             <Image
@@ -42,12 +42,12 @@ export default function FixtureCard({ fixture }: {fixture: DiscoverFixtureNormal
         </div>
 
         <div className="flex min-w-[72px] flex-col items-center text-center">
-          <div className="text-2xl font-black tracking-[-0.06em] text-white">
+          <div className="text-xl font-black tracking-[-0.06em] text-white sm:text-2xl">
             {fixture.goals.home ?? '—'}
             <span className="mx-2 text-slate-500">-</span>
             {fixture.goals.away ?? '—'}
           </div>
-          <div className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+          <div className="mt-1 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400 sm:text-[10px]">
             {!!fixture.date && new Date(fixture.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
           </div>
         </div>
