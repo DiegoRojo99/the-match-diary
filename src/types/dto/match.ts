@@ -1,5 +1,5 @@
 import { Competition, Match, Team, Venue } from "@prisma/client";
-import { ApiFixture, DiscoverFixtureApiFixture, DiscoverFixtureApiResponse } from "../api";
+import { ApiFixture, DiscoverFixtureApiResponse } from "../api";
 
 export function apiFixtureToMatchData(apiFixture: ApiFixture): Match {
   const homeTeam = apiFixture.teams.home;
