@@ -1,11 +1,18 @@
+import { createClient } from '@supabase/supabase-js';
 import { MatchWithDetails } from '@/types/prisma/match';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface MatchCardProps {
   match: MatchWithDetails;
   teamId: number;
-  teamName: string;
 }
 
 interface TeamDisplayProps {
@@ -16,8 +23,8 @@ interface TeamDisplayProps {
 
 function TeamDisplay({ team, isUserTeam, fallbackName }: TeamDisplayProps) {
   const teamContent = (
-    <div className={`flex flex-col items-center space-y-2 flex-1 ${
-      isUserTeam ? 'text-green-600' : 'text-gray-800'
+    <div className={`flex flex-1 flex-col items-center space-y-2 ${
+      isUserTeam ? 'text-emerald-300' : 'text-slate-100'
     }`}>
       <div className="flex-shrink-0">
         {team?.logoUrl ? (
@@ -26,23 +33,22 @@ function TeamDisplay({ team, isUserTeam, fallbackName }: TeamDisplayProps) {
             alt={team.name || fallbackName}
             width={32}
             height={32}
-            className="rounded-full"
+            className="rounded-full border border-white/10 bg-[#081612]"
           />
         ) : (
-          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-            <span className="text-gray-500 text-xs">⚽</span>
+          <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-[#081612] text-[10px] text-slate-300">
+            ⚽
           </div>
         )}
       </div>
       <div className="text-center">
-        <p className="font-semibold text-sm md:text-base leading-tight hover:underline">
+        <p className="text-sm font-bold leading-tight text-inherit md:text-base">
           {team?.name || fallbackName}
         </p>
       </div>
     </div>
   );
 
-  // If team has an ID, wrap in Link
   if (team?.id) {
     return (
       <Link href={`/teams/${team.id}`} className="flex-1">
@@ -51,11 +57,51 @@ function TeamDisplay({ team, isUserTeam, fallbackName }: TeamDisplayProps) {
     );
   }
 
-  // Otherwise return the content without link
   return teamContent;
 }
 
-export default function MatchCard({ match, teamId, teamName }: MatchCardProps) {
+export default function MatchCard({ match, teamId }: MatchCardProps) {
+  const router = useRouter();
+  const [isAdding, setIsAdding] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
+
+  const handleAddToDiary = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsAdding(true);
+
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError || !session) {
+        router.push('/auth/login');
+        return;
+      }
+
+      const response = await fetch('/api/user/matches', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          match_id: match.id,
+          attended_date: match.matchDate ?? new Date().toISOString(),
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error ?? 'Failed to add match to diary');
+      }
+
+      setIsAdded(true);
+    } catch (error) {
+      console.error('Failed to add match to diary:', error);
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   const formatMatchDate = (dateString: string | Date) => {
     const date = new Date(dateString);
     return {
@@ -89,96 +135,101 @@ export default function MatchCard({ match, teamId, teamName }: MatchCardProps) {
   const isFinished = match.statusShort === 'FT' || match.statusShort === 'AET' || match.statusShort === 'PEN';
 
   return (
-    <Link href={`/matches/${match.id}`}>
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 p-4 md:p-6 cursor-pointer">
-        
-        {/* Header: Date, Competition, Venue */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 text-sm text-gray-500">
-          <div className="flex items-center space-x-2 mb-2 sm:mb-0">
-            <span className="flex items-center space-x-1">
-              <span>📅</span>
-              <span className="font-medium">{matchDateTime.date}</span>
-              <span>•</span>
-              <span>{matchDateTime.time}</span>
+    <div className="rounded-[24px] border border-white/10 bg-[#0b1a17] p-4 shadow-[0_24px_60px_rgba(4,10,8,0.7)] transition-all duration-200 hover:border-emerald-400/35 md:p-5">
+      <div className="mb-4 flex flex-col gap-2 text-sm text-slate-300 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 text-slate-400">
+          <span>📅</span>
+          <span className="font-medium text-slate-300">{matchDateTime.date}</span>
+          <span className="text-slate-500">•</span>
+          <span>{matchDateTime.time}</span>
+        </div>
+
+        {match.competition && (
+          <div className="flex items-center gap-2 text-slate-300">
+            {match.competition.logoUrl ? (
+              <Image
+                src={match.competition.logoUrl}
+                alt={match.competition.name}
+                width={16}
+                height={16}
+                className="h-4 w-4 rounded-sm object-contain"
+              />
+            ) : (
+              <span className="text-xs">🏆</span>
+            )}
+            <span className="max-w-[200px] truncate text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
+              {match.competition.name}
             </span>
           </div>
-          
-          {match.competition && (
-            <div className="flex items-center space-x-2">
-              {match.competition.logoUrl ? (
-                <Image
-                  src={match.competition.logoUrl}
-                  alt={match.competition.name}
-                  width={16}
-                  height={16}
-                  className="rounded"
-                />
-              ) : (
-                <span className="text-xs">🏆</span>
-              )}
-              <span className="font-medium truncate">{match.competition.name}</span>
-            </div>
-          )}
-        </div>
+        )}
+      </div>
 
-        {/* Main Match Content */}
-        <div className="flex flex-col space-y-4">
-          
-          {/* Teams Section */}
-          <div className="flex items-center justify-between">
-            
-            {/* Home Team */}
-            <TeamDisplay 
-              team={match.homeTeam}
-              isUserTeam={match.homeTeamId === teamId}
-              fallbackName="Home Team"
-            />
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between gap-3">
+          <TeamDisplay
+            team={match.homeTeam}
+            isUserTeam={match.homeTeamId === teamId}
+            fallbackName="Home Team"
+          />
 
-            {/* Score/Status */}
-            <div className="flex-shrink-0 mx-4">
-              {isFinished && match.homeScore !== null && match.awayScore !== null ? (
-                <div className="text-center">
-                  <div className="text-2xl md:text-3xl font-bold text-gray-900 leading-none">
-                    {match.homeScore} - {match.awayScore}
-                  </div>
-                  {result && (
-                    <div className={`mt-1 px-2 py-1 rounded-full text-xs font-bold ${
-                      result === 'win' ? 'bg-green-100 text-green-700' :
-                      result === 'loss' ? 'bg-red-100 text-red-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {result.toUpperCase()}
-                    </div>
-                  )}
+          <div className="mx-2 flex-shrink-0">
+            {isFinished && match.homeScore !== null && match.awayScore !== null ? (
+              <div className="text-center">
+                <div className="text-2xl font-black tracking-[-0.06em] text-white md:text-3xl">
+                  {match.homeScore} - {match.awayScore}
                 </div>
-              ) : (
-                <div className="text-center">
-                  <div className="px-3 py-2 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full whitespace-nowrap">
-                    {match.statusShort === 'NS' ? matchDateTime.time : match.statusLong}
+                {result && (
+                  <div className={`mt-1 rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ${
+                    result === 'win' ? 'bg-emerald-500/10 text-emerald-200' :
+                    result === 'loss' ? 'bg-red-500/10 text-red-200' :
+                    'bg-amber-500/10 text-amber-200'
+                  }`}>
+                    {result.toUpperCase()}
                   </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="rounded-full border border-sky-400/30 bg-sky-500/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-sky-200 whitespace-nowrap">
+                  {match.statusShort === 'NS' ? matchDateTime.time : match.statusLong}
                 </div>
-              )}
-            </div>
-
-            {/* Away Team */}
-            <TeamDisplay 
-              team={match.awayTeam}
-              isUserTeam={match.awayTeamId === teamId}
-              fallbackName="Away Team"
-            />
+              </div>
+            )}
           </div>
 
-          {/* Bottom Info: Venue */}
-          {match.venue && (
-            <div className="flex items-center justify-center pt-2 border-t border-gray-100">
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
-                <span>🏟️</span>
-                <span className="truncate">{match.venue.name}</span>
-              </div>
-            </div>
-          )}
+          <TeamDisplay
+            team={match.awayTeam}
+            isUserTeam={match.awayTeamId === teamId}
+            fallbackName="Away Team"
+          />
         </div>
+
+        {match.venue && (
+          <div className="flex items-center justify-center border-t border-white/10 pt-3 text-sm text-slate-400">
+            <div className="flex items-center gap-2">
+              <span>🏟️</span>
+              <span className="truncate">{match.venue.name}</span>
+            </div>
+          </div>
+        )}
       </div>
-    </Link>
+
+      <div className="mt-4 flex gap-2 border-t border-white/10 pt-4">
+        <Link
+          href={`/matches/${match.id}`}
+          className="flex-1 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-center text-sm font-semibold text-emerald-200 transition hover:bg-emerald-500/15"
+        >
+          View match
+        </Link>
+        <button
+          type="button"
+          onClick={handleAddToDiary}
+          disabled={isAdding || isAdded}
+          className="rounded-full border border-white/10 bg-[#081612] px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-emerald-400/40 hover:text-emerald-200 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isAdding ? 'Adding...' : isAdded ? 'Added to diary' : 'Add to diary'}
+        </button>
+      </div>
+    </div>
   );
 }

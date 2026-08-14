@@ -5,17 +5,6 @@ import { Team } from '@prisma/client';
 
 const FINISHED_STATUSES = ['FT', 'AET', 'PEN'];
 
-function RatingDisplay({ rating }: { rating: number }) {
-  const getColor = (rating: number) => {
-    if (rating <= 3) return 'text-red-400';
-    if (rating <= 5) return 'text-amber-300';
-    if (rating <= 7) return 'text-emerald-400';
-    return 'text-sky-400';
-  };
-
-  return <span className={`text-sm font-semibold ${getColor(rating)}`}>{rating}/10</span>;
-}
-
 interface VisitCardProps {
   visit: UserMatchWithMatch;
   onDelete: (visitId: string) => void;
@@ -32,22 +21,42 @@ export default function VisitCard({ visit, onDelete, deletingId }: VisitCardProp
         <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">
           Match memory
         </span>
-        {visit.rating ? (
-          <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-200">
-            {visit.rating}/10
-          </span>
-        ) : null}
+        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+          {formatMemoryDate(visit.attendedDate)}
+        </span>
       </div>
 
       <Link href={`/matches/${visit.matchId}`} className="block">
         <div className="rounded-[22px] border border-white/5 bg-[#0b1a17] p-3">
-          <div className="mb-3 flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-            <span>{formatMemoryDate(visit.attendedDate)}</span>
-            {m?.venue?.name && <span className="text-emerald-300">{m.venue.name}</span>}
-          </div>
+          {(m?.competition || m?.venue) && (
+            <div className="mb-4 flex flex-wrap items-center justify-center gap-1.5 text-center">
+              {m?.competition && (
+                <div className="inline-flex items-center justify-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-slate-200">
+                  {m.competition.logoUrl && (
+                    <Image
+                      src={m.competition.logoUrl}
+                      alt={m.competition.name}
+                      width={12}
+                      height={12}
+                      unoptimized
+                      className="h-3 w-3 object-contain"
+                    />
+                  )}
+                  <span>{m.competition.name}</span>
+                </div>
+              )}
+
+              {m?.venue && (
+                <div className="inline-flex items-center justify-center gap-1 rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-emerald-200">
+                  <span>🏟️</span>
+                  <span className="line-clamp-1">{m.venue.name}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex items-center justify-between gap-3">
-            {teamDisplay(m?.homeTeam ?? null, 'home')}
+            {teamDisplay(m?.homeTeam ?? null)}
 
             <div className="flex min-w-[82px] flex-col items-center justify-center">
               {isFinished && m != null && m.homeScore !== null && m.awayScore !== null ? (
@@ -57,7 +66,7 @@ export default function VisitCard({ visit, onDelete, deletingId }: VisitCardProp
               )}
             </div>
 
-            {teamDisplay(m?.awayTeam ?? null, 'away')}
+            {teamDisplay(m?.awayTeam ?? null)}
           </div>
         </div>
       </Link>
@@ -83,7 +92,7 @@ export default function VisitCard({ visit, onDelete, deletingId }: VisitCardProp
   );
 }
 
-function teamDisplay(team: Team | null, side: 'home' | 'away') {
+function teamDisplay(team: Team | null) {
   if (!team) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center text-center">
@@ -117,7 +126,7 @@ function teamDisplay(team: Team | null, side: 'home' | 'away') {
           {teamName.charAt(0)}
         </div>
       )}
-      <span className={`max-w-[88px] text-xs font-semibold text-white ${side === 'home' ? 'text-left' : 'text-right'}`}>
+      <span className="max-w-[88px] text-center text-xs font-semibold text-white">
         {teamName}
       </span>
     </div>
@@ -125,54 +134,8 @@ function teamDisplay(team: Team | null, side: 'home' | 'away') {
 }
 
 function VisitCardMeta({ visit }: { visit: UserMatchWithMatch }) {
-  const m = visit.match;
-  const attendedDate = new Date(visit.attendedDate).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-
   return (
-    <div className="space-y-2 border-t border-white/10 pt-3 text-sm text-slate-300">
-      {m?.competition && (
-        <div className="flex items-center gap-2">
-          {m.competition.logoUrl && (
-            <Image
-              src={m.competition.logoUrl}
-              alt={m.competition.name}
-              width={16}
-              height={16}
-              unoptimized
-              className="h-4 w-4 object-contain"
-              onError={(e) => {
-                const target = e.currentTarget as HTMLImageElement;
-                target.style.display = 'none';
-              }}
-            />
-          )}
-          <span className="text-slate-200">{m.competition.name}</span>
-        </div>
-      )}
-
-      {m?.venue && (
-        <div className="flex items-center gap-2">
-          <span className="text-emerald-300">🏟️</span>
-          <span className="line-clamp-1">{m.venue.name}</span>
-        </div>
-      )}
-
-      <div className="flex items-center gap-2">
-        <span className="text-amber-300">📅</span>
-        <span>Attended: {attendedDate}</span>
-      </div>
-
-      {visit.rating && (
-        <div className="flex items-center gap-2">
-          <span className="text-yellow-300">⭐</span>
-          <RatingDisplay rating={visit.rating} />
-        </div>
-      )}
-
+    <div className="mt-1 space-y-2 border-t border-white/10 pt-3 text-sm text-slate-300">
       {visit.notes && (
         <div className="rounded-2xl border border-sky-400/20 bg-sky-500/5 p-3">
           <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.18em] text-sky-200">

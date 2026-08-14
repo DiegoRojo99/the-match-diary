@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { discoverApiFixtureResponseToMatchData } from '@/types/dto/match';
 import type { DiscoverFixtureApiResponse, DiscoverFixtureDatabaseMatch } from '@/types';
@@ -40,6 +41,61 @@ export async function findDiscoverFixturesByDate({
       },
     },
     take: limit,
+    orderBy: { matchDate: 'asc' },
+  })) as DiscoverFixtureDatabaseMatch[];
+}
+
+export async function searchHistoricalFixtures({
+  teamId,
+  competitionId,
+  country,
+  season,
+  from,
+  to,
+  limit,
+}: {
+  teamId?: number | null;
+  competitionId?: number | null;
+  country?: string | null;
+  season?: number | null;
+  from?: string | null;
+  to?: string | null;
+  limit?: number;
+}): Promise<DiscoverFixtureDatabaseMatch[]> {
+  const dateFilter = from || to ? {
+    ...(from ? { gte: new Date(from) } : {}),
+    ...(to ? { lte: new Date(`${to}T23:59:59.999Z`) } : {}),
+  } : undefined;
+
+  const where: Prisma.MatchWhereInput = {
+    ...(teamId ? { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }] } : {}),
+    ...(competitionId ? { competitionId } : {}),
+    ...(country ? {
+      competition: {
+        is: {
+          country: {
+            is: {
+              name: { contains: country },
+            },
+          },
+        },
+      },
+    } : {}),
+    ...(season ? { seasonYear: season } : {}),
+    ...(dateFilter ? { matchDate: dateFilter } : {}),
+  };
+
+  return (await prisma.match.findMany({
+    where,
+    include: {
+      homeTeam: true,
+      awayTeam: true,
+      venue: true,
+      competition: {
+        include: { country: true },
+      },
+    },
+    take: limit ?? 30,
     orderBy: { matchDate: 'asc' },
   })) as DiscoverFixtureDatabaseMatch[];
 }
@@ -105,7 +161,21 @@ export async function saveApiFixtureToDatabase(response: DiscoverFixtureApiRespo
     updatedAt: new Date(),
   };
 
-  const { createdAt: _createdAt, ...matchUpdateData } = matchData;
+  const matchUpdateData: Omit<typeof matchData, 'id' | 'createdAt'> = {
+    homeTeamId: matchData.homeTeamId,
+    awayTeamId: matchData.awayTeamId,
+    venueId: matchData.venueId,
+    competitionId: matchData.competitionId,
+    seasonYear: matchData.seasonYear,
+    matchDate: matchData.matchDate,
+    homeScore: matchData.homeScore,
+    awayScore: matchData.awayScore,
+    statusShort: matchData.statusShort,
+    statusLong: matchData.statusLong,
+    matchWeek: matchData.matchWeek,
+    updatedAt: new Date(),
+  };
+
   await prisma.match.upsert({
     where: { id: fixture.id },
     update: matchUpdateData,
