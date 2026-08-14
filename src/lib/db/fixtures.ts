@@ -105,9 +105,10 @@ export async function saveApiFixtureToDatabase(response: DiscoverFixtureApiRespo
     updatedAt: new Date(),
   };
 
+  const { createdAt: _createdAt, ...matchUpdateData } = matchData;
   await prisma.match.upsert({
     where: { id: fixture.id },
-    update: matchData,
+    update: matchUpdateData,
     create: matchData,
   });
 }
