@@ -2,43 +2,55 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="bg-black border-t border-gray-800">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          {/* App Info */}
-          <div className="flex items-center mb-4 md:mb-0">
-            <span className="text-2xl">⚽</span>
-            <span className="ml-2 text-lg font-bold text-white">The Match Diary</span>
+    <footer className="border-t border-emerald-400/15 bg-[#05150f] text-slate-200">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-500/10 text-lg shadow-[0_0_24px_rgba(16,185,129,0.25)]">
+              ⚽
+            </div>
+            <div>
+              <div className="text-lg font-black tracking-tight text-white">The Match Diary</div>
+              <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-300/80">
+                Your football life
+              </div>
+            </div>
           </div>
 
-          {/* Links */}
-          <div className="flex space-x-6 text-sm">
-            <Link href="/matches" className="text-gray-400 hover:text-green-400 transition-colors">
-              Matches
-            </Link>
-            <Link href="/stadiums" className="text-gray-400 hover:text-green-400 transition-colors">
-              Stadiums
-            </Link>
-            <Link href="/stats" className="text-gray-400 hover:text-green-400 transition-colors">
-              Stats
-            </Link>
+          <nav className="flex flex-wrap items-center gap-2 text-sm text-slate-300">
+            <FooterLink href="/dashboard">Dashboard</FooterLink>
+            <FooterLink href="/my-matches">My Matches</FooterLink>
+            <FooterLink href="/my-stadiums">My Stadiums</FooterLink>
+            <FooterLink href="/teams">Teams</FooterLink>
+            <FooterLink href="/venues">Venues</FooterLink>
             <a
               href="https://github.com/DiegoRojo99/the-match-diary"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-400 hover:text-green-400 transition-colors"
+              className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-slate-300 transition hover:border-emerald-400/30 hover:text-emerald-200"
             >
               GitHub
             </a>
-          </div>
+          </nav>
         </div>
 
-        <div className="border-t border-gray-800 mt-6 pt-6 text-center">
-          <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} The Match Diary. Made for football fans.
+        <div className="mt-6 border-t border-white/10 pt-6 text-center">
+          <p className="text-sm text-slate-400">
+            © {new Date().getFullYear()} The Match Diary. Built for fans who keep the story of every visit.
           </p>
         </div>
       </div>
     </footer>
+  );
+}
+
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 transition hover:border-emerald-400/30 hover:text-emerald-200"
+    >
+      {children}
+    </Link>
   );
 }

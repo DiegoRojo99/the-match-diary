@@ -6,15 +6,12 @@ const API_BASE_URL = 'https://v3.football.api-sports.io';
 class ApiFootballService {
   private getApiKey(): string {
     const apiKey = process.env.RAPIDAPI_KEY;
-    if (!apiKey) {
-      throw new Error('RAPIDAPI_KEY environment variable is required');
-    }
+    if (!apiKey) throw new Error('RAPIDAPI_KEY environment variable is required');
     return apiKey;
   }
 
   private async makeRequest<T>(endpoint: string): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    
     console.log(`🌐 API Request: ${endpoint}`);
     
     const response = await fetch(url, {
@@ -25,24 +22,15 @@ class ApiFootballService {
       },
     });
 
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
-    }
-
+    if (!response.ok) throw new Error(`API request failed: ${response.status} ${response.statusText}`);
     const data = await response.json();
     
     // Log API quota usage
     const remaining = response.headers.get('x-ratelimit-requests-remaining');
     const quota = response.headers.get('x-ratelimit-requests-limit');
     
-    if (remaining && quota) {
-      console.log(`📊 API Quota: ${remaining}/${quota} remaining`);
-    }
-
-    if (!data.response) {
-      throw new Error('Invalid API response format');
-    }
-
+    if (remaining && quota) console.log(`📊 API Quota: ${remaining}/${quota} remaining`);
+    if (!data.response) throw new Error('Invalid API response format');
     return data.response;
   }
 
@@ -56,10 +44,7 @@ class ApiFootballService {
     
     if (country) params.append('country', country);
     if (season) params.append('season', season.toString());
-    
-    if (params.toString()) {
-      endpoint += `?${params.toString()}`;
-    }
+    if (params.toString()) endpoint += `?${params.toString()}`;
     
     return this.makeRequest<ApiCompetition[]>(endpoint);
   }
@@ -71,10 +56,7 @@ class ApiFootballService {
     if (league) params.append('league', league.toString());
     if (season) params.append('season', season.toString());
     if (country) params.append('country', country);
-    
-    if (params.toString()) {
-      endpoint += `?${params.toString()}`;
-    }
+    if (params.toString()) endpoint += `?${params.toString()}`;
     
     return this.makeRequest<ApiTeamResponse[]>(endpoint);
   }
@@ -85,10 +67,7 @@ class ApiFootballService {
     
     if (country) params.append('country', country);
     if (city) params.append('city', city);
-    
-    if (params.toString()) {
-      endpoint += `?${params.toString()}`;
-    }
+    if (params.toString()) endpoint += `?${params.toString()}`;
     
     return this.makeRequest<ApiVenue[]>(endpoint);
   }
@@ -101,10 +80,7 @@ class ApiFootballService {
     if (season) params.append('season', season.toString());
     if (from) params.append('from', from);
     if (to) params.append('to', to);
-    
-    if (params.toString()) {
-      endpoint += `?${params.toString()}`;
-    }
+    if (params.toString()) endpoint += `?${params.toString()}`;
     
     return this.makeRequest<ApiFixture[]>(endpoint);
   }
@@ -121,7 +97,6 @@ class ApiFootballService {
     else if (next) params.append('next', next.toString());
     
     endpoint += `?${params.toString()}`;
-    
     console.log('🏈 Full API URL being called:', `${API_BASE_URL}${endpoint}`);
     
     return this.makeRequest<ApiFixture[]>(endpoint);
