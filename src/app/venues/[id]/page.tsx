@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import FootballLoader from '@/components/FootballLoader';
@@ -28,7 +28,6 @@ const UsersIcon = ({ className = 'w-5 h-5' }) => (
 
 export default function VenuePage() {
   const params = useParams();
-  const router = useRouter();
   const [venue, setVenue] = useState<VenueWithDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageError, setImageError] = useState(false);
@@ -51,7 +50,7 @@ export default function VenuePage() {
     };
 
     fetchVenue();
-  }, [params.id, router]);
+  }, [params.id]);
 
   if (loading) {
     return (
@@ -195,35 +194,6 @@ function StatBlock({ label, value, icon, accent }: { label: string; value: strin
           <p className="mt-3 text-2xl font-black text-white">{value}</p>
         </div>
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/10">{icon}</div>
-      </div>
-    </div>
-  );
-}
-
-            {/* Additional Info */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl p-6 border border-blue-200/50">
-              <h3 className="text-lg font-bold text-gray-900 mb-4">Stadium Features</h3>
-              <div className="space-y-3">
-                <div className="flex items-center text-gray-700">
-                  <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">🏟️</div>
-                  <span className="text-sm">Professional Stadium</span>
-                </div>
-                {venue.surface && (
-                  <div className="flex items-center text-gray-700">
-                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">🌿</div>
-                    <span className="text-sm capitalize">{venue.surface} Surface</span>
-                  </div>
-                )}
-                {venue.capacity && (
-                  <div className="flex items-center text-gray-700">
-                    <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">👥</div>
-                    <span className="text-sm">{venue.capacity.toLocaleString()} Capacity</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
