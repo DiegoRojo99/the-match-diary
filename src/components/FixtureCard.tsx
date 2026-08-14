@@ -15,6 +15,7 @@ const supabase = createClient(
 export default function FixtureCard({ fixture }: {fixture: DiscoverFixtureNormalized}) {
   const router = useRouter();
   const [isAdding, setIsAdding] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
 
   const handleAddToDiary = async () => {
     setIsAdding(true);
@@ -43,7 +44,7 @@ export default function FixtureCard({ fixture }: {fixture: DiscoverFixtureNormal
         throw new Error(errorData.error ?? 'Failed to add match to diary');
       }
 
-      router.push(`/matches/${fixture.id}`);
+      setIsAdded(true);
     } catch (error) {
       console.error('Failed to add match to diary:', error);
     } finally {
@@ -135,10 +136,10 @@ export default function FixtureCard({ fixture }: {fixture: DiscoverFixtureNormal
         <button
           type="button"
           onClick={handleAddToDiary}
-          disabled={isAdding}
+          disabled={isAdding || isAdded}
           className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-emerald-400/40 hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {isAdding ? 'Adding...' : 'Add to diary'}
+          {isAdding ? 'Adding...' : isAdded ? 'Added to diary' : 'Add to diary'}
         </button>
       </div>
     </div>
