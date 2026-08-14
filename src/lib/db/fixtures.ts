@@ -112,10 +112,6 @@ export async function saveApiFixtureToDatabase(response: DiscoverFixtureApiRespo
   });
 }
 
-export async function upsertMatchFromApiFixture(fixture: DiscoverFixtureApiResponse): Promise<void> {
-  await saveApiFixtureToDatabase(fixture);
-}
-
 export async function getFixtureByIdFromDb(matchId: number) {
   return prisma.match.findUnique({
     where: { id: matchId },
