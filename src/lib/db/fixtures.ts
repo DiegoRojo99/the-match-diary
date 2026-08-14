@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { apiFixtureToMatchData, discoverApiFixtureResponseToMatchData } from '@/types/dto/match';
+import { discoverApiFixtureResponseToMatchData } from '@/types/dto/match';
 import type { DiscoverFixtureApiResponse, DiscoverFixtureDatabaseMatch } from '@/types';
 import { upsertCompetition } from '@/lib/db/competitions';
 import { upsertTeam } from '@/lib/db/teams';
