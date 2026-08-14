@@ -6,7 +6,13 @@ import FixtureCard from '@/components/FixtureCard';
 import type { DiscoverCompetitionSummary, DiscoverFixtureNormalized } from '@/types';
 
 const CURRENT_YEAR = new Date().getFullYear();
-const YEARS = Array.from({ length: 25 }, (_, index) => CURRENT_YEAR - index);
+const SEASON_OPTIONS = Array.from({ length: 25 }, (_, index) => {
+  const year = CURRENT_YEAR - index;
+  return {
+    value: String(year),
+    label: `${year}/${String(year + 1).slice(-2)}`,
+  };
+});
 
 type SearchState = {
   teamId: string;
@@ -186,8 +192,8 @@ export default function DiscoverHistoryPage() {
                   className="w-full min-w-0 appearance-none rounded-2xl border border-white/10 bg-[#0b1a17] px-3 py-3 pr-10 text-sm text-white focus:border-emerald-400/50 focus:outline-none"
                 >
                   <option value="">Any season</option>
-                  {YEARS.map((year) => (
-                    <option key={year} value={year}>{year}</option>
+                  {SEASON_OPTIONS.map((season) => (
+                    <option key={season.value} value={season.value}>{season.label}</option>
                   ))}
                 </select>
                 <svg viewBox="0 0 20 20" fill="none" aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400">
