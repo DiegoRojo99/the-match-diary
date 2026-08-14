@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { useState } from 'react';
 import FootballLoader from '@/components/FootballLoader';
 import { TeamWithVenue } from '@/lib/prisma';
@@ -20,70 +21,55 @@ export default function TeamHeader({ team }: TeamHeaderProps) {
   };
 
   return (
-    <div className="text-center py-8">
-      {/* Team Name */}
-      <h1 className="text-5xl font-bold text-gray-900 mb-6">
-        {team.name}
-      </h1>
-      
-      {/* Team Logo */}
-      <div className="flex justify-center mb-6">
-        <div className="w-32 h-32 relative">
+    <div className="mb-8 overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,_rgba(16,185,129,0.18),transparent_35%),linear-gradient(135deg,#081a12,#0d261d_45%,#06140d)] px-6 py-8 shadow-[0_30px_80px_rgba(4,10,8,0.8)] md:px-8">
+      <div className="flex flex-col items-center text-center">
+        <div className="mb-6 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border border-emerald-400/30 bg-black/20 ring-4 ring-emerald-500/10 md:h-28 md:w-28">
           {team.logoUrl && !logoError ? (
-            <img
+            <Image
               src={team.logoUrl}
               alt={`${team.name} logo`}
-              className={`w-full h-full object-contain transition-opacity duration-300 ${
+              width={112}
+              height={112}
+              unoptimized
+              className={`h-full w-full object-contain transition-opacity duration-300 ${
                 logoLoading ? 'opacity-0' : 'opacity-100'
               }`}
               onError={handleLogoError}
               onLoad={handleLogoLoad}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-6xl">
-              {team.national ? '🌍' : '⚽'}
-            </div>
+            <div className="text-4xl md:text-5xl">{team.national ? '🌍' : '⚽'}</div>
           )}
-          
+
           {logoLoading && team.logoUrl && !logoError && (
             <div className="absolute inset-0 flex items-center justify-center">
               <FootballLoader size="md" text="" />
             </div>
           )}
         </div>
+
+        <div className="mb-3 flex items-center gap-3">
+          <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.22em] ${team.national ? 'bg-amber-500/10 text-amber-200' : 'bg-emerald-500/10 text-emerald-200'}`}>
+            {team.national ? 'National team' : 'Club'}
+          </span>
+          {team.teamCode && (
+            <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-300">
+              {team.teamCode}
+            </span>
+          )}
+        </div>
+
+        <h1 className="text-4xl font-black tracking-[-0.06em] text-white md:text-5xl">
+          {team.name}
+        </h1>
+
+        {team.homeVenue && (
+          <div className="mt-4 flex items-center justify-center gap-2 text-slate-300">
+            <span className="text-lg">🏟️</span>
+            <span className="text-lg font-medium">{team.homeVenue.name}</span>
+          </div>
+        )}
       </div>
-      
-      {/* Country with Flag */}
-      {/* {team.country && (
-        <div className="flex items-center justify-center space-x-3 mb-4">
-          <span className="text-3xl">
-            {team.country.flag ? (
-              <img
-                src={team.country.flag}
-                alt={`${team.country.name} flag`}
-                className="w-8 h-5 object-cover rounded-sm border border-gray-300"
-              />
-            ) : (
-              '🏳️'
-            )}
-          </span>
-          <span className="text-xl font-medium text-gray-700">
-          </span>
-          <span className="text-xl font-medium text-gray-700">
-            {team.country.name}
-          </span>
-        </div>
-      )} */}
-      
-      {/* Stadium */}
-      {team.homeVenue && (
-        <div className="flex items-center justify-center space-x-3">
-          <span className="text-2xl">🏟️</span>
-          <span className="text-lg font-medium text-gray-700">
-            {team.homeVenue.name}
-          </span>
-        </div>
-      )}
     </div>
   );
 }
